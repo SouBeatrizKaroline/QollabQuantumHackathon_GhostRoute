@@ -7,10 +7,10 @@ const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/assets/js/i18n.js'), 'utf8');
 const texts = vm.runInNewContext(`${source}\n; TEXTOS`, {}, { timeout: 1000 });
-const locales = ['en', 'pt-BR', 'es'];
+const locales = ['en', 'pt-PT', 'pt-BR', 'es'];
 const placeholders = value => (value.match(/\{\w+\}/g) || []).sort();
 
-test('English, Brazilian Portuguese and Spanish provide the same complete catalog', () => {
+test('English, Portuguese Portugal, Portuguese Brazil and Spanish provide complete catalogs', () => {
   assert.deepEqual(Object.keys(texts).sort(), [...locales].sort());
   const englishKeys = Object.keys(texts.en).sort();
   for (const locale of locales) {
@@ -35,9 +35,9 @@ test('localized messages preserve every runtime placeholder', () => {
   }
 });
 
-test('HTML translation bindings exist in every language', () => {
+test('HTML text and accessible translation bindings exist in every language', () => {
   const html = fs.readFileSync(path.join(root, 'public/index.html'), 'utf8');
-  const bindings = [...html.matchAll(/data-i18n\s*=\s*["']([^"']+)["']/g)].map(match => match[1]);
+  const bindings = [...html.matchAll(/data-i18n(?:-aria|-title|-placeholder)?\s*=\s*["']([^"']+)["']/g)].map(match => match[1]);
   assert.ok(bindings.length, 'Expected translated HTML labels');
   for (const key of new Set(bindings)) {
     for (const locale of locales) {
@@ -46,8 +46,8 @@ test('HTML translation bindings exist in every language', () => {
   }
 });
 
-test('Portuguese and Spanish UI do not retain English shots, debug or replay labels', () => {
-  for (const locale of ['pt-BR', 'es']) {
+test('both Portuguese variants and Spanish do not retain English sensor or replay labels', () => {
+  for (const locale of ['pt-PT', 'pt-BR', 'es']) {
     for (const [key, value] of Object.entries(texts[locale])) {
       const prose = value.replace(/\{\w+\}/g, '');
       assert.ok(!/\b(?:shots?|debug|replay|debriefing)\b/i.test(prose), `${locale}.${key}: untranslated English UI: ${value}`);
@@ -74,4 +74,71 @@ test('mission, observation, sensor exhaustion and replay states are translated',
   }
   assert.notEqual(texts['pt-BR'].attributionTranslated, texts.en.attributionTranslated);
   assert.notEqual(texts.es.attributionTranslated, texts.en.attributionTranslated);
+});
+
+test('Portuguese Portugal is a distinct complete translation with regional vocabulary', () => {
+  const portugal = texts['pt-PT'], brazil = texts['pt-BR'];
+  assert.notEqual(portugal, brazil);
+  assert.match(portugal.fullscreen, /Ecrã/);
+  assert.match(brazil.fullscreen, /Tela/);
+  assert.match(portugal.navigationControls, /Controlos/);
+  assert.match(brazil.navigationControls, /Controles/);
+  assert.match(portugal.gameSettings, /Definições/);
+  assert.match(brazil.gameSettings, /Configurações/);
+  assert.match(portugal.gridScale, /Grelha/);
+  assert.match(brazil.gridScale, /Grade/);
+  assert.match(portugal.tut2, /contacto/);
+  assert.match(brazil.tut2, /contato/);
+  assert.match(portugal.menuGuideHeadingBody, /este é 90°/);
+  assert.match(brazil.menuGuideHeadingBody, /leste é 90°/);
+  const localizedSeparately = Object.keys(portugal).filter(key => portugal[key] !== brazil[key]);
+  assert.ok(localizedSeparately.length >= 50, 'Expected regional wording throughout the interface and mission dialogue');
+});
+
+test('menu, campaign, tutorial and accessible controls are complete in all four languages', () => {
+  const required = [
+    'menuLabel', 'menuEyebrow', 'menuTitle', 'menuIntro', 'menuStart', 'menuContinue',
+    'menuClose', 'menuLanguage', 'menuFullscreen', 'menuRestart', 'menuExport', 'menuSettings',
+    'menuGuide', 'menuGuideHeading', 'menuGuideHeadingBody', 'menuGuideSensor', 'menuGuideSensorBody',
+    'menuGuideAdvance', 'menuGuideAdvanceBody', 'menuKeyboard', 'menuCampaign', 'menuLevel',
+    'menuProgress', 'menuStartLevel', 'menuDifficulty', 'menuBrandLine', 'menuUtilityAria',
+    'menuNavigationAria', 'menuRadioAria', 'menuLevelSelect', 'levelName', 'levelTutorial',
+    'levelBeginner', 'levelIntermediate', 'levelAdvanced', 'levelExpert', 'levelBrief',
+    'progressLabel', 'levelCompleted', 'nextLevel', 'campaignComplete', 'tutorialHeading',
+    'tutorialSensor', 'tutorialGps', 'tutorialRescue', 'levelIntro', 'trainingMode', 'levelNotCompleted'
+  ];
+  for (const locale of locales) {
+    for (const key of required) assert.ok(texts[locale][key], `${locale}: missing menu or campaign label ${key}`);
+    assert.deepEqual(placeholders(texts[locale].levelBrief), ['{budget}', '{radius}', '{turns}']);
+    assert.deepEqual(placeholders(texts[locale].levelIntro), ['{radius}', '{turns}']);
+    assert.deepEqual(placeholders(texts[locale].progressLabel), ['{completed}']);
+    assert.deepEqual(placeholders(texts[locale].levelCompleted), ['{level}']);
+    assert.match(texts[locale].tutorialHeading, /045°.*NE/);
+    assert.match(texts[locale].progressLabel, /100/);
+    assert.match(texts[locale].campaignComplete, /100/);
+  }
+});
+
+test('language selectors expose all four locales and default to Portugal Portuguese', () => {
+  const html = fs.readFileSync(path.join(root, 'public/index.html'), 'utf8');
+  assert.match(html, /<html\b[^>]*lang=["']pt-PT["']/);
+  for (const id of ['lang-select', 'menu-lang-select']) {
+    const select = html.match(new RegExp(`<select\\b[^>]*\\bid=["']${id}["'][^>]*>([\\s\\S]*?)</select>`));
+    assert.ok(select, `Missing language selector ${id}`);
+    const options = [...select[1].matchAll(/<option\b([^>]*)>\s*([^<]+)\s*<\/option>/g)];
+    assert.deepEqual(options.map(option => option[1].match(/value=["']([^"']+)["']/)?.[1]).sort(), [...locales].sort());
+    const selected = options.filter(option => /\bselected\b/.test(option[1]));
+    assert.equal(selected.length, 1, `${id}: expected a default selected language`);
+    assert.match(selected[0][1], /value=["']pt-PT["']/);
+  }
+});
+
+test('runtime catalog lookups in the app and map renderer have translations', () => {
+  const app = fs.readFileSync(path.join(root, 'public/assets/js/app.js'), 'utf8');
+  const engine = fs.readFileSync(path.join(root, 'public/assets/js/engine.js'), 'utf8');
+  const keys = new Set([...`${app}\n${engine}`.matchAll(/\bt\.([A-Za-z_][A-Za-z_0-9]*)/g)].map(match => match[1]));
+  assert.ok(keys.size > 40, 'Expected dynamic labels from mission states and map rendering');
+  for (const key of keys) {
+    for (const locale of locales) assert.ok(Object.hasOwn(texts[locale], key), `${locale}: missing runtime translation ${key}`);
+  }
 });

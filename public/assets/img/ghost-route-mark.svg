@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
+  <title>Ghost Route</title>
+  <path fill="#082331" d="M8 0h48v8h8v48h-8v8H8v-8H0V8h8z"/>
+  <path fill="#3b8091" d="M8 4h12v4H8v12H4V8h4zm36 0h12v4h4v12h-4V8H44zM4 44h4v12h12v4H8v-4H4zm52 0h4v12h-4v4H44v-4h12z"/>
+  <path fill="#ccf4e6" d="M28 10h8v4h4v4h4v6h4v22h-4v-4h-6v6h-4v-4h-4v4h-4v-6h-6v4h-4V24h4v-6h4v-4h4z"/>
+  <path fill="#63e9dc" d="M28 14h8v4h4v6H24v-6h4z"/>
+  <path fill="#103749" d="M22 28h6v8h-6zm14 0h6v8h-6z"/>
+  <path fill="#82e3f2" d="M24 28h4v4h-4zm12 0h4v4h-4z"/>
+  <path fill="#67d6cc" d="M12 48h8v4h24v-4h8v6h-8v4H20v-4h-8z"/>
+  <path fill="#1c6074" d="M20 54h24v4H20z"/>
+</svg>

@@ -1,41 +1,25 @@
-# Hackathon references and project decisions
+# Hackathon references and implementation decisions
 
-Project: **Ghost Route** · Team: QuantGirls · Track intention: Quantum Playground
+Reviewed on 2026-10-10 using official HTML pages and the program text supplied by the team.
 
 This effort is supported by Qollab & IonQ
 
-## Official references
+The [process and FAQ](https://qollab.xyz/programs/hackathon/how-it-works) require a public, runnable Qiskit project on Qollab under MIT, a project explanation, a public 2–3 minute demo and disclosure of starting code. A supporting frontend is permitted elsewhere, but its repository must be public without sign-in, MIT-licensed and dependency-documented.
 
-Use the current official pages when preparing the submission:
+The [rules](https://qollab.xyz/programs/hackathon/terms) set the build window to Oct 9–11, 2026, 19:00 ET to 19:00 ET. They require the exact attribution above. Intended theme: Quantum Playground. Sensor interference and GHZ ambiguity affect navigation; quantum behavior is more than random-number generation. This is a fictional teaching model, without a claim of operational navigation accuracy or demonstrated quantum advantage over a strong classical baseline.
 
-- [Hackathon program](https://qollab.xyz/programs/hackathon)
-- [Timeline and process](https://qollab.xyz/programs/hackathon/how-it-works)
-- [Rules and terms](https://qollab.xyz/programs/hackathon/terms)
-- [Runtime environment](https://qollab.xyz/learn/docs/runtime-environment)
-- [JS / Qiskit projects](https://qollab.xyz/learn/docs/js-qiskit-projects)
-- [Circuit compilation and backends](https://qollab.xyz/learn/docs/how-your-circuit-is-compiled)
-- [Error mitigation](https://qollab.xyz/learn/docs/error-mitigation)
-- [Creating a project](https://qollab.xyz/learn/building-your-first-qollab-project/create-project)
+The [runtime documentation](https://qollab.xyz/learn/docs/runtime-environment) specifies root main.py for Python projects, the pre-created backend, annotated one-line main signatures and one backend job per IonQ run. The earlier sensor-only package lacked that entrypoint. main.py now packs n=1 X/Y and n=3 X/Y into one eight-qubit circuit, uses the selected backend and is not called manually. Running the actual upload on Qollab remains necessary.
 
-These are source links, not evidence that a particular uploaded version ran successfully. Confirm the current deadline, required submission artifacts and runtime limits on the platform. This revision does not establish a newly verified deadline or platform execution result.
-
-## Project implementation decisions
-
-| Area | Ghost Route implementation |
+| Area | Implementation |
 | --- | --- |
-| Browser game | Maintained in `public/`; static Vercel deployment uses output directory `public` and no build. |
-| Quantum entrypoint | Canonical root `sensor.py` builds Qiskit circuits. Browser sensing uses offline Born sampling. |
-| Session verification | `scripts/replay_session.py` takes saved positions/phases as references and batches all circuit PUBs in one sampler.run call. Python samples are fresh, not identical to JavaScript outcomes. |
-| Distribution | `scripts/package_qollab.py` generates ignored `dist/qollab/` and `dist/ghost-route-qollab.zip`; there is no maintained second source copy. |
-| Model | A fictional 100 × 100 km field, 12 turns, current noise, a reef and programmed GPS attacks. It is a teaching model, not an operational navigation system. |
-| Sensor trade-off | Simple and three-qubit GHZ phase responses; GHZ phase ambiguity is retained. Scalar readings do not identify a unique coordinate. |
-| Language | English, Brazilian Portuguese and Spanish catalog in `public/assets/js/i18n.js`. Proper names retain their spelling. |
-| Accessibility | Keyboard controls, readable contrast, focus and reduced motion are implementation goals. Formal conformance requires a broader audit. |
-| Attribution and licensing | MIT license; exact Qollab/IonQ attribution preserved. |
-| Demo and project page | Drafts in `docs/demo-script.md` and `docs/project-page.md`; upload and public-link validation remain submission tasks. |
+| Frontend | Native HTML/CSS/Canvas in public/, with static Vercel output public/ and no build step. |
+| Brand | Original Ghost Route beacon/ship mark, naval palette and pixel interface; SPOOFED remains the vessel name. |
+| Ship | 32 cached pixel perspectives; upright mast, fixed anchor and shortest-path bearing transitions. |
+| Campaign | 100 deterministic configurations, levels 00–99, four-turn guided introduction, then progressively harder currents, attacks, resources and rescue precision. |
+| Languages | English, Portuguese Portugal (default), Portuguese Brazil and Spanish; 185 matching keys. |
+| Qiskit sensor | Canonical sensor.py module and Qollab main.py entrypoint. Browser sampling stays distinct from actual circuit execution. |
+| Local verification | scripts/replay_session.py supports campaign 1.1.0 and archived 1.0.0, validates before submitting and batches circuits in one Sampler V2 call. Its multiple-circuit replay is not advertised as the Qollab demo. |
+| Distribution | scripts/package_qollab.py generates ignored dist/qollab/ and dist/ghost-route-qollab.zip, without a maintained duplicate source. |
 
-## Disclosures
+GitHub was private when checked. Public repository visibility, Qollab publication and successful free simulator runs, final video, verified prior-work disclosure and captain submission remain external eligibility steps. See [submission-checklist.md](submission-checklist.md).
 
-Gemini Spark assisted the initial project. OpenAI Codex assisted the fullscreen pixel-art interface, localization, QA and repository organization. The team's visual references guided the art direction. Review this account against actual contributions before publishing.
-
-The frontend uses native HTML, CSS and Canvas without external runtime libraries. Python dependencies are declared in `requirements.txt`: Qiskit, NumPy, Matplotlib and pytest. Do not describe the Python environment as dependency-free or fix its Qiskit version to a stale 1.x label.

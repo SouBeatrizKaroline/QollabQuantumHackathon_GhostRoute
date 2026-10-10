@@ -50,7 +50,7 @@ assert.equal(game.state.currentTurn,7);
 game.advanceTurn();
 assert.equal(game.state.turnsRecord.at(-1).shots,0);
 assert.match(get('last-reading').textContent,/no quantum measurement this turn/);
-for(const lang of['pt-BR','es','en']){
+for(const lang of['pt-PT','pt-BR','es','en']){
  game.currentLang=lang;game.updateLocalization();
  assert.equal(document.documentElement.lang,lang);
  assert.ok(get('last-reading').textContent.includes(a.TEXTOS[lang].budgetExhausted));
@@ -61,7 +61,7 @@ while(!game.state.isFinished)game.advanceTurn();
 assert.ok(get('dialogue-box').textContent.includes(a.TEXTOS.en.endingDeceived));
 assert.equal(get('last-reading').textContent.includes(a.TEXTOS.en.budgetExhausted),false,'Do not tell a finished player to continue');
 get('btn-close-replay').click();
-for(const lang of['pt-BR','es']){
+for(const lang of['pt-PT','pt-BR','es']){
  game.currentLang=lang;game.updateLocalization();
  assert.equal(game.replayModal.style.display,'none','Changing language must not reopen a closed replay');
  assert.equal(get('dialogue-box').textContent,a.TEXTOS[lang].endingDeceived);
@@ -80,3 +80,35 @@ assert.equal(game.sensorModeSelect.value,'simple','Restart must restore sensing 
 assert.equal(game.sensorShotsSelect.value,'500');assert.equal(game.sensorShotsSelect.disabled,false);
 assert.equal(game.state.remainingShots,6000);assert.equal(get('legend-heat').hidden,false);
 console.log('PASS localized observation, exhausted sensing, final radio, replay focus/legend and restart states');
+
+const saved=new Map();context.window.localStorage={getItem:key=>saved.get(key)||null,setItem:(key,value)=>saved.set(key,value)};
+const campaign=Object.create(a.GhostRouteApp.prototype);
+campaign.renderer={canvas:node(),resize(){},render(){},worldToScreen(x,y){return{sx:x,sy:y};}};
+campaign.avatarCtx={};campaign.estimator=new a.BayesianGridEstimator();campaign.currentLang='pt-PT';campaign.levelNumber=0;campaign.completedLevels=new Set();campaign.debugMode=false;
+campaign.initDOM();campaign.bindEvents();campaign.startNewGame(20261011);campaign.closeMissionMenu();
+assert.equal(campaign.state.maxTurns,4);assert.match(get('dialogue-box').textContent,/045°/);
+for(let i=0;i<4;i++)campaign.advanceTurn();
+assert.equal(campaign.state.isFinished,true);assert.equal(campaign.state.isAground,false);
+assert.ok(campaign.completedLevels.has(0));assert.equal(get('btn-next-level').hidden,false);
+assert.equal(get('outcome-banner').textContent.includes(a.TEXTOS['pt-PT'].endingRescue),false,'No-attack tutorial must not claim an attack was missed');
+assert.equal(get('outcome-banner').textContent.includes('3 ataques'),false,'Tutorial must not claim three attacks were detected');
+assert.equal(JSON.parse(saved.get('ghost-route.preferences')).completed.join(','),'0');
+campaign.openReplayModal();assert.equal(campaign.completedLevels.size,1,'Reopening replay must not double-count completion');
+let download;
+const createElement=document.createElement;document.createElement=tag=>{const result=node();result.remove=()=>{};if(tag==='a')download=result;return result;};document.body={appendChild(){}};
+campaign.exportDecisionsJSON();document.createElement=createElement;
+const data=JSON.parse(decodeURIComponent(download.attributes.href.split(',').slice(1).join(',')));
+assert.equal(data.versao,'1.1.0');assert.equal(data.nivel_campanha,0);assert.equal(data.total_turnos,4);assert.equal(data.configuracao_missao.turnos,4);
+assert.equal(data.estatisticas_finais.casco_encalhado,false);
+if(process.env.GHOST_ROUTE_CAMPAIGN_EXPORT)fs.writeFileSync(process.env.GHOST_ROUTE_CAMPAIGN_EXPORT,JSON.stringify(data,null,2)+'\n');
+get('btn-next-level').click();assert.equal(campaign.levelNumber,1);assert.equal(campaign.state.isFinished,false);
+assert.equal(campaign.replayModal.style.display,'none');assert.equal(campaign.missionMenu.hidden,true);
+campaign.setHeading(270);while(!campaign.state.isFinished)campaign.advanceTurn();
+assert.equal(campaign.completedLevels.has(1),false,'An unsuccessful mission cannot complete a level');
+assert.equal(get('btn-next-level').hidden,true,'An unsuccessful mission cannot offer progression');
+campaign.completedLevels.add(1);campaign.updateCampaignMenu();
+assert.equal(get('btn-next-level').hidden,true,'An earlier completion must not turn the current failed attempt into a win');
+campaign.changeLanguage('pt-BR');assert.equal(JSON.parse(saved.get('ghost-route.preferences')).language,'pt-BR');
+campaign.changeLanguage('invalid');assert.equal(campaign.currentLang,'pt-BR');
+campaign.beginCampaignLevel(99);assert.equal(campaign.levelNumber,99);assert.equal(campaign.state.maxTurns,12);assert.equal(campaign.state.remainingShots,3000);
+console.log('PASS tutorial rescue, saved completion, campaign JSON, next-level transition, failed rescue and final-level selection');

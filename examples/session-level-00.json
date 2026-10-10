@@ -1,0 +1,256 @@
+{
+  "projeto": "Ghost Route",
+  "versao": "1.1.0",
+  "nivel_campanha": 0,
+  "hackathon": "Qollab x IonQ Quantum Hackathon 2026",
+  "equipe": "QuantGirls",
+  "atribuicao": "This effort is supported by Qollab & IonQ",
+  "semente": 20261011,
+  "configuracao_missao": {
+    "turnos": 4,
+    "minutos_por_turno": 20,
+    "porto": [
+      10,
+      15
+    ],
+    "navio": {
+      "velocidade_km_turno": 5.656854249492381,
+      "ruido_corrente_km": 0
+    },
+    "inercial": {
+      "erro_inicial_km": 0.2,
+      "crescimento_km_turno": 0.12
+    },
+    "campo": {
+      "kappa": 1,
+      "base": 2,
+      "anomalias": [
+        {
+          "x": 25,
+          "y": 30,
+          "amplitude": 2.5,
+          "raio_km": 9
+        },
+        {
+          "x": 45,
+          "y": 45,
+          "amplitude": -1.8,
+          "raio_km": 12
+        },
+        {
+          "x": 60,
+          "y": 65,
+          "amplitude": 2,
+          "raio_km": 8
+        },
+        {
+          "x": 75,
+          "y": 80,
+          "amplitude": -1.5,
+          "raio_km": 10
+        }
+      ]
+    },
+    "recife": [
+      [
+        88,
+        88
+      ],
+      [
+        94,
+        88
+      ],
+      [
+        94,
+        94
+      ],
+      [
+        88,
+        94
+      ]
+    ],
+    "capsula": {
+      "elipse_prevista": {
+        "centro": [
+          26,
+          31
+        ],
+        "semi_eixo_x": 2,
+        "semi_eixo_y": 2
+      },
+      "pouso_real": [
+        26,
+        31
+      ],
+      "turno_blackout_inicio": 0,
+      "turno_revelacao": 0
+    },
+    "sensor": {
+      "shots_total": 8000,
+      "ghz_n": 3,
+      "opcoes_shots": [
+        100,
+        250,
+        500,
+        1000
+      ]
+    },
+    "ataques": [],
+    "vitoria": {
+      "raio_resgate_km": 4
+    },
+    "nivel": 0
+  },
+  "total_turnos": 4,
+  "registros_turnos": [
+    {
+      "turn": 1,
+      "heading": 45,
+      "commanded": {
+        "dx": 4,
+        "dy": 4.000000000000001
+      },
+      "realBefore": [
+        10,
+        15
+      ],
+      "realAfter": [
+        14,
+        19
+      ],
+      "gpsReported": [
+        14,
+        19
+      ],
+      "inertial": [
+        14,
+        19
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 221,
+      "NX": 250,
+      "kY": 44,
+      "NY": 250,
+      "phaseCandidates": [
+        2.4407382457053437
+      ],
+      "markedSuspicious": false,
+      "gpsInsideHPD": true,
+      "remainingShots": 7500
+    },
+    {
+      "turn": 2,
+      "heading": 45,
+      "commanded": {
+        "dx": 4,
+        "dy": 4.000000000000001
+      },
+      "realBefore": [
+        14,
+        19
+      ],
+      "realAfter": [
+        18,
+        23
+      ],
+      "gpsReported": [
+        18,
+        23
+      ],
+      "inertial": [
+        18,
+        23
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 243,
+      "NX": 250,
+      "kY": 163,
+      "NY": 250,
+      "phaseCandidates": [
+        3.453139480492481
+      ],
+      "markedSuspicious": false,
+      "gpsInsideHPD": true,
+      "remainingShots": 7000
+    },
+    {
+      "turn": 3,
+      "heading": 45,
+      "commanded": {
+        "dx": 4,
+        "dy": 4.000000000000001
+      },
+      "realBefore": [
+        18,
+        23
+      ],
+      "realAfter": [
+        22,
+        27
+      ],
+      "gpsReported": [
+        22,
+        27
+      ],
+      "inertial": [
+        22,
+        27
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 194,
+      "NX": 250,
+      "kY": 237,
+      "NY": 250,
+      "phaseCandidates": [
+        4.160235989929186
+      ],
+      "markedSuspicious": false,
+      "gpsInsideHPD": true,
+      "remainingShots": 6500
+    },
+    {
+      "turn": 4,
+      "heading": 45,
+      "commanded": {
+        "dx": 4,
+        "dy": 4.000000000000001
+      },
+      "realBefore": [
+        22,
+        27
+      ],
+      "realAfter": [
+        26,
+        31
+      ],
+      "gpsReported": [
+        26,
+        31
+      ],
+      "inertial": [
+        26,
+        31
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 185,
+      "NX": 250,
+      "kY": 239,
+      "NY": 250,
+      "phaseCandidates": [
+        4.227911051347666
+      ],
+      "markedSuspicious": false,
+      "gpsInsideHPD": true,
+      "remainingShots": 6000
+    }
+  ],
+  "estatisticas_finais": {
+    "distancia_capsula_km": 0,
+    "shots_economizados": 6000,
+    "casco_encalhado": false
+  }
+}

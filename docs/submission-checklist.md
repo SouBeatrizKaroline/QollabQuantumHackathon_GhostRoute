@@ -1,24 +1,26 @@
 # Submission checklist — Ghost Route
 
-Team: QuantGirls · Qollab × IonQ hackathon · MIT license
+Reviewed against the official program, process, terms and runtime documentation on 2026-10-10. Team: QuantGirls. Intended theme: Quantum Playground.
 
 This effort is supported by Qollab & IonQ
 
-This checklist separates prepared artifacts from actions that still need platform or submission evidence. Review the current [official terms](https://qollab.xyz/programs/hackathon/terms) before submitting.
+| Requirement | Evidence and remaining action |
+| --- | --- |
+| Qiskit and essential quantum behavior | sensor.py implements Ramsey interference, X/Y measurement and three-qubit GHZ phase amplification with ambiguity. main.py demonstrates both modes using actual Qiskit circuits. |
+| Runnable project on Qollab | Root main.py is the Python entrypoint. Upload the **contents** of the extracted qollab/ folder so main.py is at the project root. Qollab calls its annotated main function automatically. |
+| Selected free backend; IonQ one-job limit | main.py uses Qollab's injected backend, with four quadrature readings in one eight-qubit circuit and exactly one backend.run. Actual Qollab local and IonQ simulator runs are still required. |
+| Public Qollab publication and MIT | MIT license and attribution are present. Publish on Qollab before the deadline and retain the actual public URL and successful Run result. |
+| Public supporting repository | GitHub API reported the Ghost Route repository **private** on 2026-10-10. The official FAQ requires an externally hosted supporting repository to be public, MIT-licensed, dependency-documented and accessible without sign-in. Visibility was not changed during this review. |
+| Project page | docs/project-page.md explains the project, sensor and run instructions. Add actual Qollab, frontend and video links before submission. |
+| Public 2–3 minute video | Four narration tracks are in docs/demo-script.md. Record the working game and Qollab circuit run, upload the video and verify it opens without sign-in. A script is not a video. |
+| Build-window disclosure | README lists Gemini Spark, OpenAI Codex and visual-reference assistance. Explicitly identify what existed before Oct 9, 19:00 ET and what was added during the window; the team must confirm the chronology. |
+| Accessibility | Keyboard navigation, modal focus, live descriptions and reduced motion are implemented and locally tested. No formal WCAG certification is claimed. |
+| Languages | EN, PT-PT, PT-BR and ES; 185 keys per locale. PT-PT is the default and the Portuguese variants use distinct wording. |
+| Campaign | Levels 00–99 have distinct exported mission configurations. Tutorial 00 is a safe four-turn introduction; difficulty changes current noise, attacks, budget, route length and rescue precision. |
+| Session reproducibility | Browser exports 1.1.0 campaign decisions; replay also supports archived 1.0.0 missions. The local replay validates geometry and measures fresh Qiskit counts. It is separate from the one-circuit Qollab demonstration. |
+| Deadline | Official cutoff: **Oct 11, 2026, 19:00 ET** (20:00 in São Paulo). The registered captain submits the public project; registration and submission status require account evidence. |
 
-| Item | Repository evidence | Submission action |
-| --- | --- | --- |
-| Quantum implementation | Root `sensor.py`; Ramsey and GHZ tests in `tests/test_sensor.py` | Run the Python entrypoint in the intended Qollab environment and retain the actual result. |
-| Analytical/circuit agreement | Python tests and `scripts/replay_session.py` | Report fresh Qiskit counts, not a claim that browser and Python RNGs produce identical counts. |
-| Job batching | Replay script sends all session circuit PUBs in one sampler.run call | Confirm compatibility with the selected Qollab backend and its current shot/qubit limits. |
-| Generated package | `scripts/package_qollab.py` creates ignored `dist/qollab/` and `dist/ghost-route-qollab.zip` | Generate it, inspect it and test the actual uploaded project. Generation alone is not platform verification. |
-| Web frontend | `public/index.html`, `public/assets/js/`, `public/assets/css/game.css` | Test the deployed URL; keep its offline Born sampling distinct from Qiskit execution. |
-| Three languages | `public/assets/js/i18n.js` and `tests/localization.cjs` | Check rendered buttons, radio, alerts, final outcomes and replay in all three languages. |
-| Accessibility | Semantic controls, focus styling, live text and reduced-motion handling | Check keyboard focus and screen-reader behavior. Do not claim certified WCAG AA/AAA compliance without a complete audit. |
-| Export | Decisions JSON and `examples/session-seed-20261011.json` | Download a real session and run the replay script against it. |
-| Fringes | `scripts/plot_fringes.py` and `docs/assets/ramsey-fringes.png` | Regenerate the plot with the documented environment when using it as experimental evidence. |
-| MIT license and attribution | `LICENSE`, README and UI attribution | Preserve the exact sentence above in the submission. |
-| Project description | [project-page.md](project-page.md) | Add the actual project URL, run evidence and deployment link. |
-| Demo | [demo-script.md](demo-script.md) | Record the game and circuit execution; supply the required public video link. A script is not a submitted video. |
-| Contribution disclosure | README describes Gemini Spark, OpenAI Codex and visual-reference assistance | Confirm completeness, existing assets and work performed during the allowed period. |
-| Deadline and eligibility | [Official hackathon program](https://qollab.xyz/programs/hackathon) | Confirm the current cutoff, timezone, track and eligibility on the platform. |
+The frontend samples Born probabilities in JavaScript. It does not call Qiskit or IonQ. Local test success and a GitHub update do not establish official publication, simulator execution or submission.
+
+Sources: [process and FAQ](https://qollab.xyz/programs/hackathon/how-it-works), [rules and terms](https://qollab.xyz/programs/hackathon/terms), [runtime environment](https://qollab.xyz/learn/docs/runtime-environment).
+

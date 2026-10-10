@@ -11,7 +11,7 @@ let main=fs.readFileSync(path.join(base,'assets/js/app.js'),'utf8').replace(/\r\
 main=main.slice(0,main.indexOf('\n}\n')+3);
 // This script exercises the game controller itself with UI/renderer callbacks isolated.
 if(!main.includes('class GhostRouteApp'))throw new Error('Controller was not found');
-const context=vm.createContext({console,Float32Array,Set,Math,Intl,TEXTOS:{'pt-BR':{missionStarted:'Mission started'}}});
+const context=vm.createContext({console,Float32Array,Set,Math,Intl,TEXTOS:{'pt-PT':{missionStarted:'Mission started'},'pt-BR':{missionStarted:'Mission started'}}});
 vm.runInContext(core+'\n'+main+'\nthis.API={MISSAO,mulberry32,getRamseyProbabilities,reconstructPhaseCandidates,checkReefCollision,distToPolygon,BayesianGridEstimator,GhostRouteApp};',context);
 const a=context.API;
 const originalStart=a.GhostRouteApp.prototype.startNewGame;
@@ -70,7 +70,8 @@ if(useBuilt){
  const fullscreen=eventNode();
  context.document={getElementById:()=>fullscreen,addEventListener(){}};
  context.window={addEventListener(){}};
- context.TEXTOS={'pt-BR':{markSaved:'saved'}};
+ const mapText={markSaved:'saved',portLabel:'Port',northLabel:'North',suspectedSignal:'Suspected signal',signalMismatch:'GPS mismatch'};
+ context.TEXTOS={'pt-PT':mapText,'pt-BR':mapText};
  let enhancements=fs.readFileSync(path.join(base,'assets/js/app.js'),'utf8').replace(/\r\n/g,'\n');
  enhancements=enhancements.slice(enhancements.indexOf('// Fullscreen HUD controller'),enhancements.indexOf('function startGhostRoute'));
  vm.runInContext(enhancements,context);
@@ -93,12 +94,14 @@ if(useBuilt){
  const allEngine=fs.readFileSync(path.join(base,'assets/js/engine.js'),'utf8').replace(/\r\n/g,'\n');
  vm.runInContext(allEngine.slice(allEngine.indexOf('class TacticalMapRenderer'))+'\nthis.Renderer=TacticalMapRenderer;',context);
  const chart=Object.create(context.Renderer.prototype);
- chart.ctx=new Proxy({}, {get:(obj,key)=>obj[key]||(()=>{})});chart.worldToScreen=(x,y)=>({sx:x,sy:y});chart.scale=1;
+ chart.ctx=new Proxy({measureText:label=>({width:label.length*4})}, {get:(obj,key)=>obj[key]||(()=>{})});chart.worldToScreen=(x,y)=>({sx:x,sy:y});chart.scale=1;
+ chart.ox=0;chart.oy=0;chart.chartSize=100;chart.labelBoxes=[];chart.mapLabels=[];
  let labels=[];chart.text=label=>labels.push(label);
  const labelText={landingLabel:'Expected landing'};
  chart.drawTarget({currentTurn:8,turnsRecord:[{turn:7}]},labelText);
+ labels=chart.mapLabels.map(item=>item.label);
  assert.equal(labels.includes('AURORA-1'),false,'Capsule must remain hidden after completing turn 7');
- labels=[];chart.drawTarget({currentTurn:9,turnsRecord:[{turn:8}]},labelText);
+ chart.labelBoxes=[];chart.mapLabels=[];chart.drawTarget({currentTurn:9,turnsRecord:[{turn:8}]},labelText);labels=chart.mapLabels.map(item=>item.label);
  assert.equal(labels.includes('AURORA-1'),true,'Capsule must appear after completing turn 8');
  console.log('PASS capsule reveal follows completed turn 8');
  const historicalState={...markGame.state,currentTurn:3,currentHeading:90,realPosition:[30,15],gpsPosition:[30,15],inertialPosition:[30,15],inertialRadiusKm:2,turnsRecord:[{turn:3,markedSuspicious:false}],gpsHistory:[[10,15],[30,15]],realHistory:[[10,15],[30,15]],inertialHistory:[[10,15],[30,15]]};

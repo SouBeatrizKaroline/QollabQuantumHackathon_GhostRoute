@@ -8,9 +8,9 @@ This effort is supported by Qollab & IonQ
 
 **Ghost Route** is a fullscreen, 16-bit pixel-art rescue game set in the South Atlantic in 2031. The player steers **SPOOFED** toward the Aurora-1 capsule while an adversary supplies deceptive GPS readings. Quoora's simulated quantum sensor offers another source of evidence.
 
-The mission has 12 turns, a 6,000-shot measurement budget and a reef to avoid. At the end, the ship must be within 2 km of the capsule. Players flag observed suspicious GPS readings; a perfect rescue also detects all three attack types. False alarms are reported separately.
+The campaign has 100 levels, numbered 00–99, beginning with a guided four-turn voyage. Later missions vary the turn limit, measurement budget, currents and rescue radius. Players avoid reefs and flag observed suspicious GPS readings; a perfect rescue also detects every attack type present in that mission. False alarms are reported separately. The archived example retains the original twelve-turn mission, a 6,000-measurement budget and a 2 km rescue radius.
 
-The whole interface supports English, Brazilian Portuguese and Spanish. The name Ghost Route is the same in all three languages.
+The whole interface supports English, Portuguese from Portugal, Brazilian Portuguese and Spanish, with separate translations for both Portuguese variants. Portugal Portuguese is the default. Ghost Route retains its English name in all four languages. The game's own pixel ship emblem, nautical interface, mission menu and 32 directional ship sprites establish its visual identity. Local browser storage preserves the language, selected level and completed levels when available.
 
 ## Quantum contribution
 
@@ -29,7 +29,7 @@ This is a controlled educational simulation. It does not establish a spoof-proof
 
 ## Two execution paths
 
-The browser samples the analytical Born probabilities offline in JavaScript. The canonical root `sensor.py` builds and samples Qiskit circuits in Python.
+The browser samples the analytical Born probabilities offline in JavaScript. Root `sensor.py` builds and samples Qiskit circuits in Python. Root `main.py` is the Qollab Run entry point, using an injected platform backend and one combined eight-qubit circuit for simple/GHZ sensing in both X/Y bases. The entry point's presence does not establish that a platform run has occurred.
 
 Session export preserves world observations, phases, commands and sensor choices. `scripts/replay_session.py` uses those saved references and submits the session circuit PUBs in one sampler.run call. It takes fresh Qiskit measurements; JavaScript and Python use different random-number generators, so exact sample counts need not match.
 

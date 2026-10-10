@@ -23,7 +23,7 @@ git status
 Run the checks described in [../README.md](../README.md). Stage the files you intend to publish, review the staged diff, commit, and push the branch:
 
 ```sh
-git add public sensor.py scripts tests docs README.md requirements.txt vercel.json .gitignore examples
+git add public main.py sensor.py scripts tests docs README.md requirements.txt vercel.json .gitignore examples
 git diff --cached
 git commit -m "fix: improve game QA and localization"
 git push -u origin fix/game-qa
@@ -33,7 +33,7 @@ Open a pull request into `main` for review. The commands above are a suggested w
 
 ## Generated and local files
 
-Keep `.venv/`, Python caches and `dist/` out of Git. Qollab distributions are generated with `python scripts/package_qollab.py`; the maintained web source lives in `public/` and the Python entrypoint is root `sensor.py`.
+Keep `.venv/`, Python caches and `dist/` out of Git. Qollab distributions are generated with `python scripts/package_qollab.py`; the maintained web source lives in `public/`, the Qollab entrypoint is root `main.py`, and `sensor.py` contains the reusable quantum sensor.
 
 There is no required Git bundle or legacy archive in this project.
 

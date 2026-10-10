@@ -72,32 +72,48 @@ def calculate_phase(field, position):
 def validate_session(session):
     """Validate every record before building or submitting any quantum circuits."""
     _object(session, "session")
-    if session.get("projeto") != "Ghost Route" or session.get("versao") != "1.0.0":
-        raise SessionValidationError("Only Ghost Route export version 1.0.0 is supported")
+    version = session.get("versao")
+    if session.get("projeto") != "Ghost Route" or version not in ("1.0.0", "1.1.0"):
+        raise SessionValidationError("Only Ghost Route export versions 1.0.0 and 1.1.0 are supported")
+    campaign = version == "1.1.0"
+    if campaign:
+        _integer(session.get("nivel_campanha"), "nivel_campanha", 0, 99)
     _integer(session.get("semente"), "semente", 0, 2**32 - 1)
     mission = _object(session.get("configuracao_missao"), "configuracao_missao")
-    if _integer(mission.get("turnos"), "turnos", 1, 12) != 12:
+    max_turns = _integer(mission.get("turnos"), "turnos", 4 if campaign else 1, 12)
+    if not campaign and max_turns != 12:
         raise SessionValidationError("Version 1.0.0 requires the 12-turn mission")
     port = _coordinate(mission.get("porto"), "porto")
     ship = _object(mission.get("navio"), "navio")
     speed = _number(ship.get("velocidade_km_turno"), "velocidade_km_turno")
     if speed <= 0:
         raise SessionValidationError("velocidade_km_turno must be positive")
+    if campaign and not 5.5 <= speed <= 8.5:
+        raise SessionValidationError("Version 1.1.0 requires a ship speed between 5.5 and 8.5 km per turn")
     _number(ship.get("ruido_corrente_km"), "ruido_corrente_km", 0)
     sensor = _object(mission.get("sensor"), "sensor")
-    if _integer(sensor.get("shots_total"), "shots_total") != 6000 or _integer(sensor.get("ghz_n"), "ghz_n", 1, 3) != 3:
-        raise SessionValidationError("Version 1.0.0 requires a 6000-shot budget and GHZ n=3")
+    budget = _integer(sensor.get("shots_total"), "shots_total", 1 if campaign else 0, 100000 if campaign else None)
+    if not campaign and budget != 6000:
+        raise SessionValidationError("Version 1.0.0 requires a 6000-shot budget")
+    if _integer(sensor.get("ghz_n"), "ghz_n", 1, 3) != 3:
+        raise SessionValidationError("Ghost Route requires GHZ n=3")
     options = sensor.get("opcoes_shots")
     if not isinstance(options, list) or len(options) != 4 or [_integer(value, "opcoes_shots") for value in options] != [100, 250, 500, 1000]:
         raise SessionValidationError("Unsupported shot allocation options")
     capsule = _object(mission.get("capsula"), "capsula")
     capsule_position = _coordinate(capsule.get("pouso_real"), "pouso_real")
+    if campaign:
+        reef = mission.get("recife")
+        if not isinstance(reef, list) or len(reef) != 4:
+            raise SessionValidationError("Version 1.1.0 requires a four-vertex reef")
+        for index, vertex in enumerate(reef):
+            _coordinate(vertex, f"recife[{index}]")
     field = _object(mission.get("campo"), "campo")
     _number(field.get("base"), "campo.base")
     _number(field.get("kappa"), "campo.kappa")
     anomalies = field.get("anomalias")
     if not isinstance(anomalies, list) or len(anomalies) != 4:
-        raise SessionValidationError("Version 1.0.0 requires four magnetic anomalies")
+        raise SessionValidationError("Ghost Route requires four magnetic anomalies")
     for index, anomaly in enumerate(anomalies):
         prefix = f"campo.anomalias[{index}]"
         _object(anomaly, prefix)
@@ -108,16 +124,16 @@ def validate_session(session):
         if radius <= 0 or not math.isfinite(radius * radius) or radius * radius == 0:
             raise SessionValidationError(prefix + ".raio_km must have a positive finite square")
     records = session.get("registros_turnos")
-    if not isinstance(records, list) or len(records) > 12:
-        raise SessionValidationError("registros_turnos must be a list of at most 12 records")
-    if _integer(session.get("total_turnos"), "total_turnos", 0, 12) != len(records):
+    if not isinstance(records, list) or len(records) > max_turns:
+        raise SessionValidationError("registros_turnos must not exceed the mission's turn limit")
+    if _integer(session.get("total_turnos"), "total_turnos", 0, max_turns) != len(records):
         raise SessionValidationError("total_turnos disagrees with the record count")
     previous_real, previous_inertial = port, port
     spent = 0
     for index, record in enumerate(records):
         prefix = f"registros_turnos[{index}]"
         _object(record, prefix)
-        if _integer(record.get("turn"), prefix + ".turn", 1, 12) != index + 1:
+        if _integer(record.get("turn"), prefix + ".turn", 1, max_turns) != index + 1:
             raise SessionValidationError(prefix + ".turn must be contiguous and start at 1")
         heading = _number(record.get("heading"), prefix + ".heading", 0)
         if heading >= 360:
@@ -160,11 +176,11 @@ def validate_session(session):
             if not isinstance(record.get(key), bool):
                 raise SessionValidationError(prefix + f".{key} must be boolean")
         spent += shots
-        if spent > 6000 or _integer(record.get("remainingShots"), prefix + ".remainingShots", 0, 6000) != 6000 - spent:
+        if spent > budget or _integer(record.get("remainingShots"), prefix + ".remainingShots", 0, budget) != budget - spent:
             raise SessionValidationError(prefix + ".remainingShots disagrees with the shot budget")
         calculate_phase(field, after)
     final = _object(session.get("estatisticas_finais"), "estatisticas_finais")
-    if _integer(final.get("shots_economizados"), "shots_economizados", 0, 6000) != 6000 - spent:
+    if _integer(final.get("shots_economizados"), "shots_economizados", 0, budget) != budget - spent:
         raise SessionValidationError("Final saved shots disagree with the accumulated budget")
     if not isinstance(final.get("casco_encalhado"), bool):
         raise SessionValidationError("casco_encalhado must be boolean")
@@ -186,7 +202,7 @@ def replay_session(session, sampler=None, validate_only=False):
     validate_session(session)
     records = session["registros_turnos"]
     report = {
-        "project": "Ghost Route", "exportVersion": "1.0.0", "seed": session["semente"],
+        "project": "Ghost Route", "exportVersion": session["versao"], "seed": session["semente"],
         "valid": True, "totalTurns": len(records), "remainingShots": session["estatisticas_finais"]["shots_economizados"],
         "execution": {"submittedJobs": 0, "circuitCount": 0, "maxQubits": 0, "validateOnly": validate_only,
                       "officialQollabVerified": False, "samplerClass": None},
@@ -194,6 +210,8 @@ def replay_session(session, sampler=None, validate_only=False):
         "trajectory": [{key: record[key] for key in ("turn", "heading", "realBefore", "realAfter", "gpsReported", "inertial", "markedSuspicious")} for record in records],
         "readings": [],
     }
+    if session["versao"] == "1.1.0":
+        report["campaignLevel"] = session["nivel_campanha"]
     if validate_only:
         return report
     field = session["configuracao_missao"]["campo"]

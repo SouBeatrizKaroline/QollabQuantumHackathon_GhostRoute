@@ -35,7 +35,7 @@ class CountingSampler:
 
 
 def set_shots(session, allocations, modes=None):
-    remaining = 6000
+    remaining = session["configuracao_missao"]["sensor"]["shots_total"]
     for index, (record, shots) in enumerate(zip(session["registros_turnos"], allocations)):
         mode = modes[index] if modes else record["sensorMode"]
         record.update(sensorMode=mode if shots else "none", shots=shots, NX=shots // 2, NY=shots // 2)
@@ -139,3 +139,92 @@ def test_json_nan_is_rejected_when_loading(tmp_path):
     malformed.write_text('{"value":NaN}', encoding="utf-8")
     with pytest.raises(bridge.SessionValidationError, match="non-finite"):
         bridge.load_session(malformed)
+
+
+def campaign_export(session, level=0, turns=4, budget=3000, speed=5.5):
+    """A shorter campaign has its own movement, budget and final distance."""
+    session = deepcopy(session)
+    session.update(versao="1.1.0", nivel_campanha=level, total_turnos=turns)
+    mission = session["configuracao_missao"]
+    mission["turnos"] = turns
+    mission["sensor"]["shots_total"] = budget
+    mission["navio"]["velocidade_km_turno"] = speed
+    session["registros_turnos"] = session["registros_turnos"][:turns]
+    inertial = mission["porto"]
+    for record in session["registros_turnos"]:
+        radians = math.radians(record["heading"])
+        dx, dy = speed * math.sin(radians), speed * math.cos(radians)
+        record["commanded"] = {"dx": dx, "dy": dy}
+        inertial = [max(0, min(100, inertial[0] + dx)), max(0, min(100, inertial[1] + dy))]
+        record["inertial"] = inertial
+    final_position = session["registros_turnos"][-1]["realAfter"] if turns else mission["porto"]
+    session["estatisticas_finais"]["distancia_capsula_km"] = math.dist(final_position, mission["capsula"]["pouso_real"])
+    set_shots(session, [100] * turns if budget >= turns * 100 else [0] * turns)
+    return session
+
+
+@pytest.mark.parametrize("level,turns,budget,speed", [(0, 4, 3000, 5.5), (99, 12, 8000, 8.5), (50, 8, 1, 7.5), (99, 12, 100000, 8.5)])
+def test_campaign_version_preserves_level_and_uses_exported_limits(session, level, turns, budget, speed):
+    exported = campaign_export(session, level, turns, budget, speed)
+    sampler = CountingSampler()
+    report = bridge.replay_session(exported, sampler=sampler, validate_only=True)
+    assert sampler.calls == 0
+    assert report["exportVersion"] == "1.1.0"
+    assert report["campaignLevel"] == level
+    assert report["totalTurns"] == turns
+    assert report["remainingShots"] == exported["estatisticas_finais"]["shots_economizados"]
+    assert report["trajectory"][-1]["inertial"] == exported["registros_turnos"][-1]["inertial"]
+
+
+def test_campaign_replay_samples_short_mission_once_and_honors_its_budget(session):
+    exported = campaign_export(session, level=7, turns=4, budget=3000)
+    set_shots(exported, [100, 250, 500, 1000], ["simple", "ghz", "simple", "ghz"])
+    sampler = CountingSampler()
+    report = bridge.replay_session(exported, sampler=sampler)
+    assert sampler.calls == 1
+    assert len(sampler.pubs) == 8
+    assert report["campaignLevel"] == 7
+    assert report["remainingShots"] == 1150
+    assert report["execution"]["officialQollabVerified"] is False
+    assert [pub[2] for pub in sampler.pubs] == [50, 50, 125, 125, 250, 250, 500, 500]
+    assert [reading["turn"] for reading in report["readings"]] == [1, 2, 3, 4]
+
+
+@pytest.mark.parametrize("mutation", [
+    lambda s: s.pop("nivel_campanha"),
+    lambda s: s.update(nivel_campanha=-1),
+    lambda s: s.update(nivel_campanha=100),
+    lambda s: s.update(nivel_campanha=True),
+    lambda s: s.update(nivel_campanha=1.5),
+    lambda s: s["configuracao_missao"].update(turnos=3),
+    lambda s: s["configuracao_missao"].update(turnos=13),
+    lambda s: s["configuracao_missao"]["sensor"].update(shots_total=0),
+    lambda s: s["configuracao_missao"]["sensor"].update(shots_total=100001),
+    lambda s: s["configuracao_missao"]["sensor"].update(ghz_n=2),
+    lambda s: s["configuracao_missao"]["navio"].update(velocidade_km_turno=5.49),
+    lambda s: s["configuracao_missao"]["navio"].update(velocidade_km_turno=8.51),
+    lambda s: s["configuracao_missao"]["campo"]["anomalias"].pop(),
+    lambda s: s["configuracao_missao"]["recife"].pop(),
+    lambda s: s["configuracao_missao"]["recife"][0].__setitem__(0, float("inf")),
+    lambda s: s["configuracao_missao"]["sensor"].update(shots_total=399),
+    lambda s: s["registros_turnos"].append(deepcopy(s["registros_turnos"][-1])),
+    lambda s: s["registros_turnos"][1].update(remainingShots=2799),
+    lambda s: s["estatisticas_finais"].update(shots_economizados=6000),
+])
+def test_invalid_campaign_is_rejected_before_any_job(session, mutation):
+    exported = campaign_export(session)
+    mutation(exported)
+    sampler = CountingSampler()
+    with pytest.raises(bridge.SessionValidationError):
+        bridge.replay_session(exported, sampler=sampler)
+    assert sampler.calls == 0
+
+
+@pytest.mark.parametrize("field,value", [("turnos", 4), ("shots_total", 3000)])
+def test_legacy_export_cannot_claim_campaign_limits(session, field, value):
+    if field == "turnos":
+        session["configuracao_missao"][field] = value
+    else:
+        session["configuracao_missao"]["sensor"][field] = value
+    with pytest.raises(bridge.SessionValidationError, match="Version 1.0.0"):
+        bridge.validate_session(session)

@@ -4,9 +4,12 @@ class GhostRouteApp {
     this.avatarCtx = document.getElementById('avatar-canvas').getContext('2d');
     this.estimator = new BayesianGridEstimator();
 
-    this.currentLang = 'pt-BR';
+    const preferences = readPreferences();
+    this.currentLang = Object.hasOwn(TEXTOS,preferences.language) ? preferences.language : 'pt-PT';
+    this.levelNumber = Number.isInteger(preferences.level) && preferences.level>=0 && preferences.level<=99 ? preferences.level : 0;
+    this.completedLevels = new Set(Array.isArray(preferences.completed) ? preferences.completed.filter(n=>Number.isInteger(n)&&n>=0&&n<=99) : []);
     this.debugMode = false;
-    this.seed = 20261011;
+    this.seed = 20261011 + this.levelNumber * 7919;
 
     this.initDOM();
     this.bindEvents();
@@ -15,6 +18,7 @@ class GhostRouteApp {
     autotesteSensor();
 
     this.startNewGame(this.seed);
+    this.openMissionMenu();
   }
 
   initDOM() {
@@ -47,8 +51,7 @@ class GhostRouteApp {
 
   bindEvents() {
     this.langSelect.addEventListener('change', (e) => {
-      this.currentLang = e.target.value;
-      this.updateLocalization();
+      this.changeLanguage(e.target.value);
     });
 
     this.headingSlider.addEventListener('input', (e) => {
@@ -91,6 +94,7 @@ class GhostRouteApp {
     this.btnExportJson.addEventListener('click', () => this.exportDecisionsJSON());
 
     window.addEventListener('keydown', (e) => {
+      if (this.missionMenu && !this.missionMenu.hidden) return;
       if (e.target.closest('input, select, button') || e.target.isContentEditable) return;
       if (this.replayModal.style.display === 'flex') return;
       if (e.key === 'Enter' || e.key === ' ') {
@@ -205,24 +209,23 @@ class GhostRouteApp {
 
     // 4. Apply GPS Spoofing Attacks
     let reportedGPS = [...nextReal];
-    // Jump attack (Turn 4)
-    if (turn === 4) {
-      reportedGPS[0] += MISSAO.ataques[0].deslocamento_km[0];
-      reportedGPS[1] += MISSAO.ataques[0].deslocamento_km[1];
+    const attacks = activeAttacks(turn), jump = attacks.find(a=>a.tipo==='salto'), drift = attacks.find(a=>a.tipo==='deriva');
+    if (jump) {
+      reportedGPS[0] += jump.deslocamento_km[0];
+      reportedGPS[1] += jump.deslocamento_km[1];
     }
-    // Drift attack (Turns 6 to 10)
-    if (turn >= 6 && turn <= 10) {
-      this.driftAccum[0] += MISSAO.ataques[1].km_por_turno[0];
-      this.driftAccum[1] += MISSAO.ataques[1].km_por_turno[1];
+    if (drift) {
+      this.driftAccum[0] += drift.km_por_turno[0];
+      this.driftAccum[1] += drift.km_por_turno[1];
       reportedGPS[0] += this.driftAccum[0];
       reportedGPS[1] += this.driftAccum[1];
-    } else if (turn > 10) {
+    } else {
       this.driftAccum = [0.0, 0.0]; // Drift resets when attack ends
     }
 
     // Freeze attack (Turns 9 and 10)
-    if (turn >= 9 && turn <= 10) {
-      if (!this.frozenGpsPos && this.state.gpsHistory.length >= 8) {
+    if (attacks.some(a=>a.tipo==='congelamento')) {
+      if (!this.frozenGpsPos) {
         this.frozenGpsPos = [...this.state.gpsHistory[this.state.gpsHistory.length - 1]]; // Turn 8 displayed position
       }
       if (this.frozenGpsPos) {
@@ -282,7 +285,8 @@ class GhostRouteApp {
     this.recordTurnDecisions(commanded, prevReal, nextReal, kX, NX, kY, NY, mode, actualShots, phaseCandidates, gpsInside);
 
     // Advance Turn Counter
-    if (this.state.isAground || turn >= this.state.maxTurns) {
+    const rescued = this.levelNumber !== undefined && Math.hypot(nextReal[0]-MISSAO.capsula.pouso_real[0],nextReal[1]-MISSAO.capsula.pouso_real[1])<=MISSAO.vitoria.raio_resgate_km;
+    if (this.state.isAground || rescued || turn >= this.state.maxTurns) {
       this.state.isFinished = true;
       this.openReplayModal();
     } else {
@@ -436,20 +440,8 @@ class GhostRouteApp {
     let attacksDetected = 0;
     let falseAlarms = 0;
 
-    // Jump attack on turn 4
-    const turn4 = this.state.turnsRecord.find(r => r.turn === 4);
-    if (turn4 && turn4.markedSuspicious) attacksDetected++;
-
-    // Drift attack on turns 6 to 10
-    const driftRecord = this.state.turnsRecord.filter(r => r.turn >= 6 && r.turn <= 10 && r.markedSuspicious);
-    if (driftRecord.length > 0) attacksDetected++;
-
-    // Freeze attack on turns 9 to 10
-    const freezeRecord = this.state.turnsRecord.filter(r => (r.turn === 9 || r.turn === 10) && r.markedSuspicious);
-    if (freezeRecord.length > 0) attacksDetected++;
-
-    // False alarms (marked on honest turns 1, 2, 3, 5, 11, 12)
-    const honestMarks = this.state.turnsRecord.filter(r => [1, 2, 3, 5, 11, 12].includes(r.turn) && r.markedSuspicious);
+    attacksDetected = MISSAO.ataques.filter(a=>this.state.turnsRecord.some(r=>r.markedSuspicious&&r.turn>=a.inicio&&r.turn<=a.fim)).length;
+    const honestMarks = this.state.turnsRecord.filter(r => !activeAttacks(r.turn).length && r.markedSuspicious);
     falseAlarms = honestMarks.length;
 
     // Final capsule distance
@@ -457,7 +449,7 @@ class GhostRouteApp {
     const dy = this.state.realPosition[1] - MISSAO.capsula.pouso_real[1];
     const finalDist = Math.hypot(dx, dy);
 
-    document.getElementById('val-rep-score').textContent = `${attacksDetected} / 3`;
+    document.getElementById('val-rep-score').textContent = `${attacksDetected} / ${MISSAO.ataques.length}`;
     document.getElementById('val-rep-false').textContent = `${falseAlarms}`;
     document.getElementById('val-rep-dist').textContent = `${finalDist.toFixed(1)} km`;
     document.getElementById('val-rep-shots').textContent = `${this.state.remainingShots}`;
@@ -470,7 +462,10 @@ class GhostRouteApp {
       banner.classList.add("outcome-aground");
       banner.textContent = t.endingAground;
     } else if (finalDist <= MISSAO.vitoria.raio_resgate_km) {
-      if (attacksDetected === 3) {
+      if (MISSAO.ataques.length === 0) {
+        banner.classList.add('outcome-rescue');
+        banner.textContent = fillText(t.levelCompleted,{level:String(this.levelNumber).padStart(2,'0')}) + ' · AURORA-1 ✓';
+      } else if (attacksDetected === MISSAO.ataques.length) {
         banner.classList.add("outcome-perfect");
         banner.textContent = t.endingPerfect;
       } else {
@@ -491,7 +486,8 @@ class GhostRouteApp {
   exportDecisionsJSON() {
     const exportData = {
       projeto: "Ghost Route",
-      versao: "1.0.0",
+      versao: this.levelNumber === undefined ? "1.0.0" : "1.1.0",
+      ...(this.levelNumber === undefined ? {} : {nivel_campanha:this.levelNumber}),
       hackathon: "Qollab x IonQ Quantum Hackathon 2026",
       equipe: "QuantGirls",
       atribuicao: "This effort is supported by Qollab & IonQ",
@@ -661,7 +657,7 @@ GhostRouteApp.prototype.updateTelemetryUI = function () {
   this.chkSuspicious.checked = Boolean(rec?.markedSuspicious);
   document.getElementById('txt-advance').textContent = this.state.isFinished ? t.btnViewReplay : t.advanceTurn;
   const map = this.estimator.getMAP();
-  const target = completed >= 8 ? MISSAO.capsula.pouso_real : MISSAO.capsula.elipse_prevista.centro;
+  const target = completed >= MISSAO.capsula.turno_revelacao ? MISSAO.capsula.pouso_real : MISSAO.capsula.elipse_prevista.centro;
   document.getElementById('map-description').textContent = fillText(t.mapDescription, {
     x:numberText(map[0],this.currentLang), y:numberText(map[1],this.currentLang), distance:numberText(Math.hypot(map[0]-target[0],map[1]-target[1]),this.currentLang),
     turn:completed, alerts:(!rec?t.gpsPending:aligned?t.gpsAligned:t.gpsMismatch)
@@ -687,11 +683,14 @@ GhostRouteApp.prototype.updateNarrative = function () {
 };
 
 GhostRouteApp.prototype.startNewGame = function (seed) {
+  if (this.levelNumber !== undefined) useCampaignMission(this.levelNumber);
   this.sensorModeSelect.value = 'simple';
   this.sensorShotsSelect.value = '500';
   this.replayModal.style.display = 'none';
   this.renderer.displayWorld = null;
   this.renderer.target = null;
+  this.renderer.visualHeading = null;
+  this.renderer.headingTarget = null;
   this.alertGps.style.display = 'none';
   this.alertReef.style.display = 'none';
   baseStart.call(this, seed);
@@ -722,6 +721,8 @@ GhostRouteApp.prototype.renderMap = function () {
 
 GhostRouteApp.prototype.updateFullscreenLabel = function () {
   document.getElementById('btn-fullscreen').textContent = TEXTOS[this.currentLang][document.fullscreenElement ? 'exitFullscreen' : 'fullscreen'];
+  const menuButton=document.getElementById('btn-menu-fullscreen');
+  if(menuButton)menuButton.textContent=TEXTOS[this.currentLang][document.fullscreenElement ? 'exitFullscreen' : 'menuFullscreen'];
 };
 
 GhostRouteApp.prototype.bindEvents = function () {
@@ -741,6 +742,7 @@ GhostRouteApp.prototype.bindEvents = function () {
     e.currentTarget.setAttribute('aria-expanded',String(open));
     e.currentTarget.textContent = open ? '▲' : '▼';
     this.updateRadioLabel();
+    this.renderMap();
   });
   document.getElementById('btn-fullscreen').addEventListener('click', async () => {
     try {
@@ -799,9 +801,10 @@ GhostRouteApp.prototype.renderScrubberTurn = function (turnIndex) {
   const timeline=document.getElementById('attack-timeline'); timeline.replaceChildren(); timeline.setAttribute('aria-label',t.timelineLabel);
   for (const r of this.state.turnsRecord) {
     const names=[], symbols=[];
-    if(r.turn===4){names.push(t.attackJump);symbols.push(t.jumpCode);}
-    if(r.turn>=6&&r.turn<=10){names.push(t.attackDrift);symbols.push(t.driftCode);}
-    if(r.turn===9||r.turn===10){names.push(t.attackFreeze);symbols.push(t.freezeCode);}
+    const active=activeAttacks(r.turn);
+    if(active.some(a=>a.tipo==='salto')){names.push(t.attackJump);symbols.push(t.jumpCode);}
+    if(active.some(a=>a.tipo==='deriva')){names.push(t.attackDrift);symbols.push(t.driftCode);}
+    if(active.some(a=>a.tipo==='congelamento')){names.push(t.attackFreeze);symbols.push(t.freezeCode);}
     const btn=document.createElement('button');btn.type='button';btn.className='timeline-cell'+(names.length?' attack':'')+(r.markedSuspicious?' marked':'')+(r.turn===rec.turn?' current':'');
     btn.dataset.turn = String(r.turn);
     btn.textContent=`${r.turn}${symbols.length?' '+symbols.join(''):''}${r.markedSuspicious?' !':''}`;
@@ -821,6 +824,126 @@ GhostRouteApp.prototype.renderScrubberTurn = function (turnIndex) {
     gpsHistory:[[...MISSAO.porto],...this.state.turnsRecord.slice(0,turnIndex).map(r=>r.gpsReported)],
     inertialHistory:[[...MISSAO.porto],...this.state.turnsRecord.slice(0,turnIndex).map(r=>r.inertial)]
   },this.estimator,true,true);
+};
+
+function readPreferences(){
+  try { const value=JSON.parse(window.localStorage.getItem('ghost-route.preferences')||'{}');return value&&typeof value==='object'?value:{}; }
+  catch { return {}; }
+}
+GhostRouteApp.prototype.savePreferences = function(){
+  try { window.localStorage.setItem('ghost-route.preferences',JSON.stringify({language:this.currentLang,level:this.levelNumber,completed:[...(this.completedLevels||[])]})); }
+  catch { /* Storage restrictions must not prevent playing. */ }
+};
+GhostRouteApp.prototype.changeLanguage = function(lang){
+  if(!Object.hasOwn(TEXTOS,lang))return;
+  this.currentLang=lang;this.savePreferences();this.updateLocalization();
+};
+GhostRouteApp.prototype.levelBand = function(level){
+  return level===0?'levelTutorial':level<10?'levelBeginner':level<30?'levelIntermediate':level<60?'levelAdvanced':'levelExpert';
+};
+GhostRouteApp.prototype.updateCampaignMenu = function(){
+  if(this.levelNumber===undefined)return;
+  const t=TEXTOS[this.currentLang],select=document.getElementById('level-select');
+  this.langSelect.value=this.currentLang;
+  document.getElementById('menu-lang-select').value=this.currentLang;
+  const selected=select.options?.length?Number(select.value):this.levelNumber;
+  select.replaceChildren();
+  for(let level=0;level<100;level++){
+    const option=document.createElement('option');option.value=String(level);
+    option.textContent=`${String(level).padStart(2,'0')} · ${t[this.levelBand(level)]}${this.completedLevels?.has(level)?' ✓':''}`;select.appendChild(option);
+  }
+  select.value=String(selected);
+  document.getElementById('current-level').textContent=fillText(t.levelName,{level:String(this.levelNumber).padStart(2,'0')});
+  document.getElementById('level-progress').textContent=fillText(t.progressLabel,{completed:this.completedLevels?.size||0});
+  document.getElementById('mission-badge').textContent=`${fillText(t.levelName,{level:String(this.levelNumber).padStart(2,'0')})} · ${t[this.levelBand(this.levelNumber)]}`;
+  document.getElementById('menu-primary-label').textContent=this.state?.isFinished?t.btnViewReplay:this.state?.turnsRecord.length?t.menuContinue:t.menuStart;
+  const m=createCampaignMission(selected);
+  document.getElementById('level-difficulty').textContent=t[this.levelBand(selected)];
+  document.getElementById('level-description').textContent=fillText(t.levelBrief,{turns:m.turnos,budget:numberText(m.sensor.shots_total,this.currentLang,0),radius:numberText(m.vitoria.raio_resgate_km,this.currentLang)});
+  const next=document.getElementById('btn-next-level');
+  next.hidden=!(this.state?.isFinished&&!this.state.isAground&&Math.hypot(this.state.realPosition[0]-MISSAO.capsula.pouso_real[0],this.state.realPosition[1]-MISSAO.capsula.pouso_real[1])<=MISSAO.vitoria.raio_resgate_km&&this.levelNumber<99);
+};
+GhostRouteApp.prototype.openMissionMenu = function(){
+  this.missionMenu=document.getElementById('mission-menu');
+  this.menuPreviousFocus=document.activeElement;
+  this.replayModal.style.display='none';
+  this.updateCampaignMenu();this.missionMenu.hidden=false;
+  document.getElementById('game-shell').inert=true;
+  document.getElementById('btn-menu-primary').focus();
+};
+GhostRouteApp.prototype.closeMissionMenu = function(){
+  this.missionMenu.hidden=true;document.getElementById('game-shell').inert=false;
+  const previous=this.menuPreviousFocus;
+  (previous?.isConnected&&previous.matches?.('button,select,input,summary,[tabindex]')?previous:this.renderer.canvas).focus();
+};
+GhostRouteApp.prototype.beginCampaignLevel = function(level){
+  if(!Number.isInteger(level)||level<0||level>99)return;
+  this.levelNumber=level;this.debugMode=false;this.debugBadge.style.display='none';
+  this.startNewGame(20261011+level*7919);this.savePreferences();
+  document.getElementById('level-select').value=String(level);this.updateCampaignMenu();this.closeMissionMenu();
+};
+const campaignLocalization=GhostRouteApp.prototype.updateLocalization;
+GhostRouteApp.prototype.updateLocalization=function(){campaignLocalization.call(this);this.updateCampaignMenu();};
+const campaignTelemetry=GhostRouteApp.prototype.updateTelemetryUI;
+GhostRouteApp.prototype.updateTelemetryUI=function(){
+  campaignTelemetry.call(this);
+  if(this.levelNumber===undefined)return;
+  const t=TEXTOS[this.currentLang];
+  document.getElementById('val-speed').textContent=fillText(t.speedFormat,{speed:numberText(MISSAO.navio.velocidade_km_turno,this.currentLang)});
+};
+const campaignNarrative=GhostRouteApp.prototype.updateNarrative;
+GhostRouteApp.prototype.updateNarrative=function(){
+  campaignNarrative.call(this);
+  document.querySelectorAll('.tutorial-focus').forEach(el=>el.classList.remove('tutorial-focus'));
+  if(this.levelNumber===undefined||this.state.isFinished)return;
+  const t=TEXTOS[this.currentLang],turn=this.state.turnsRecord.length;
+  const tutorial=['tutorialHeading','tutorialSensor','tutorialGps','tutorialRescue'];
+  document.getElementById('dialogue-box').textContent=this.levelNumber===0?t[tutorial[Math.min(turn,3)]]:
+    fillText(t.levelIntro,{turns:MISSAO.turnos,radius:numberText(MISSAO.vitoria.raio_resgate_km,this.currentLang)});
+  document.getElementById('speaker-name').textContent=t.speakerQuoora;
+  document.getElementById('speaker-role').textContent=this.levelNumber===0?t.trainingMode:t.roleQuoora;
+  this.dialogueNav.style.display='none';
+  if(this.levelNumber===0){
+    const selectors=['.heading-module','.sensor-module','.telemetry-strip','.action-module'];
+    document.querySelector(selectors[Math.min(turn,3)])?.classList.add('tutorial-focus');
+  }
+};
+const campaignReplay=GhostRouteApp.prototype.openReplayModal;
+GhostRouteApp.prototype.openReplayModal=function(){
+  campaignReplay.call(this);
+  if(this.levelNumber===undefined)return;
+  const success=!this.state.isAground&&Math.hypot(this.state.realPosition[0]-MISSAO.capsula.pouso_real[0],this.state.realPosition[1]-MISSAO.capsula.pouso_real[1])<=MISSAO.vitoria.raio_resgate_km;
+  if(success){this.completedLevels.add(this.levelNumber);this.savePreferences();}
+  if(this.completedLevels.size===100){
+    document.getElementById('outcome-banner').textContent=TEXTOS[this.currentLang].campaignComplete;
+    this.updateNarrative();
+  }
+  this.updateCampaignMenu();
+};
+const campaignBind=GhostRouteApp.prototype.bindEvents;
+GhostRouteApp.prototype.bindEvents=function(){
+  campaignBind.call(this);
+  if(this.levelNumber===undefined)return;
+  this.missionMenu=document.getElementById('mission-menu');
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&this.missionMenu.hidden&&this.replayModal.style.display!=='flex'){e.preventDefault();this.openMissionMenu();}});
+  document.getElementById('btn-menu').addEventListener('click',()=>this.openMissionMenu());
+  document.getElementById('btn-menu-close').addEventListener('click',()=>this.closeMissionMenu());
+  document.getElementById('btn-menu-primary').addEventListener('click',()=>{this.closeMissionMenu();if(this.state.isFinished)this.openReplayModal();});
+  document.getElementById('menu-lang-select').addEventListener('change',e=>this.changeLanguage(e.target.value));
+  document.getElementById('level-select').addEventListener('change',()=>this.updateCampaignMenu());
+  document.getElementById('btn-start-level').addEventListener('click',()=>this.beginCampaignLevel(Number(document.getElementById('level-select').value)));
+  document.getElementById('btn-next-level').addEventListener('click',()=>this.beginCampaignLevel(this.levelNumber+1));
+  document.getElementById('btn-menu-restart').addEventListener('click',()=>{this.startNewGame(this.seed);this.closeMissionMenu();});
+  document.getElementById('btn-menu-export').addEventListener('click',()=>this.exportDecisionsJSON());
+  document.getElementById('btn-menu-fullscreen').addEventListener('click',()=>document.getElementById('btn-fullscreen').click());
+  this.missionMenu.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){e.preventDefault();this.closeMissionMenu();return;}
+    if(e.key!=='Tab')return;
+    const elements=Array.from(this.missionMenu.querySelectorAll('button:not(:disabled),select,summary')).filter(el=>el.getClientRects().length);
+    const first=elements[0],last=elements.at(-1);
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+  });
 };
 
 function startGhostRoute(){ drawTitle(); window.gameApp = new GhostRouteApp(); }

@@ -13,7 +13,7 @@ import zipfile
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-ROOT_FILES = ("sensor.py", "requirements.txt", "README.md", "LICENSE", "vercel.json")
+ROOT_FILES = ("main.py", "sensor.py", "requirements.txt", "README.md", "LICENSE", "vercel.json")
 SOURCE_DIRECTORIES = ("public", "scripts", "examples", "docs", "tests")
 EXCLUDED_PARTS = {"__pycache__", ".pytest_cache", ".ruff_cache", ".git", ".venv"}
 REQUIRED_FILES = (
@@ -59,8 +59,12 @@ python -m http.server 8000 --directory public
 
 The web interface samples the Ramsey model in JavaScript. It does not invoke
 Qiskit or IonQ hardware. `sensor.py` is the canonical Qiskit module; this
-package does not introduce a Qollab backend or runner contract. Configure the
-Qollab runtime according to its supported execution interface before submitting.
+package includes root `main.py` as the Qollab Python entrypoint. Upload the
+extracted files preserving the root, select a free simulator and press Run.
+Qollab calls its annotated main function; do not add a manual call. It uses the
+injected `backend` and measures simple/GHZ X/Y in one 8-qubit circuit and one job.
+Test both a local free simulator and the IonQ simulator on the actual platform.
+Local tests do not establish that this uploaded version ran on Qollab.
 
 This effort is supported by Qollab & IonQ
 """
