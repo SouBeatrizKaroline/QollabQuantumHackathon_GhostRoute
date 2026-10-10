@@ -32,7 +32,8 @@ const context=vm.createContext({console,Math,Intl,Float32Array,Set,document,wind
 const read=name=>fs.readFileSync(path.join(root,'assets/js',name),'utf8').replace(/\r\n/g,'\n');
 let engine=read('engine.js');engine=engine.slice(0,engine.indexOf('/* =========================================================================='+'\n   RENDER'));
 let app=read('app.js');app=app.slice(0,app.indexOf('function startGhostRoute'));
-vm.runInContext(read('i18n.js')+'\n'+engine+'\n'+app+'\nthis.API={GhostRouteApp,BayesianGridEstimator,TEXTOS};',context);
+get('sensor-intro').hidden=true;get('feature-intro').hidden=true;
+vm.runInContext(read('i18n.js')+'\n'+engine+'\n'+read('audio.js')+'\n'+read('onboarding.js')+'\n'+app+'\ninstallMissionExperience(GhostRouteApp);this.API={GhostRouteApp,BayesianGridEstimator,TEXTOS};',context);
 const a=context.API;
 const game=Object.create(a.GhostRouteApp.prototype);
 game.renderer={canvas:node(),resize(){},render(){},worldToScreen(x,y){return{sx:x,sy:y};}};game.avatarCtx={};game.estimator=new a.BayesianGridEstimator();
@@ -87,7 +88,7 @@ campaign.renderer={canvas:node(),resize(){},render(){},worldToScreen(x,y){return
 campaign.avatarCtx={};campaign.estimator=new a.BayesianGridEstimator();campaign.currentLang='pt-BR';campaign.levelNumber=0;campaign.completedLevels=new Set();campaign.debugMode=false;
 campaign.initDOM();campaign.bindEvents();campaign.startNewGame(20261011);campaign.closeMissionMenu();
 assert.equal(campaign.state.maxTurns,4);assert.match(get('dialogue-box').textContent,/045°/);
-for(let i=0;i<4;i++)campaign.advanceTurn();
+for(let i=0;i<4;i++){while(campaign.introQueue.length)campaign.ackFeature();campaign.advanceTurn();}
 assert.equal(campaign.state.isFinished,true);assert.equal(campaign.state.isAground,false);
 assert.ok(campaign.completedLevels.has(0));assert.equal(get('btn-next-level').hidden,false);
 assert.equal(get('outcome-banner').textContent.includes(a.TEXTOS['pt-BR'].endingRescue),false,'No-attack tutorial must not claim an attack was missed');
@@ -103,7 +104,7 @@ assert.equal(data.estatisticas_finais.casco_encalhado,false);
 if(process.env.GHOST_ROUTE_CAMPAIGN_EXPORT)fs.writeFileSync(process.env.GHOST_ROUTE_CAMPAIGN_EXPORT,JSON.stringify(data,null,2)+'\n');
 get('btn-next-level').click();assert.equal(campaign.levelNumber,1);assert.equal(campaign.state.isFinished,false);
 assert.equal(campaign.replayModal.style.display,'none');assert.equal(campaign.missionMenu.hidden,true);
-campaign.setHeading(270);while(!campaign.state.isFinished)campaign.advanceTurn();
+campaign.setHeading(270);while(!campaign.state.isFinished){while(campaign.introQueue.length)campaign.ackFeature();campaign.advanceTurn();}
 assert.equal(campaign.completedLevels.has(1),false,'An unsuccessful mission cannot complete a level');
 assert.equal(get('btn-next-level').hidden,true,'An unsuccessful mission cannot offer progression');
 campaign.completedLevels.add(1);campaign.updateCampaignMenu();
