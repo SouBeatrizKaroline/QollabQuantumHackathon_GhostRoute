@@ -1,4 +1,4 @@
-# Ghost Route
+# Ghost Route 
 
 A fullscreen, 16-bit pixel-art navigation game by QuantGirls for the Qollab × IonQ hackathon. Rescue the Aurora-1 crew aboard **SPOOFED**, navigate around a reef and rock fields, and identify deceptive GPS readings with Quoora's simulated quantum sensor.
 
