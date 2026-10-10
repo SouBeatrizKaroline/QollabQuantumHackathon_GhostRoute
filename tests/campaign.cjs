@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const engine=fs.readFileSync(path.join(__dirname,'../public/assets/js/engine.js'),'utf8');
 const context=vm.createContext({Math,console,Float32Array});
-vm.runInContext(engine.slice(0,engine.indexOf('/* =========================================================================='+'\n   RENDER'))+'\nthis.API={MISSAO,createCampaignMission,useCampaignMission,checkReefCollision,activeAttacks,mulberry32,gaussianRandom,headingToVector};',context);
+vm.runInContext(engine.slice(0,engine.indexOf('/* =========================================================================='+'\n   RENDER'))+'\nthis.API={MISSAO,createCampaignMission,useCampaignMission,checkReefCollision,hitsObstacle,distToObstacles,activeAttacks,mulberry32,gaussianRandom,headingToVector};',context);
 const a=context.API,missions=Array.from({length:100},(_,i)=>a.createCampaignMission(i));
 assert.equal(new Set(missions.map(m=>JSON.stringify(m))).size,100);
 for(const bad of[-1,100,1.5,NaN,'0'])assert.throws(()=>a.createCampaignMission(bad));
@@ -19,19 +19,25 @@ for(let level=0;level<100;level++){
     assert.ok(m.navio.ruido_corrente_km>=previous.navio.ruido_corrente_km,'Current uncertainty increases');
     assert.ok(m.turnos>=previous.turnos,'Mission length increases');
   }
-  // A route south of the reef, then to the target, fits the available travel.
-  const waypoint=level<10?m.porto:[m.recife[1][0]+4,m.recife[0][1]-3];
-  assert.equal(a.checkReefCollision(m.porto,waypoint,m.recife),false);
-  assert.equal(a.checkReefCollision(waypoint,m.capsula.pouso_real,m.recife),false);
-  const routeLength=Math.hypot(waypoint[0]-m.porto[0],waypoint[1]-m.porto[1])+Math.hypot(m.capsula.pouso_real[0]-waypoint[0],m.capsula.pouso_real[1]-waypoint[1]);
-  assert.ok(routeLength<=m.turnos*m.navio.velocidade_km_turno,'Collision-free route fits the turn budget');
+  // From level 1 the capsule lands on the far side of the chart, among rocks.
+  const obstacles=[m.recife,...m.pedras];
+  if(level>0){
+    assert.ok(Math.hypot(m.capsula.pouso_real[0]-m.porto[0],m.capsula.pouso_real[1]-m.porto[1])>=90,'Rescue lies across the chart');
+    assert.ok(m.pedras.length>=2&&m.pedras.length>=(previous?.pedras.length||0),'Rocks never decrease');
+  } else assert.equal(m.pedras.length,0,'The tutorial has no rocks');
+  for(const poly of obstacles){
+    assert.ok(poly.length>=4&&poly.every(p=>p.every(v=>v>0&&v<100)));
+    for(const point of[m.porto,m.capsula.pouso_real])assert.ok(obstacles.every(o=>!a.checkReefCollision(point,point,o)),'Port and capsule are open water');
+  }
+  // Rocks never touch each other or the reef, so every gap between them is real water.
+  for(let i=0;i<obstacles.length;i++)for(let j=i+1;j<obstacles.length;j++)for(const p of obstacles[i])assert.ok(!a.checkReefCollision(p,p,obstacles[j]));
 }
 assert.equal(missions[0].ataques.length,0);assert.equal(missions[0].navio.ruido_corrente_km,0);
 assert.equal(missions[1].ataques.length,1);assert.equal(missions[10].ataques.length,2);assert.equal(missions[99].ataques.length,3);
 a.useCampaignMission(99);assert.equal(a.MISSAO.nivel,99);assert.equal(a.activeAttacks(3).length,1);
 a.useCampaignMission(0);assert.equal(a.MISSAO.nivel,0);assert.equal(a.activeAttacks(3).length,0);
 assert.equal(missions[99].sensor.shots_total,3000,'Switching missions must not mutate saved configs');
-console.log('PASS 100 unique feasible missions, gradual difficulty, tutorial safety, attack stages and configuration isolation');
+console.log('PASS 100 unique missions across the chart, growing rock fields, gradual difficulty, tutorial safety, attack stages and configuration isolation');
 
 // A bounded geometric search checks fixed-length moves, integer headings and
 // each level's actual deterministic current stream. It is a test oracle only;
@@ -41,13 +47,17 @@ for(let level=0;level<100;level++){
  const currents=Array.from({length:m.turnos},()=>[a.gaussianRandom(rng)*m.navio.ruido_corrente_km,a.gaussianRandom(rng)*m.navio.ruido_corrente_km]);
  const vectors=Array.from({length:360},(_,heading)=>[Math.sin(heading*Math.PI/180)*speed,Math.cos(heading*Math.PI/180)*speed]);
  const move=(position,heading,turn)=>position.map((coordinate,index)=>Math.max(0,Math.min(100,coordinate+vectors[heading][index]+currents[turn][index])));
- const xs=m.recife.map(p=>p[0]),ys=m.recife.map(p=>p[1]),bounds=[Math.min(...xs),Math.max(...xs),Math.min(...ys),Math.max(...ys)];
- const collision=(from,to)=>{
+ const boxes=[m.recife,...m.pedras].map(poly=>{const xs=poly.map(p=>p[0]),ys=poly.map(p=>p[1]);return{poly,bounds:[Math.min(...xs),Math.max(...xs),Math.min(...ys),Math.max(...ys)]};});
+ const collision=(from,to)=>boxes.some(({poly,bounds})=>{
   // Disjoint segment/polygon bounds prove separation; touching bounds still use
   // the game's exact collision check, preserving its boundary behavior.
   if(Math.max(from[0],to[0])<bounds[0]||Math.min(from[0],to[0])>bounds[1]||Math.max(from[1],to[1])<bounds[2]||Math.min(from[1],to[1])>bounds[3])return false;
-  return a.checkReefCollision(from,to,m.recife);
- };
+  return a.checkReefCollision(from,to,poly);
+ });
+ const corners=boxes.flatMap(({bounds:[x0,x1,y0,y1]})=>[[x0-2.5,y0-2.5],[x1+2.5,y0-2.5],[x0-2.5,y1+2.5],[x1+2.5,y1+2.5]]).filter(p=>p.every(v=>v>0&&v<100));
+ // Cheapest way from each corner to the capsule: straight, or via one more corner.
+ const toTarget=corners.map(p=>collision(p,target)?Infinity:Math.hypot(p[0]-target[0],p[1]-target[1]));
+ const cornerCost=corners.map((p,i)=>Math.min(toTarget[i],...corners.map((q,j)=>j===i||toTarget[j]===Infinity||collision(p,q)?Infinity:Math.hypot(q[0]-p[0],q[1]-p[1])+toTarget[j])));
  const headingFor=(dx,dy)=>(Math.round(Math.atan2(dx,dy)*180/Math.PI)+360)%360;
  let beam=[{position:m.porto,headings:[]}],solution=null;
  for(let turn=0;turn<m.turnos&&!solution;turn++){
@@ -76,9 +86,10 @@ for(let level=0;level<100;level++){
     if(distance<=m.vitoria.raio_resgate_km){solution=[...headings,heading];break;}
     let score=distance;
     if(collision(next,target)){
-     const corners=[[bounds[1]+2,bounds[2]-2],[bounds[0]-2,bounds[3]+2]];
-     const detours=corners.filter(p=>!collision(next,p)&&!collision(p,target)).map(p=>Math.hypot(p[0]-next[0],p[1]-next[1])+Math.hypot(p[0]-target[0],p[1]-target[1]));
-     score=detours.length?Math.min(...detours):distance+30;
+     // Around one obstacle (one corner) or between two (two corners).
+     let best=Infinity;
+     corners.forEach((p,i)=>{if(cornerCost[i]<Infinity&&!collision(next,p))best=Math.min(best,Math.hypot(p[0]-next[0],p[1]-next[1])+cornerCost[i]);});
+     score=Number.isFinite(best)?best:distance+30;
     }
     candidates.push({position:next,headings:[...headings,heading],score});
    }
@@ -96,7 +107,7 @@ for(let level=0;level<100;level++){
  for(const [turn,heading]of solution.entries()){
   assert.ok(Number.isInteger(heading)&&heading>=0&&heading<360);
   const vector=a.headingToVector(heading,speed),next=[Math.max(0,Math.min(100,verified[0]+vector.dx+currents[turn][0])),Math.max(0,Math.min(100,verified[1]+vector.dy+currents[turn][1]))];
-  assert.equal(a.checkReefCollision(verified,next,m.recife),false,`Level ${level}, turn ${turn+1}: safe full-length movement`);
+  assert.equal(a.useCampaignMission(level)&&a.hitsObstacle(verified,next),false,`Level ${level}, turn ${turn+1}: safe full-length movement`);
   verified=next;
  }
  assert.ok(Math.hypot(verified[0]-target[0],verified[1]-target[1])<=m.vitoria.raio_resgate_km,`Level ${level}: discrete route reaches the rescue radius`);

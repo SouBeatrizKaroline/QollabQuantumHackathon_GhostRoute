@@ -25,7 +25,7 @@ SOFTWARE.
 Attribution Notice:
 This effort is supported by Qollab & IonQ
 -->
-<html lang="pt-PT">
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -33,7 +33,7 @@ This effort is supported by Qollab & IonQ
   <meta name="description" content="Ghost Route — a 16-bit quantum navigation adventure by QuantGirls.">
   <title>Ghost Route — QuantGirls</title>
   <link rel="icon" type="image/svg+xml" href="assets/img/ghost-route-mark.svg">
-  <link rel="stylesheet" href="assets/css/game.css?v=1.1">
+  <link rel="stylesheet" href="assets/css/game.css?v=1.15">
 </head>
 <body>
 <div id="game-shell">
@@ -62,10 +62,9 @@ This effort is supported by Qollab & IonQ
   <nav class="utility" aria-label="Mission controls">
     <label for="lang-select" id="lbl-language" class="sr-only"></label>
     <select id="lang-select">
-      <option value="pt-BR">BR · Brasil</option>
-      <option value="pt-PT" selected>PT · Portugal</option>
-      <option value="es">ES · Español</option>
-      <option value="en">IN · English</option>
+      <option value="pt-BR" label="PT" selected>PT · Português</option>
+      <option value="es" label="ES">ES · Español</option>
+      <option value="en" label="EN">IN · English</option>
     </select>
     <button id="btn-fullscreen" type="button" data-i18n="fullscreen"></button>
     <button id="btn-restart" type="button"><span id="txt-restart"></span></button>
@@ -100,7 +99,7 @@ This effort is supported by Qollab & IonQ
       </div>
     </div>
     <div class="sensor-module">
-      <div class="panel-kicker"><h2 data-i18n="sensorTitle"></h2><span class="qubit-pips" aria-hidden="true">▣ ▣ ▣</span></div>
+      <div class="panel-kicker"><h2 data-i18n="sensorTitle"></h2><button id="btn-sensor-help" class="help-btn" type="button" aria-haspopup="dialog" aria-controls="sensor-intro"><span aria-hidden="true">?</span><span class="sr-only" data-i18n="sensorIntroHelp"></span></button><span class="qubit-pips" aria-hidden="true">▣ ▣ ▣</span></div>
       <div class="sensor-fields">
         <div><label id="lbl-sensor-mode" for="sensor-mode-select"></label><select id="sensor-mode-select"><option id="opt-mode-none" value="none"></option><option id="opt-mode-simple" value="simple" selected></option><option id="opt-mode-ghz" value="ghz"></option></select></div>
         <div><label id="lbl-sensor-shots" for="sensor-shots-select"></label><select id="sensor-shots-select"><option value="100">100</option><option value="250">250</option><option value="500" selected>500</option><option value="1000">1000</option></select></div>
@@ -120,6 +119,22 @@ This effort is supported by Qollab & IonQ
   <div hidden><span id="txt-map-title"></span><span id="txt-telemetry-title"></span><span id="lbl-pos"></span><span id="lbl-heading"></span><span id="lbl-speed"></span><span id="val-speed"></span></div>
 </div>
 
+
+<div id="sensor-intro" class="sensor-intro" role="dialog" aria-modal="true" aria-labelledby="sensor-intro-title" hidden>
+  <section class="sensor-intro-box pixel-panel">
+    <div class="sensor-intro-head">
+      <svg class="sensor-intro-atom" viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke-width="2.5"><ellipse cx="24" cy="24" rx="20" ry="8" stroke="#b69cff"/><ellipse cx="24" cy="24" rx="20" ry="8" stroke="#d7c8ff" transform="rotate(60 24 24)"/><ellipse cx="24" cy="24" rx="20" ry="8" stroke="#ffd166" transform="rotate(120 24 24)"/></g><circle cx="24" cy="24" r="4.5" fill="#ff8a3d"/></svg>
+      <h2 id="sensor-intro-title" data-i18n="sensorIntroTitle"></h2>
+    </div>
+    <p data-i18n="sensorIntroGps"></p>
+    <p data-i18n="sensorIntroQuantum"></p>
+    <ul>
+      <li data-i18n="sensorIntroMode"></li>
+      <li data-i18n="sensorIntroShots"></li>
+    </ul>
+    <button id="btn-sensor-intro-ok" class="sensor-intro-ok" type="button" data-i18n="sensorIntroOk"></button>
+  </section>
+</div>
 <div id="mission-menu" class="mission-menu" role="dialog" aria-modal="true" aria-labelledby="menu-title" aria-describedby="menu-intro" hidden>
   <section class="menu-box pixel-panel">
     <header class="menu-topbar"><span class="menu-eyebrow" data-i18n="menuEyebrow"></span><button id="btn-menu-close" type="button" data-i18n="menuClose"></button></header>
@@ -143,7 +158,7 @@ This effort is supported by Qollab & IonQ
         </section>
         <section class="menu-settings" aria-labelledby="menu-settings-title">
           <h3 id="menu-settings-title" class="menu-section-label" data-i18n="menuSettings"></h3>
-          <div class="menu-settings-row"><div><label for="menu-lang-select" data-i18n="menuLanguage"></label><select id="menu-lang-select"><option value="pt-BR">BR · Português (Brasil)</option><option value="pt-PT" selected>PT · Português (Portugal)</option><option value="es">ES · Español</option><option value="en">IN · English</option></select></div><button id="btn-menu-fullscreen" type="button" data-i18n="menuFullscreen"></button></div>
+          <div class="menu-settings-row"><div><label for="menu-lang-select" data-i18n="menuLanguage"></label><select id="menu-lang-select"><option value="pt-BR" selected>PT · Português</option><option value="es">ES · Español</option><option value="en">IN · English</option></select></div><button id="btn-menu-fullscreen" type="button" data-i18n="menuFullscreen"></button></div>
         </section>
         <details class="menu-guide">
           <summary data-i18n="menuGuide"></summary>
@@ -163,10 +178,10 @@ This effort is supported by Qollab & IonQ
     <div class="scoreboard-grid"><div><span id="lbl-rep-score"></span><strong id="val-rep-score"></strong></div><div><span id="lbl-rep-false"></span><strong id="val-rep-false"></strong></div><div><span id="lbl-rep-dist"></span><strong id="val-rep-dist"></strong></div><div><span id="lbl-rep-shots"></span><strong id="val-rep-shots"></strong></div></div>
     <label id="lbl-scrubber" for="scrubber-range"></label><input id="scrubber-range" type="range" min="1" max="12" value="12">
     <div id="turn-event-info"></div><div id="attack-timeline"></div><p id="timeline-legend"></p>
-    <div id="replay-measurement-box"><h3 id="lbl-meas-title"></h3><div id="meas-details"></div><canvas id="histogram-canvas" width="520" height="112" aria-hidden="true"></canvas></div>
+    <div id="replay-measurement-box"><h3 id="lbl-meas-title"></h3><div id="meas-details"></div><canvas id="histogram-canvas" width="520" height="112" aria-hidden="true"></canvas><p id="histogram-caption" class="histogram-caption" data-i18n="histogramDescription"></p></div>
     <div class="replay-controls"><button id="btn-next-level" class="menu-level-action" type="button" data-i18n="nextLevel" hidden></button><button id="btn-replay-same" type="button"><span id="txt-btn-same"></span></button><button id="btn-replay-new" type="button"><span id="txt-btn-new"></span></button><button id="btn-export-json" type="button"><span id="txt-btn-export"></span></button></div>
   </section>
 </div>
-<script src="assets/js/i18n.js"></script><script src="assets/js/engine.js"></script><script src="assets/js/app.js"></script>
+<script src="assets/js/i18n.js?v=1.15"></script><script src="assets/js/engine.js?v=1.15"></script><script src="assets/js/app.js?v=1.15"></script><script src="assets/js/console-decor.js?v=1.15"></script>
 </body>
 </html>

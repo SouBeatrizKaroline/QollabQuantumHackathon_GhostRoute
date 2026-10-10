@@ -50,7 +50,7 @@ assert.equal(game.state.currentTurn,7);
 game.advanceTurn();
 assert.equal(game.state.turnsRecord.at(-1).shots,0);
 assert.match(get('last-reading').textContent,/no quantum measurement this turn/);
-for(const lang of['pt-PT','pt-BR','es','en']){
+for(const lang of['pt-BR','es','en']){
  game.currentLang=lang;game.updateLocalization();
  assert.equal(document.documentElement.lang,lang);
  assert.ok(get('last-reading').textContent.includes(a.TEXTOS[lang].budgetExhausted));
@@ -61,7 +61,7 @@ while(!game.state.isFinished)game.advanceTurn();
 assert.ok(get('dialogue-box').textContent.includes(a.TEXTOS.en.endingDeceived));
 assert.equal(get('last-reading').textContent.includes(a.TEXTOS.en.budgetExhausted),false,'Do not tell a finished player to continue');
 get('btn-close-replay').click();
-for(const lang of['pt-PT','pt-BR','es']){
+for(const lang of['pt-BR','es']){
  game.currentLang=lang;game.updateLocalization();
  assert.equal(game.replayModal.style.display,'none','Changing language must not reopen a closed replay');
  assert.equal(get('dialogue-box').textContent,a.TEXTOS[lang].endingDeceived);
@@ -84,13 +84,13 @@ console.log('PASS localized observation, exhausted sensing, final radio, replay 
 const saved=new Map();context.window.localStorage={getItem:key=>saved.get(key)||null,setItem:(key,value)=>saved.set(key,value)};
 const campaign=Object.create(a.GhostRouteApp.prototype);
 campaign.renderer={canvas:node(),resize(){},render(){},worldToScreen(x,y){return{sx:x,sy:y};}};
-campaign.avatarCtx={};campaign.estimator=new a.BayesianGridEstimator();campaign.currentLang='pt-PT';campaign.levelNumber=0;campaign.completedLevels=new Set();campaign.debugMode=false;
+campaign.avatarCtx={};campaign.estimator=new a.BayesianGridEstimator();campaign.currentLang='pt-BR';campaign.levelNumber=0;campaign.completedLevels=new Set();campaign.debugMode=false;
 campaign.initDOM();campaign.bindEvents();campaign.startNewGame(20261011);campaign.closeMissionMenu();
 assert.equal(campaign.state.maxTurns,4);assert.match(get('dialogue-box').textContent,/045°/);
 for(let i=0;i<4;i++)campaign.advanceTurn();
 assert.equal(campaign.state.isFinished,true);assert.equal(campaign.state.isAground,false);
 assert.ok(campaign.completedLevels.has(0));assert.equal(get('btn-next-level').hidden,false);
-assert.equal(get('outcome-banner').textContent.includes(a.TEXTOS['pt-PT'].endingRescue),false,'No-attack tutorial must not claim an attack was missed');
+assert.equal(get('outcome-banner').textContent.includes(a.TEXTOS['pt-BR'].endingRescue),false,'No-attack tutorial must not claim an attack was missed');
 assert.equal(get('outcome-banner').textContent.includes('3 ataques'),false,'Tutorial must not claim three attacks were detected');
 assert.equal(JSON.parse(saved.get('ghost-route.preferences')).completed.join(','),'0');
 campaign.openReplayModal();assert.equal(campaign.completedLevels.size,1,'Reopening replay must not double-count completion');

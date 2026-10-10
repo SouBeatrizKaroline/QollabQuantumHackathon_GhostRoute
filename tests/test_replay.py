@@ -163,7 +163,7 @@ def campaign_export(session, level=0, turns=4, budget=3000, speed=5.5):
     return session
 
 
-@pytest.mark.parametrize("level,turns,budget,speed", [(0, 4, 3000, 5.5), (99, 12, 8000, 8.5), (50, 8, 1, 7.5), (99, 12, 100000, 8.5)])
+@pytest.mark.parametrize("level,turns,budget,speed", [(0, 4, 3000, 5.5), (99, 12, 8000, 12.0), (50, 8, 1, 7.5), (99, 12, 100000, 12.5)])
 def test_campaign_version_preserves_level_and_uses_exported_limits(session, level, turns, budget, speed):
     exported = campaign_export(session, level, turns, budget, speed)
     sampler = CountingSampler()
@@ -202,7 +202,10 @@ def test_campaign_replay_samples_short_mission_once_and_honors_its_budget(sessio
     lambda s: s["configuracao_missao"]["sensor"].update(shots_total=100001),
     lambda s: s["configuracao_missao"]["sensor"].update(ghz_n=2),
     lambda s: s["configuracao_missao"]["navio"].update(velocidade_km_turno=5.49),
-    lambda s: s["configuracao_missao"]["navio"].update(velocidade_km_turno=8.51),
+    lambda s: s["configuracao_missao"]["navio"].update(velocidade_km_turno=12.51),
+    lambda s: s["configuracao_missao"].update(pedras={}),
+    lambda s: s["configuracao_missao"].update(pedras=[[[10, 10], [12, 10]]]),
+    lambda s: s["configuracao_missao"].update(pedras=[[[10, 10], [12, 10], [float("inf"), 12]]]),
     lambda s: s["configuracao_missao"]["campo"]["anomalias"].pop(),
     lambda s: s["configuracao_missao"]["recife"].pop(),
     lambda s: s["configuracao_missao"]["recife"][0].__setitem__(0, float("inf")),

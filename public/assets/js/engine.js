@@ -24,6 +24,7 @@ const MISSAO = {
     ]
   },
   recife: [[38, 50], [48, 50], [48, 56], [38, 56]],
+  pedras: [],
   capsula: {
     elipse_prevista: {
       centro: [70, 70],
@@ -56,21 +57,45 @@ function createCampaignMission(level) {
   if (!Number.isInteger(level) || level < 0 || level > 99) throw new RangeError('Campaign level must be 0..99');
   const m = JSON.parse(JSON.stringify(ORIGINAL_MISSION)), difficulty = level / 99;
   m.nivel = level;
-  m.turnos = level === 0 ? 4 : Math.min(12, 6 + Math.floor(level / 8));
-  m.navio.velocidade_km_turno = level === 0 ? Math.SQRT2 * 4 : 5.8 + difficulty * 2.7;
+  // From level 1 the capsule lands on the far side of the chart, so the ship is
+  // faster and the voyage uses the full twelve turns.
+  m.turnos = level === 0 ? 4 : 12;
+  m.navio.velocidade_km_turno = level === 0 ? Math.SQRT2 * 4 : 10.5 + difficulty * 1.5;
   m.navio.ruido_corrente_km = level === 0 ? 0 : .04 + difficulty * .46;
   m.inercial.crescimento_km_turno = .12 + difficulty * .88;
   m.sensor.shots_total = 8000 - Math.round(difficulty * 5000 / 100) * 100;
   m.vitoria.raio_resgate_km = 4 - difficulty * 2.4;
-  const reach = level === 0 ? 16 : m.turnos * m.navio.velocidade_km_turno * .79 / Math.SQRT2;
-  const target = [10 + reach, 15 + reach];
+  const rng = mulberry32(7717 + level * 104729), round = v => Math.round(v * 10) / 10;
+  const target = level === 0 ? [26, 31] : [round(79 + rng() * 8), round(79 + rng() * 9)];
   m.capsula.pouso_real = target;
-  m.capsula.elipse_prevista = {centro:[target[0],target[1]-difficulty*3],semi_eixo_x:2+difficulty*6,semi_eixo_y:2+difficulty*3};
+  m.capsula.elipse_prevista = {centro:[target[0],round(target[1]-difficulty*3)],semi_eixo_x:2+difficulty*6,semi_eixo_y:2+difficulty*3};
   m.capsula.turno_blackout_inicio = level < 10 ? 0 : 2;
   m.capsula.turno_revelacao = level < 10 ? 0 : Math.max(3,Math.floor(m.turnos * .65));
-  const middle = [10 + reach * .52, 15 + reach * .52];
-  m.recife = level < 10 ? [[88,88],[94,88],[94,94],[88,94]] :
-    [[middle[0]-3,middle[1]+1],[middle[0]+3,middle[1]+1],[middle[0]+3,middle[1]+4+difficulty*2],[middle[0]-3,middle[1]+4+difficulty*2]];
+  const port = m.porto, along = [target[0]-port[0], target[1]-port[1]], span = Math.hypot(...along);
+  const dir = [along[0]/span, along[1]/span], side = [-dir[1], dir[0]];
+  const at = (t, offset) => [port[0]+along[0]*t+side[0]*offset, port[1]+along[1]*t+side[1]*offset];
+  // The big reef sits mid-route from level 10; before that it stays out of the way.
+  const middle = at(.5, 0), reefH = 3 + difficulty * 2;
+  m.recife = level < 10 ? [[78,22],[84,22],[84,28],[78,28]] :
+    [[round(middle[0]-4),round(middle[1]-1)],[round(middle[0]+4),round(middle[1]-1)],[round(middle[0]+4),round(middle[1]-1+reefH)],[round(middle[0]-4),round(middle[1]-1+reefH)]];
+  // Rocks scattered along the route force the navigator to steer around them.
+  m.pedras = [];
+  const rockCount = level === 0 ? 0 : 2 + Math.floor(difficulty * 6);
+  const reefBox = {x0:Math.min(...m.recife.map(p=>p[0])),x1:Math.max(...m.recife.map(p=>p[0])),y0:Math.min(...m.recife.map(p=>p[1])),y1:Math.max(...m.recife.map(p=>p[1]))};
+  const centers = [];
+  for (let tries = 0; m.pedras.length < rockCount && tries < 400; tries++) {
+    const r = 1.6 + rng() * 1.6, c = at(.18 + rng() * .66, (rng() - .5) * 26);
+    if (c.some(v => v < 4 || v > 96)) continue;
+    if (Math.hypot(c[0]-port[0], c[1]-port[1]) < 12 || Math.hypot(c[0]-target[0], c[1]-target[1]) < 10) continue;
+    if (centers.some(o => Math.hypot(c[0]-o.c[0], c[1]-o.c[1]) < r + o.r + 8)) continue;
+    if (c[0] > reefBox.x0-r-6 && c[0] < reefBox.x1+r+6 && c[1] > reefBox.y0-r-6 && c[1] < reefBox.y1+r+6) continue;
+    centers.push({c, r});
+    const sides = 5 + Math.floor(rng() * 2), turn = rng() * Math.PI;
+    m.pedras.push(Array.from({length:sides}, (_, i) => {
+      const a = turn + i / sides * Math.PI * 2, k = r * (.75 + rng() * .25);
+      return [round(c[0] + Math.cos(a) * k), round(c[1] + Math.sin(a) * k)];
+    }));
+  }
   m.ataques = [];
   if (level > 0) m.ataques.push({tipo:'salto',inicio:3,fim:3,deslocamento_km:[-(.8+difficulty*7),difficulty*2]});
   if (level >= 10) m.ataques.push({tipo:'deriva',inicio:Math.max(3,Math.floor(m.turnos*.4)),fim:m.turnos-2,km_por_turno:[.1+difficulty*.5,-(.1+difficulty*.5)]});
@@ -236,6 +261,11 @@ function checkReefCollision(p1, p2, reefPoly) {
   }
   return false;
 }
+
+// The reef and every rock are obstacles: hitting any of them runs the ship aground.
+function missionObstacles() { return [MISSAO.recife, ...(MISSAO.pedras || [])]; }
+function hitsObstacle(p1, p2) { return missionObstacles().some(poly => checkReefCollision(p1, p2, poly)); }
+function distToObstacles(pt) { return Math.min(...missionObstacles().map(poly => distToPolygon(pt, poly))); }
 
 function distToPolygon(pt, poly) {
   if (isPointInPoly(pt, poly)) return 0.0;
@@ -502,20 +532,20 @@ const AssetRegistry = {
   drawQuooraAvatar(ctx, expression) {
     ctx.clearRect(0, 0, 48, 48);
 
-    ctx.fillStyle = "#091a30";
+    ctx.fillStyle = "#1b1238";
     ctx.fillRect(4, 4, 40, 40);
-    ctx.strokeStyle = "#00d2ff";
+    ctx.strokeStyle = "#b69cff";
     ctx.lineWidth = 2;
     ctx.strokeRect(4, 4, 40, 40);
 
-    ctx.fillStyle = "#38bdf8";
+    ctx.fillStyle = "#ffd166";
     ctx.fillRect(22, 1, 4, 4);
 
-    ctx.fillStyle = "#020712";
+    ctx.fillStyle = "#0d0820";
     ctx.fillRect(8, 8, 32, 32);
 
     if (expression === 'happy') {
-      ctx.fillStyle = "#22c55e";
+      ctx.fillStyle = "#ffd166";
       ctx.fillRect(12, 18, 8, 3);
       ctx.fillRect(12, 15, 2, 3);
       ctx.fillRect(18, 15, 2, 3);
@@ -524,27 +554,27 @@ const AssetRegistry = {
       ctx.fillRect(34, 15, 2, 3);
       ctx.fillRect(20, 28, 8, 3);
     } else if (expression === 'worried') {
-      ctx.fillStyle = "#f59e0b";
+      ctx.fillStyle = "#ffb347";
       ctx.fillRect(12, 17, 8, 4);
       ctx.fillRect(28, 17, 8, 4);
       ctx.fillRect(22, 30, 4, 3);
     } else if (expression === 'alert') {
-      ctx.fillStyle = "#ef4444";
+      ctx.fillStyle = "#ff6b6b";
       ctx.fillRect(12, 15, 9, 8);
       ctx.fillRect(27, 15, 9, 8);
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(15, 18, 3, 3);
       ctx.fillRect(30, 18, 3, 3);
-      ctx.fillStyle = "#ef4444";
+      ctx.fillStyle = "#ff6b6b";
       ctx.fillRect(21, 28, 6, 5);
     } else if (expression === 'thoughtful') {
-      ctx.fillStyle = "#38bdf8";
+      ctx.fillStyle = "#b69cff";
       ctx.fillRect(12, 18, 8, 4);
       ctx.fillRect(28, 15, 8, 4);
-      ctx.fillStyle = "#f59e0b";
+      ctx.fillStyle = "#ffd166";
       ctx.fillRect(22, 28, 4, 3);
     } else {
-      ctx.fillStyle = "#00f0ff";
+      ctx.fillStyle = "#d7c8ff";
       ctx.fillRect(12, 18, 8, 5);
       ctx.fillRect(28, 18, 8, 5);
       ctx.fillRect(20, 29, 8, 3);
@@ -558,59 +588,88 @@ const AssetRegistry = {
 /* Full-viewport 16-bit chart. Coordinates remain in kilometers, north up.
    Only the posterior estimate is drawn as the ship during normal play. */
 class PixelShipAtlas {
-  constructor() { this.frames=Array.from({length:32},(_,i)=>this.paint(i*11.25)); }
+  // k = pixels per hull unit. k=1 is the original 88 px sprite; the map draws a
+  // larger "32-bit" atlas (k≈2) on its own full-resolution layer.
+  constructor(k=1) { this.k=k;this.frames=Array.from({length:32},(_,i)=>this.paint(i*11.25)); }
   static normalize(heading) { return ((heading%360)+360)%360; }
   static turnDelta(from,to) { return (((to-from+180)%360)+360)%360-180; }
   static frameIndex(heading) { return Math.round(PixelShipAtlas.normalize(heading)/11.25)%32; }
   paint(heading) {
-    const canvas=document.createElement('canvas');canvas.width=88;canvas.height=88;
+    const k=this.k,size=Math.round(88*k),hi=k>=1.4;
+    const canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;
     const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;
     const angle=heading*Math.PI/180,fx=Math.sin(angle),fy=-Math.cos(angle),rx=Math.cos(angle),ry=Math.sin(angle);
-    const project=([u,v,z=0])=>[Math.round(44+u*fx+v*rx),Math.round(48+(u*fy+v*ry)*.78-z)];
+    const project=([u,v,z=0])=>[Math.round(44*k+(u*fx+v*rx)*k),Math.round(48*k+((u*fy+v*ry)*.78-z)*k)];
     const pixel=(x,y,color)=>{ctx.fillStyle=color;ctx.fillRect(x,y,1,1);};
     const line=(a,b,color)=>{
       let [x,y]=a;const [tx,ty]=b,dx=Math.abs(tx-x),dy=-Math.abs(ty-y),sx=x<tx?1:-1,sy=y<ty?1:-1;let error=dx+dy;
       for(;;){pixel(x,y,color);if(x===tx&&y===ty)break;const twice=2*error;if(twice>=dy){error+=dy;x+=sx;}if(twice<=dx){error+=dx;y+=sy;}}
     };
-    const poly=(vertices,color,outline='#051623')=>{
-      const pts=vertices.map(project),ys=pts.map(p=>p[1]);ctx.fillStyle=color;
+    const fillPts=(pts,color)=>{
+      const ys=pts.map(p=>p[1]);ctx.fillStyle=color;
       for(let y=Math.min(...ys);y<=Math.max(...ys);y++){
         const xs=[];for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length];if((a[1]<=y+.5&&b[1]>y+.5)||(b[1]<=y+.5&&a[1]>y+.5))xs.push(a[0]+(y+.5-a[1])*(b[0]-a[0])/(b[1]-a[1]));}
         xs.sort((a,b)=>a-b);for(let i=0;i+1<xs.length;i+=2)ctx.fillRect(Math.ceil(xs[i]),y,Math.max(1,Math.floor(xs[i+1])-Math.ceil(xs[i])+1),1);
       }
-      if(outline)pts.forEach((p,i)=>line(p,pts[(i+1)%pts.length],outline));
     };
+    const poly=(vertices,color,outline='#2a1530')=>{const pts=vertices.map(project);fillPts(pts,color);if(outline)pts.forEach((p,i)=>line(p,pts[(i+1)%pts.length],outline));};
+    // Sunset light comes from the top right of the chart; faces turned to it are brighter.
+    const L=[.6,-.8];
+    const facing=(a,b,z,orient)=>{const p=project([...a,z]),q=project([...b,z]);let nx=(q[1]-p[1])*orient,ny=-(q[0]-p[0])*orient;const n=Math.hypot(nx,ny)||1;nx/=n;ny/=n;return{nx,ny,light:nx*L[0]+ny*L[1]};};
+    const orientation=pts=>{let a=0;for(let i=0;i<pts.length;i++){const p=project([...pts[i],0]),q=project([...pts[(i+1)%pts.length],0]);a+=p[0]*q[1]-q[0]*p[1];}return a>0?1:-1;};
+    const ramp=(colors,light)=>colors[Math.max(0,Math.min(colors.length-1,Math.round((light+1)/2*(colors.length-1))))];
+
     const hull=[[-28,-5],[-23,-8],[9,-8],[22,-5],[30,0],[22,5],[9,8],[-23,8],[-28,5]];
-    // An oblique, pixel-rasterized hull. Elevated features stay vertical in every view.
-    poly(hull.map(([u,v])=>[u,v,-2]),'#173c4c');
-    poly(hull.map(([u,v])=>[u,v,1]),'#7faaa8');
+    const hullOrient=orientation(hull);
+    // Soft shadow on the water, cast away from the sun (32-bit depth cue).
+    if(hi){const off=Math.round(2*k);fillPts(hull.map(([u,v])=>{const p=project([u,v,-2]);return[p[0]-off,p[1]+off];}),'rgba(13,8,32,.45)');}
+    poly(hull.map(([u,v])=>[u,v,-2]),'#6e2410');
+    poly(hull.map(([u,v])=>[u,v,1]),'#ff7a2e');
+    const sideRamp=['#6e2410','#9a3514','#c2481a','#e0601f','#ff7a2e','#ff9a55'];
     for(let i=0;i<hull.length;i++){
-      const a=hull[i],b=hull[(i+1)%hull.length];
-      if(project(a)[1]+project(b)[1]>=96)poly([[...a,1],[...b,1],[...b,-2],[...a,-2]],'#345864');
+      const a=hull[i],b=hull[(i+1)%hull.length],f=facing(a,b,0,hullOrient);
+      if(f.ny>0||(!hi&&project(a)[1]+project(b)[1]>=96*k)){
+        poly([[...a,1],[...b,1],[...b,-2],[...a,-2]],ramp(sideRamp,f.light));
+        if(hi)line(project([...a,-.6]),project([...b,-.6]),'#fff1de'); // white rescue stripe
+      }
+      if(hi&&f.light>.25)line(project([...a,1]),project([...b,1]),'#ffc489'); // sunlit gunwale
     }
     const deck=[[-25,-4],[-21,-6],[8,-6],[20,-4],[26,0],[20,4],[8,6],[-21,6],[-25,4]];
-    poly(deck.map(([u,v])=>[u,v,2]),'#91b4ad','#c6ddd0');
-    line(project([-22,0,3]),project([22,0,3]),'#597e80');
-    const box=(u1,u2,v1,v2,height)=>{
-      const corners=[[u1,v1],[u2,v1],[u2,v2],[u1,v2]],faces=[];
+    poly(deck.map(([u,v])=>[u,v,2]),'#efe2d2','#fff6ea');
+    if(hi){for(const v of[-3,-1.5,1.5,3])line(project([-20,v,2]),project([18-Math.abs(v)*1.5,v,2]),'#e2d2bf');}
+    line(project([-22,0,3]),project([22,0,3]),'#c9b29a');
+    // Railing: a thin rail with posts along the deck edge.
+    if(hi){const railOrient=orientation(deck);for(let i=0;i<deck.length;i++){const a=deck[i],b=deck[(i+1)%deck.length],f=facing(a,b,0,railOrient);line(project([...a,4]),project([...b,4]),f.ny>0?'#fff6ea':'#d9c6b0');const n=Math.max(1,Math.round(Math.hypot(b[0]-a[0],b[1]-a[1])/3));for(let j=0;j<n;j++){const t=j/n,u=a[0]+(b[0]-a[0])*t,v=a[1]+(b[1]-a[1])*t;line(project([u,v,2]),project([u,v,4]),'#e9d8c6');}}}
+    const box=(u1,u2,v1,v2,height,opt={})=>{
+      const corners=[[u1,v1],[u2,v1],[u2,v2],[u1,v2]],faces=[],orient=orientation(corners);
+      const sides=opt.sides||['#a8978a','#c7b6a4','#e3d4c2','#fff1de'];
       for(let i=0;i<4;i++){
-        const a=corners[i],b=corners[(i+1)%4];faces.push({a,b,y:(project(a)[1]+project(b)[1])/2});
+        const a=corners[i],b=corners[(i+1)%4];faces.push({a,b,y:(project(a)[1]+project(b)[1])/2,f:facing(a,b,0,orient)});
       }
-      faces.sort((a,b)=>a.y-b.y).forEach(({a,b},i)=>{
-        poly([[...a,2],[...b,2],[...b,height],[...a,height]],i<2?'#4e7179':'#5d8b8c');
-        if(height>5){line(project([a[0]*.75+b[0]*.25,a[1]*.75+b[1]*.25,height-2]),project([a[0]*.25+b[0]*.75,a[1]*.25+b[1]*.75,height-2]),'#a4f3ed');}
+      faces.sort((a,b)=>a.y-b.y).forEach(({a,b,f},i)=>{
+        poly([[...a,2],[...b,2],[...b,height],[...a,height]],hi?ramp(sides,f.light):(i<2?sides[1]:sides[2]));
+        if(opt.windows&&height>5){
+          if(hi&&f.ny>0){const panes=5;for(let w=0;w<panes;w++){const t0=(w+.2)/panes,t1=(w+.8)/panes,P=t=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+            const quad=[[...P(t0),height-1.5],[...P(t1),height-1.5],[...P(t1),height-3.5],[...P(t0),height-3.5]];poly(quad,'#1f2a4a',null);line(project(quad[0]),project([...P((t0+t1)/2),height-1.5]),'#7fd4ff');}}
+          else line(project([a[0]*.75+b[0]*.25,a[1]*.75+b[1]*.25,height-2]),project([a[0]*.25+b[0]*.75,a[1]*.25+b[1]*.75,height-2]),'#7fd4ff');
+        }
       });
-      poly(corners.map(([u,v])=>[u,v,height]),'#d8e2cc','#183743');
-      line(project([u1+1,v1+1,height]),project([u2-1,v1+1,height]),'#f1efda');
+      poly(corners.map(([u,v])=>[u,v,height]),opt.roof||'#fff6ea','#3a1f2a');
+      line(project([u1+1,v1+1,height]),project([u2-1,v1+1,height]),opt.stripe||'#ff8a3d');
     };
-    box(-21,-12,-4,4,5); // stern equipment locker
-    box(-3,11,-5,5,10); // wheelhouse: roof and visible faces vary with the angle
-    poly([[-1,-3,11],[7,-3,11],[7,3,11],[-1,3,11]],'#5e8388','#abc7bd');
+    // Stern: an orange rescue lifeboat on its cradle.
+    box(-21,-12,-4,4,5,{sides:['#9a3514','#c2481a','#e0601f','#ff7a2e'],roof:'#ff9a55',stripe:'#fff1de'});
+    box(-3,11,-5,5,10,{windows:true}); // wheelhouse: roof and visible faces vary with the angle
+    poly([[-1,-3,11],[7,-3,11],[7,3,11],[-1,3,11]],'#ff8a3d','#ffc489');
+    if(hi){line(project([5,-2.5,12.5]),project([5,2.5,12.5]),'#e9d8c6');line(project([5,0,11]),project([5,0,12.5]),'#c9b29a');
+      const port=project([4,-5.3,8]),star=project([4,5.3,8]);ctx.fillStyle='#ff6b6b';ctx.fillRect(port[0],port[1],2,2);ctx.fillStyle='#7be08a';ctx.fillRect(star[0],star[1],2,2);}
     const mast=project([0,0,11]),tip=project([0,0,22]);
-    line([mast[0]-1,mast[1]], [tip[0]-1,tip[1]],'#082332');line(mast,tip,'#e5e9cf');
-    line(project([0,-6,19]),project([0,6,19]),'#c1dcd0');
-    pixel(tip[0],tip[1]-1,'#8affdc');
-    for(const u of[-25,-15,16])for(const v of[-5,5]){const p=project([u,v,4]);pixel(p[0],p[1],'#e1ead0');}
+    line([mast[0]-1,mast[1]], [tip[0]-1,tip[1]],'#2a1530');line(mast,tip,'#fff1de');if(hi)line([mast[0]+1,mast[1]],[tip[0]+1,tip[1]],'#e2d2bf');
+    line(project([0,-6,19]),project([0,6,19]),'#e9d8c6');
+    pixel(tip[0],tip[1]-1,'#ffd166');if(hi){pixel(tip[0]+1,tip[1]-1,'#ffd166');pixel(tip[0],tip[1]-2,'#ffe9a8');}
+    for(const u of[-25,-15,16])for(const v of[-5,5]){const p=project([u,v,4]);pixel(p[0],p[1],'#ffe9a8');}
+    // Bow spray where the hull cuts the water.
+    if(hi){for(const[u,v]of[[31,0],[30,-2],[30,2],[28,-4],[28,4],[32,-1],[32,1]]){const p=project([u,v,-2]);pixel(p[0],p[1],'#fff6ea');}}
     const bow=project([26,0,4]);pixel(bow[0],bow[1],'#baf9ed');pixel(bow[0]+1,bow[1],'#70d9ea');
     return canvas;
   }
@@ -618,7 +677,10 @@ class PixelShipAtlas {
 class TacticalMapRenderer {
   constructor(canvasId){
     this.canvas=document.getElementById(canvasId);this.ctx=this.canvas.getContext('2d');this.padding=32;this.worldMax=100;this.current=null;this.displayWorld=null;this.reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;this.lastFrame=0;
-    this.shipAtlas=new PixelShipAtlas();this.ocean=document.createElement('canvas');this.resize();
+    this.shipAtlas=new PixelShipAtlas();this.ocean=document.createElement('canvas');
+    // The ship lives on its own full-resolution layer: twice the detail of the 16-bit chart.
+    this.shipLayer=document.createElement('canvas');this.shipLayer.className='ship-layer';this.shipLayer.setAttribute('aria-hidden','true');this.canvas.after(this.shipLayer);this.shipCtx=this.shipLayer.getContext('2d');
+    this.resize();
     window.addEventListener('resize',()=>{this.resize();if(this.current)this.drawScene(performance.now());});
     this.loop=(now)=>{if(this.current&&now-this.lastFrame>48){this.lastFrame=now;this.drawScene(now);}requestAnimationFrame(this.loop);};requestAnimationFrame(this.loop);
   }
@@ -630,105 +692,252 @@ class TacticalMapRenderer {
     const portrait=r.width<=850&&r.height>520||r.width<=620;
     const short=r.height<500;
     const sideDock=short&&dock&&dock.left>r.width*.4&&dock.width<r.width*.6;
-    const top=(Math.max(hud?.bottom||100,(portrait||sideDock)?telemetry?.bottom||0:0,portrait?radio?.bottom||0:0,portrait?bounds('.compass-widget')?.bottom||0:0)+26-r.top)*ratioY;
-    const bottom=(sideDock?r.height-70:dock?dock.top-r.top-64:r.height-70)*ratioY;
+    const floatingRadio=document.querySelector('.radio-widget')?.classList?.contains('radio-floating');
+    const top=(Math.max(hud?.bottom||100,(portrait||sideDock)?telemetry?.bottom||0:0,portrait&&!floatingRadio?radio?.bottom||0:0,portrait?bounds('.compass-widget')?.bottom||0:0)+26-r.top)*ratioY;
+    // In the bridge layout the window frame ends above the console; keep the axis labels inside it.
+    const frameBox=bounds('.bezel'),frameBottom=frameBox&&dock&&frameBox.bottom<dock.top?frameBox.bottom-r.top-46:Infinity;
+    const bottom=Math.min(sideDock?r.height-70:dock?dock.top-r.top-64:r.height-70,frameBottom)*ratioY;
     let left=26*ratioX,right=w-26*ratioX;
     if(sideDock)right=(dock.left-r.left-24)*ratioX;
     else if(!portrait){
-      for(const selector of['.compass-widget','.radar-widget','.radio-widget']){const p=bounds(selector);if(p)left=Math.max(left,(p.right-r.left+24)*ratioX);}
-      for(const selector of['.utility','.telemetry-strip','.chart-legend']){const p=bounds(selector);if(p)right=Math.min(right,(p.left-r.left-24)*ratioX);}
+      // Only panels that sit beside the chart band push it sideways; console panels below it do not.
+      const bandTop=top/ratioY+r.top,bandBottom=bottom/ratioY+r.top,beside=p=>p&&p.top<bandBottom&&p.bottom>bandTop;
+      for(const selector of['.compass-widget','.radar-widget','.radio-widget']){const p=bounds(selector);if(beside(p))left=Math.max(left,(p.right-r.left+24)*ratioX);}
+      for(const selector of['.utility','.telemetry-strip','.chart-legend']){const p=bounds(selector);if(beside(p))right=Math.min(right,(p.left-r.left-24)*ratioX);}
     }
     this.scale=Math.max(.12,Math.min((right-left)/100,(bottom-top)/100));
     this.chartSize=100*this.scale;this.ox=left+(right-left-this.chartSize)/2;this.oy=top+(Math.max(0,bottom-top-this.chartSize))/2;this.makeOcean();
+    if(this.shipLayer){this.shipLayer.width=Math.max(1,Math.round(r.width));this.shipLayer.height=Math.max(1,Math.round(r.height));this.shipCtx.imageSmoothingEnabled=false;
+      const k=Math.max(1,Math.round(2*this.shipScale()*TacticalMapRenderer.SHIP_ZOOM*4)/4);if(k!==this.shipK){this.shipK=k;this.hiAtlas=new PixelShipAtlas(k);}}
   }
+  static get SHIP_ZOOM(){return .8;}
+  shipScale(){return Math.min(1,Math.max(.42,this.scale/2));}
   worldToScreen(x,y){return{sx:this.ox+x*this.scale,sy:this.oy+(100-y)*this.scale};}
   screenToWorld(x,y){return[(x-this.ox)/this.scale,100-(y-this.oy)/this.scale];}
   makeOcean(){
-    const c=this.ocean;c.width=this.canvas.width;c.height=this.canvas.height;const g=c.getContext('2d');
-    const gradient=g.createLinearGradient(0,0,c.width,c.height);gradient.addColorStop(0,'#0c4266');gradient.addColorStop(.45,'#093657');gradient.addColorStop(1,'#08264c');g.fillStyle=gradient;g.fillRect(0,0,c.width,c.height);
-    const rng=mulberry32(837211);for(let i=0;i<c.width*c.height/150;i++){const x=Math.floor(rng()*c.width),y=Math.floor(rng()*c.height);g.fillStyle=['#174b6c','#1b5273','#28627b','#0b2b4c'][Math.floor(rng()*4)];g.fillRect(x,y,Math.ceil(rng()*5)+2,1);if(rng()>.6){g.fillRect(x+2,y-1,2,1);g.fillRect(x+4,y+1,2,1);}}
-    for(let y=0;y<c.height;y+=3){g.fillStyle='#04193420';g.fillRect(0,y,c.width,1);}
+    // Two pre-rendered frames: the sea alternates between them for a 16-bit wave shimmer.
+    this.oceanFrames=[0,1].map(frame=>this.paintOcean(frame));this.ocean=this.oceanFrames[0];
+  }
+  paintOcean(frame){
+    const c=document.createElement('canvas');c.width=this.canvas.width;c.height=this.canvas.height;const g=c.getContext('2d'),W=c.width,H=c.height;
+    // Sunset sky reflected on the sea: stepped bands, warm violet at the top to deep navy at the bottom.
+    const bands=['#4a2358','#43245e','#3b2765','#322a68','#292c69','#212d66','#1b2c60','#162a58','#12264f','#0f2247','#0d1e40'];
+    const bh=Math.ceil(H/bands.length);
+    bands.forEach((color,i)=>{g.fillStyle=color;g.fillRect(0,i*bh,W,bh);});
+    // Checker dithering on band edges keeps the gradient pixelated, never smooth.
+    for(let i=0;i<bands.length-1;i++){const y0=(i+1)*bh;for(let y=y0-3;y<y0+3;y++){g.fillStyle=y<y0?bands[i+1]:bands[i];for(let x=(y+i)%2;x<W;x+=2)if((y<y0)===((x+y)%4<2))g.fillRect(x,y,1,1);}}
+    // Low sun glow near the top right, drawn with dithered dots that thin out with distance.
+    const sunX=Math.round(W*.74),sunY=Math.round(H*.06),rx=W*.42,ry=H*.36;
+    const rng=mulberry32(4401+frame*17);
+    const glow=['#ffb347','#ff8a3d','#e0651f','#b8466a','#7a3070'];
+    // Ordered (Bayer) dithering: an even, retro pattern instead of random noise.
+    const bayer=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
+    for(let y=0;y<Math.min(H,sunY+ry);y++)for(let x=Math.max(0,Math.floor(sunX-rx));x<Math.min(W,sunX+rx);x+=1){
+      const d=Math.hypot((x-sunX)/rx,(y-sunY)/ry);if(d>=1)continue;
+      if(bayer[y%4][x%4]/16<Math.pow(1-d,2.6)*.42){g.fillStyle=glow[Math.min(glow.length-1,Math.floor(d*glow.length))];g.fillRect(x,y,1,1);}
+    }
+    // Sun path: golden glints on the water below the sun, widening and fading downward.
+    const glints=['#ffe9a8','#ffd166','#ffb347','#ff8a3d'];
+    for(let i=0;i<W*H/900;i++){
+      const y=Math.floor(Math.pow(rng(),1.6)*H),spread=5+y*.32,x=Math.round(sunX+(rng()-.5)*2*spread);
+      if(x<0||x>=W||rng()>1-y/H*.85)continue;
+      g.fillStyle=glints[Math.min(3,Math.floor(y/H*4+rng()*.8))];g.fillRect(x,y,2+Math.floor(rng()*4),1);
+    }
+    // Wave dashes, shifted between the two frames.
+    const waveRng=mulberry32(837211);
+    for(let i=0;i<W*H/150;i++){
+      const x=Math.floor(waveRng()*W),y=Math.floor(waveRng()*H),pick=Math.floor(waveRng()*3),len=Math.ceil(waveRng()*5)+2,curl=waveRng()>.6;
+      const t=y/H,palette=t<.3?['#6a3f7a','#5e3a86','#7a4a8a']:t<.65?['#3e4a8a','#45508f','#36437f']:['#2a4a78','#1f3f6c','#305584'];
+      const dx=frame?2:0;g.fillStyle=palette[pick];g.fillRect(x+dx,y,len,1);if(curl){g.fillRect(x+dx+2,y-1,2,1);g.fillRect(x+dx+4,y+1,2,1);}
+    }
+    for(let y=0;y<H;y+=3){g.fillStyle='#0b061920';g.fillRect(0,y,W,1);}
+    return c;
   }
   render(state,estimator,isReplay=false,debug=false){
-    this.current={state,estimator,isReplay,debug};const target=(debug||isReplay)?state.realPosition:estimator.getMAP();
+    this.current={state,estimator,isReplay,debug};this.noteReadings(state);const target=(debug||isReplay)?state.realPosition:estimator.getMAP();
     const now=performance.now(),heading=PixelShipAtlas.normalize(state.currentHeading);
     if(this.headingTarget!==heading){this.headingFrom=this.visualHeading??heading;this.headingTarget=heading;this.headingStart=now;}
     if(this.reduced||isReplay)this.visualHeading=heading;
     if(!this.target||Math.hypot(this.target[0]-target[0],this.target[1]-target[1])>.01){this.animFrom=this.displayWorld?[...this.displayWorld]:[...target];this.target=[...target];this.animStart=performance.now();}
     if(this.reduced||isReplay)this.displayWorld=[...target];this.drawScene(performance.now());
   }
-  text(label,x,y,color='#cee7df',align='left'){const c=this.ctx;c.font='bold 7px monospace';c.textAlign=align;c.fillStyle='#041024';c.fillText(label,x+1,y+1);c.fillStyle=color;c.fillText(label,x,y);c.textAlign='left';}
-  mapLabel(label,x,y,color='#cee7df',align='left'){
+  text(label,x,y,color='#f3e6f2',align='left'){const c=this.ctx;c.font='bold 7px monospace';c.textAlign=align;c.fillStyle='#0d0820';c.fillText(label,x+1,y+1);c.fillStyle=color;c.fillText(label,x,y);c.textAlign='left';}
+  // optional=true: a secondary name that is simply left out when it can't find free space.
+  mapLabel(label,x,y,color='#f3e6f2',align='left',optional=false){
     const c=this.ctx;c.font='bold 7px monospace';
     const left=this.ox+2,right=this.ox+this.chartSize-2,top=this.oy+8,bottom=this.oy+this.chartSize-3;
     const lines=[];let line='';for(const word of label.split(' ')){const candidate=line?line+' '+word:word;if(line&&c.measureText(candidate).width>right-left){lines.push(line);line=word;}else line=candidate;}if(line)lines.push(line);
     const width=Math.max(...lines.map(value=>c.measureText(value).width)),height=lines.length*9;
     const anchor=align==='center'?x-width/2:align==='right'?x-width:x;
-    const candidates=[[anchor,y],[anchor,y-16],[anchor,y+16],[x-width-12,y],[x+12,y],[left,top]];
+    const candidates=[[anchor,y],[anchor,y-16],[anchor,y+16],[x-width-12,y],[x+12,y],[x+12,y-16],[x-width-12,y-16],[x+12,y+16],[x-width-12,y+16],[anchor,y-28],[anchor,y+28],[left,top]];
     let best=null,bestOverlap=Infinity;
-    for(const[px,py]of candidates){
+    // A secondary name never jumps to the chart corner: far from its place it would mislead.
+    for(const[px,py]of optional?candidates.slice(0,-1):candidates){
       const bx=Math.max(left,Math.min(right-width,px)),by=Math.max(top,Math.min(bottom-height+9,py));
       const box={left:bx-2,right:bx+width+2,top:by-8,bottom:by+height-6};
       let overlap=0;for(const occupied of this.labelBoxes||[]){overlap+=Math.max(0,Math.min(box.right,occupied.right)-Math.max(box.left,occupied.left))*Math.max(0,Math.min(box.bottom,occupied.bottom)-Math.max(box.top,occupied.top));}
       if(overlap<bestOverlap){best={bx,by,box};bestOverlap=overlap;}if(!overlap)break;
     }
+    if(optional&&bestOverlap>0)return;
     this.labelBoxes.push(best.box);lines.forEach((value,index)=>this.mapLabels.push({label:value,x:best.bx,y:best.by+index*9,color}));
   }
   line(points,color,width,dash=[]){if(!points?.length)return;const c=this.ctx;c.strokeStyle=color;c.lineWidth=width;c.setLineDash(dash);c.beginPath();points.forEach((p,i)=>{const s=this.worldToScreen(...p);i?c.lineTo(s.sx,s.sy):c.moveTo(s.sx,s.sy);});c.stroke();c.setLineDash([]);}
   drawScene(now){
-    const{state:s,estimator:e,isReplay:replay,debug}=this.current;const c=this.ctx,w=this.canvas.width,h=this.canvas.height;const t=TEXTOS[window.gameApp?.currentLang||'pt-PT'];c.imageSmoothingEnabled=false;c.drawImage(this.ocean,0,0);
-    const u=this.reduced||replay?1:Math.min(1,(now-this.animStart)/650);const f=u*u*(3-2*u);this.displayWorld=this.target.map((v,i)=>this.animFrom[i]+(v-this.animFrom[i])*f);
-    const shipAnchor=this.worldToScreen(...this.displayWorld),shipScale=Math.min(1,Math.max(.42,this.scale/2));
+    const{state:s,estimator:e,isReplay:replay,debug}=this.current;this.frameNow=now;if(this.shipCtx)this.shipCtx.clearRect(0,0,this.shipLayer.width,this.shipLayer.height);const c=this.ctx,w=this.canvas.width,h=this.canvas.height;const t=TEXTOS[window.gameApp?.currentLang||'pt-BR'];c.imageSmoothingEnabled=false;c.drawImage(this.oceanFrames?.[this.reduced?0:Math.floor(now/650)%2]||this.ocean,0,0);
+    const u=this.reduced||replay?1:Math.min(1,(now-this.animStart)/1500);const f=u*u*(3-2*u);this.displayWorld=this.target.map((v,i)=>this.animFrom[i]+(v-this.animFrom[i])*f);
+    const shipAnchor=this.worldToScreen(...this.displayWorld),shipScale=Math.min(1,Math.max(.42,this.scale/2))*(this.shipLayer?TacticalMapRenderer.SHIP_ZOOM:1);
     this.labelBoxes=[{left:shipAnchor.sx-29*shipScale,right:shipAnchor.sx+29*shipScale,top:shipAnchor.sy-26*shipScale,bottom:shipAnchor.sy+22*shipScale}];
-    this.mapLabels=[];this.mapLabel('SPOOFED',shipAnchor.sx+29*shipScale+7,shipAnchor.sy+8,'#e6f5de');
+    this.mapLabels=[];const compact=this.chartSize<180; // small charts (phones) only keep names that fit
     // Grid and a low-key map boundary; the ocean itself fills the viewport.
-    c.strokeStyle='#5189a031';c.lineWidth=.5;for(let km=0;km<=100;km+=10){const p=this.worldToScreen(km,km);c.beginPath();c.moveTo(p.sx,this.oy);c.lineTo(p.sx,this.oy+this.chartSize);c.moveTo(this.ox,p.sy);c.lineTo(this.ox+this.chartSize,p.sy);c.stroke();if(km%(this.scale<.7?100:20)===0){this.text(String(km),p.sx,this.oy+this.chartSize+9,'#9fc4cd','center');this.text(String(km),this.ox-5,p.sy+2,'#9fc4cd','right');}}
+    c.strokeStyle='#d7c8ff26';c.lineWidth=.5;for(let km=0;km<=100;km+=10){const p=this.worldToScreen(km,km);c.beginPath();c.moveTo(p.sx,this.oy);c.lineTo(p.sx,this.oy+this.chartSize);c.moveTo(this.ox,p.sy);c.lineTo(this.ox+this.chartSize,p.sy);c.stroke();if(km%(this.scale<.7?100:20)===0){this.text(String(km),p.sx,this.oy+this.chartSize+9,'#e2d0f0','center');this.text(String(km),this.ox-5,p.sy+2,'#e2d0f0','right');}}
     // A decorative port shoreline is rasterized into the chart's lower edge.
-    const port=this.worldToScreen(...MISSAO.porto);c.fillStyle='#203e41';c.beginPath();c.moveTo(this.ox,this.oy+this.chartSize);c.lineTo(this.ox+this.scale*8,this.oy+this.chartSize);c.lineTo(this.ox+this.scale*6,this.oy+this.chartSize-this.scale*8);c.lineTo(this.ox+this.scale*2,this.oy+this.chartSize-this.scale*18);c.lineTo(this.ox,this.oy+this.chartSize-this.scale*21);c.fill();c.fillStyle='#487367';for(let i=0;i<9;i++)c.fillRect(this.ox+1+i%3*3,this.oy+this.chartSize-9-Math.floor(i/3)*4,3,2);
+    const port=this.worldToScreen(...MISSAO.porto);c.fillStyle='#3a2440';c.beginPath();c.moveTo(this.ox,this.oy+this.chartSize);c.lineTo(this.ox+this.scale*8,this.oy+this.chartSize);c.lineTo(this.ox+this.scale*6,this.oy+this.chartSize-this.scale*8);c.lineTo(this.ox+this.scale*2,this.oy+this.chartSize-this.scale*18);c.lineTo(this.ox,this.oy+this.chartSize-this.scale*21);c.fill();c.fillStyle='#ffb34799';for(let i=0;i<9;i++)c.fillRect(this.ox+1+i%3*3,this.oy+this.chartSize-9-Math.floor(i/3)*4,3,2);
     // Known magnetic anomalies: contour rings, not revealed attack locations.
-    c.strokeStyle='#3c719334';c.lineWidth=.5;for(const a of MISSAO.campo.anomalias){const p=this.worldToScreen(a.x,a.y);for(const k of [1,1.45]){c.beginPath();c.arc(p.sx,p.sy,a.raio_km*this.scale*k,0,Math.PI*2);c.stroke();}}
-    this.drawReef(t);if(!replay)this.drawHeatmap(e);this.drawTarget(s,t);
-    const inertial=this.worldToScreen(...s.inertialPosition);c.strokeStyle='#97d3f280';c.lineWidth=.6;c.setLineDash([1,3]);c.beginPath();c.arc(inertial.sx,inertial.sy,s.inertialRadiusKm*this.scale,0,Math.PI*2);c.stroke();c.setLineDash([]);
-    if(replay){this.line(s.realHistory,'#a7f2ce',2);this.line(s.inertialHistory,'#b1c8ff',.8,[1,3]);}else if(debug)this.line(s.realHistory,'#a7f2ce',1.6);
-    this.line(s.gpsHistory,'#e6bc72',1,[3,3]);
-    const gps=this.worldToScreen(...s.gpsPosition);c.strokeStyle='#ead59c';c.lineWidth=1;c.strokeRect(gps.sx-3,gps.sy-3,6,6);c.fillStyle='#f3db91';c.fillRect(gps.sx-1,gps.sy-1,2,2);
+    c.strokeStyle='#b69cff30';c.lineWidth=.5;for(const a of MISSAO.campo.anomalias){const p=this.worldToScreen(a.x,a.y);for(const k of [1,1.45]){c.beginPath();c.arc(p.sx,p.sy,a.raio_km*this.scale*k,0,Math.PI*2);c.stroke();}}
+    this.drawReef(t);this.drawRocks();if(!replay)this.drawHeatmap(e);this.drawTarget(s,t);
+    const inertial=this.worldToScreen(...s.inertialPosition);c.strokeStyle='#e9ddff99';c.lineWidth=.6;c.setLineDash([1,3]);c.beginPath();c.arc(inertial.sx,inertial.sy,s.inertialRadiusKm*this.scale,0,Math.PI*2);c.stroke();c.setLineDash([]);
+    if(replay){this.line(s.realHistory,'#fff1de',2);this.line(s.inertialHistory,'#d7c8ff',.8,[1,3]);}else if(debug)this.line(s.realHistory,'#fff1de',1.6);
+    this.line(s.gpsHistory,'#ffb347',1,[3,3]);
+    const gps=this.worldToScreen(...s.gpsPosition);
     const recorded=s.turnsRecord||[],marked=recorded.filter(r=>r.markedSuspicious),hpd=e.getHPD95(),mismatch=!replay&&recorded.length&&!e.isGPSInsideHPD(...s.gpsPosition,hpd);
-    for(const r of marked){const p=this.worldToScreen(...r.gpsReported);this.drawInterference(p.sx,p.sy,14,now);if(r===marked.at(-1)&&(!mismatch||Math.hypot(p.sx-gps.sx,p.sy-gps.sy)>20))this.mapLabel(t.suspectedSignal,p.sx+15,p.sy-9,'#ffc0b6');}
-    if(mismatch){this.drawInterference(gps.sx,gps.sy,19,now);this.mapLabel(t.signalMismatch,gps.sx+21,gps.sy+3,'#ffc0b6');}
-    c.fillStyle='#7bcaca';c.fillRect(port.sx-4,port.sy-4,8,8);c.fillStyle='#0a2334';c.fillRect(port.sx-2,port.sy-2,4,4);if(Math.hypot(this.displayWorld[0]-MISSAO.porto[0],this.displayWorld[1]-MISSAO.porto[1])>10)this.mapLabel(t.portLabel,port.sx+8,port.sy+12);
-    const ship=this.worldToScreen(...this.displayWorld);this.drawShip(ship.sx,ship.sy,s.currentHeading,now);
-    const b=this.worldToScreen(0,0);if(this.scale>=.7){c.strokeStyle='#bed5ce';c.beginPath();c.moveTo(b.sx,b.sy+17);c.lineTo(b.sx+this.scale*10,b.sy+17);c.stroke();this.text('10 km',b.sx,b.sy+26,'#b7d6d6');}this.text(t.northLabel,this.ox+this.chartSize-2,this.oy-8,'#b4d4dc','right');
+    for(const r of marked){const p=this.worldToScreen(...r.gpsReported);this.drawInterference(p.sx,p.sy,14,now);if(r===marked.at(-1)&&(!mismatch||Math.hypot(p.sx-gps.sx,p.sy-gps.sy)>20))this.mapLabel(t.suspectedSignal,p.sx+15,p.sy-9,'#ffc2b5');}
+    if(mismatch){this.drawInterference(gps.sx,gps.sy,19,now);this.mapLabel(t.signalMismatch,gps.sx+21,gps.sy+3,'#ffc2b5');}
+    this.drawGPS(gps.sx,gps.sy,mismatch,now);
+    this.drawLighthouse(port.sx,port.sy,now);if(Math.hypot(this.displayWorld[0]-MISSAO.porto[0],this.displayWorld[1]-MISSAO.porto[1])>10)this.mapLabel(t.portLabel,port.sx+8,port.sy+12,'#f3e6f2','left',true);
+    this.mapLabel('SPOOFED',shipAnchor.sx+29*shipScale+7,shipAnchor.sy+8,'#ffe6cc','left',compact);
+    const ship=this.worldToScreen(...this.displayWorld);this.drawShip(ship.sx,ship.sy,s.currentHeading,now);this.drawQuantumFx(ship.sx,ship.sy,now);
+    const b=this.worldToScreen(0,0);if(this.scale>=.7){c.strokeStyle='#e9d8c6';c.beginPath();c.moveTo(b.sx,b.sy+17);c.lineTo(b.sx+this.scale*10,b.sy+17);c.stroke();this.text('10 km',b.sx,b.sy+26,'#e9d8c6');}if(!compact)this.mapLabel(t.northLabel,this.ox+this.chartSize-3,this.oy+10,'#ffd166','right',true); // the compass already shows north on small charts
     this.mapLabels.forEach(label=>this.text(label.label,label.x,label.y,label.color));
     this.drawCompass(s.currentHeading);this.drawRadar(s,e,now);
   }
-  drawReef(t){const c=this.ctx,p=MISSAO.recife.map(p=>this.worldToScreen(...p));c.fillStyle='#5a334d99';c.strokeStyle='#f18c97';c.lineWidth=1;c.beginPath();p.forEach((q,i)=>i?c.lineTo(q.sx,q.sy):c.moveTo(q.sx,q.sy));c.closePath();c.fill();c.stroke();c.save();c.clip();c.strokeStyle='#ed829680';for(let x=p[0].sx-30;x<p[1].sx+30;x+=4){c.beginPath();c.moveTo(x,p[0].sy+3);c.lineTo(x+20,p[2].sy-3);c.stroke();}c.restore();this.mapLabel(t.reefLabel,p[3].sx,p[3].sy-5,'#ffb6b9');}
-  drawHeatmap(e){const c=this.ctx;let max=0;for(const p of e.grid)if(p>max)max=p;if(!max)return;for(let i=0;i<e.grid.length;i++){const p=e.grid[i];if(p<max*.004)continue;const s=this.worldToScreen(i%e.size,Math.floor(i/e.size));c.fillStyle=`rgba(95,211,247,${.12+.5*Math.sqrt(p/max)})`;c.fillRect(Math.round(s.sx-this.scale/2),Math.round(s.sy-this.scale/2),Math.ceil(this.scale),Math.ceil(this.scale));}}
-  drawTarget(s,t){const c=this.ctx,observed=s.turnsRecord?.at(-1)?.turn||0;if(observed>=MISSAO.capsula.turno_revelacao){const p=this.worldToScreen(...MISSAO.capsula.pouso_real);c.strokeStyle='#afefdb';c.fillStyle='#cefbdc';c.fillRect(p.sx-3,p.sy-2,6,4);c.beginPath();c.arc(p.sx,p.sy,8,0,Math.PI*2);c.stroke();this.labelBoxes.push({left:p.sx-9,right:p.sx+9,top:p.sy-9,bottom:p.sy+9});this.mapLabel('AURORA-1',p.sx+12,p.sy+2,'#cefbdc');}else if(observed>=MISSAO.capsula.turno_blackout_inicio){const m=MISSAO.capsula.elipse_prevista,p=this.worldToScreen(...m.centro);c.setLineDash([3,2]);c.strokeStyle='#ecd09c';c.beginPath();c.ellipse(p.sx,p.sy,m.semi_eixo_x*this.scale,m.semi_eixo_y*this.scale,0,0,Math.PI*2);c.stroke();c.setLineDash([]);this.mapLabel(t.landingLabel,p.sx,p.sy-m.semi_eixo_y*this.scale-5,'#f1d1a0','center');}}
-  drawInterference(x,y,r,now){const c=this.ctx;const phase=this.reduced?0:(now%3000)/3000;c.fillStyle='#c92d5930';c.strokeStyle='#eb5c7d99';for(let k=0;k<4;k++){c.beginPath();c.arc(x,y,r*(.25+k*.25)+phase*2,0,Math.PI*2);k===3&&c.fill();c.stroke();}c.fillStyle='#ff667b';c.fillRect(x-2,y-2,4,4);c.strokeStyle='#ffa0a6';c.beginPath();c.moveTo(x-r-4,y);c.lineTo(x-r-1,y);c.moveTo(x+r+1,y);c.lineTo(x+r+4,y);c.stroke();}
+  drawReef(t){const c=this.ctx,p=MISSAO.recife.map(p=>this.worldToScreen(...p));c.fillStyle='#7a2b3acc';c.strokeStyle='#ff7b6b';c.lineWidth=1;c.beginPath();p.forEach((q,i)=>i?c.lineTo(q.sx,q.sy):c.moveTo(q.sx,q.sy));c.closePath();c.fill();c.stroke();c.save();c.clip();c.strokeStyle='#ff8f7a80';for(let x=p[0].sx-30;x<p[1].sx+30;x+=4){c.beginPath();c.moveTo(x,p[0].sy+3);c.lineTo(x+20,p[2].sy-3);c.stroke();}c.restore();
+    // Foam breaking on the reef edge: a few white pixels that twinkle.
+    const foamTick=this.reduced?0:Math.floor((this.frameNow||0)/400);for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];for(let k=0;k<6;k++){if(((k*7+i*3+foamTick)%5)>1)continue;const f=(k+.5)/6;c.fillStyle=k%2?'#fff6ea':'#ffd3c9';c.fillRect(Math.round(a.sx+(b.sx-a.sx)*f),Math.round(a.sy+(b.sy-a.sy)*f),1,1);}}
+    this.labelBoxes.push({left:Math.min(...p.map(q=>q.sx))-2,right:Math.max(...p.map(q=>q.sx))+2,top:Math.min(...p.map(q=>q.sy))-2,bottom:Math.max(...p.map(q=>q.sy))+2});this.mapLabel(t.reefLabel,p[3].sx,p[3].sy-5,'#ffc2b5');}
+  drawRocks(){
+    // Pixel rocks: a shadow on the water, a dark body lit from the top right,
+    // a few crisp highlights and white foam that breaks around the base.
+    const c=this.ctx,tick=this.reduced?0:Math.floor((this.frameNow||0)/450);
+    (MISSAO.pedras||[]).forEach((poly,index)=>{
+      const p=poly.map(q=>this.worldToScreen(...q)),xs=p.map(q=>q.sx),ys=p.map(q=>q.sy);
+      const cx=xs.reduce((a,b)=>a+b)/p.length,cy=ys.reduce((a,b)=>a+b)/p.length;
+      const path=(dx=0,dy=0,k=1)=>{c.beginPath();p.forEach((q,i)=>{const x=cx+(q.sx-cx)*k+dx,y=cy+(q.sy-cy)*k+dy;i?c.lineTo(x,y):c.moveTo(x,y);});c.closePath();};
+      c.fillStyle='#0b061999';path(-1,2);c.fill();
+      c.fillStyle='#4a4166';path();c.fill();c.strokeStyle='#1a1230';c.lineWidth=1;c.stroke();
+      c.fillStyle='#7a6f96';path(1,-1,.62);c.fill();
+      c.fillStyle='#c2b8d8';path(1.5,-1.5,.28);c.fill();
+      c.fillStyle='#ffd16699';c.fillRect(Math.round(cx+1),Math.round(cy-2),1,1);
+      for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];for(let k=0;k<3;k++){if(((k*5+i*3+index+tick)%4)>1)continue;const f=(k+.5)/3,ox=(a.sx+b.sx)/2-cx,oy=(a.sy+b.sy)/2-cy,n=Math.hypot(ox,oy)||1;
+        c.fillStyle=k%2?'#fff6ea':'#d7e6ff';c.fillRect(Math.round(a.sx+(b.sx-a.sx)*f+ox/n*1.5),Math.round(a.sy+(b.sy-a.sy)*f+oy/n*1.5),1,1);}}
+      this.labelBoxes.push({left:Math.min(...xs)-2,right:Math.max(...xs)+2,top:Math.min(...ys)-2,bottom:Math.max(...ys)+2});
+    });
+  }
+  drawHeatmap(e){const c=this.ctx;let max=0;for(const p of e.grid)if(p>max)max=p;if(!max)return;
+    // Four discrete lilac bands (16-bit style) instead of a smooth gradient.
+    const steps=[[.75,'rgba(243,236,255,.72)'],[.5,'rgba(215,200,255,.6)'],[.28,'rgba(182,156,255,.46)'],[0,'rgba(125,95,214,.3)']];
+    for(let i=0;i<e.grid.length;i++){const p=e.grid[i];if(p<max*.004)continue;const r=Math.sqrt(p/max),s=this.worldToScreen(i%e.size,Math.floor(i/e.size));c.fillStyle=steps.find(([limit])=>r>limit)[1];c.fillRect(Math.round(s.sx-this.scale/2),Math.round(s.sy-this.scale/2),Math.ceil(this.scale),Math.ceil(this.scale));}}
+  drawTarget(s,t){const c=this.ctx,observed=s.turnsRecord?.at(-1)?.turn||0,now=this.frameNow||0;if(observed>=MISSAO.capsula.turno_revelacao){const p=this.worldToScreen(...MISSAO.capsula.pouso_real);
+      // Capsule with an orange parachute and a pulsing rescue ring.
+      c.fillStyle='#ff8a3d';c.fillRect(p.sx-4,p.sy-7,8,2);c.fillStyle='#fff1de';c.fillRect(p.sx-2,p.sy-7,2,2);c.fillRect(p.sx+2,p.sy-7,1,2);
+      c.fillStyle='#e9d8c6';c.fillRect(p.sx-3,p.sy-5,1,3);c.fillRect(p.sx+2,p.sy-5,1,3);
+      c.fillStyle='#fff1de';c.fillRect(p.sx-3,p.sy-2,6,4);c.fillStyle='#ff8a3d';c.fillRect(p.sx-3,p.sy,6,1);
+      const pulse=this.reduced?0:(now%1600)/1600;c.strokeStyle='#ff8a3d';c.beginPath();c.arc(p.sx,p.sy,8,0,Math.PI*2);c.stroke();
+      if(pulse){c.strokeStyle=`rgba(255,209,102,${(1-pulse)*.9})`;c.beginPath();c.arc(p.sx,p.sy,8+pulse*10,0,Math.PI*2);c.stroke();}
+      this.labelBoxes.push({left:p.sx-9,right:p.sx+9,top:p.sy-9,bottom:p.sy+9});this.mapLabel('AURORA-1',p.sx+12,p.sy+2,'#ffd166');}
+    else if(observed>=MISSAO.capsula.turno_blackout_inicio){const m=MISSAO.capsula.elipse_prevista,p=this.worldToScreen(...m.centro);c.setLineDash([3,2]);c.lineDashOffset=this.reduced?0:-Math.floor(now/120)%5;c.strokeStyle='#ffd166';c.beginPath();c.ellipse(p.sx,p.sy,m.semi_eixo_x*this.scale,m.semi_eixo_y*this.scale,0,0,Math.PI*2);c.stroke();c.setLineDash([]);c.lineDashOffset=0;this.mapLabel(t.landingLabel,p.sx,p.sy-m.semi_eixo_y*this.scale-5,'#ffe2b0','center',this.chartSize<180);}}
+  drawInterference(x,y,r,now){const c=this.ctx;const phase=this.reduced?0:(now%3000)/3000;c.fillStyle='#ff6b6b30';c.strokeStyle='#ff8f86aa';for(let k=0;k<4;k++){c.beginPath();c.arc(x,y,r*(.25+k*.25)+phase*2,0,Math.PI*2);k===3&&c.fill();c.stroke();}c.fillStyle='#ff6b6b';c.fillRect(x-2,y-2,4,4);c.strokeStyle='#ffb0a8';c.beginPath();c.moveTo(x-r-4,y);c.lineTo(x-r-1,y);c.moveTo(x+r+1,y);c.lineTo(x+r+4,y);c.stroke();}
+  drawGPS(x,y,mismatch,now){
+    // Amber GPS marker. When it disagrees with the quantum estimate it glitches:
+    // magenta/cyan ghost copies jump around it, like a corrupted signal.
+    const c=this.ctx;
+    if(mismatch&&!this.reduced){const tick=Math.floor(now/90),j=(n)=>((tick*7919+n*104729)%7)-3;
+      c.fillStyle='#ff3fa499';c.fillRect(Math.round(x-3+j(1)),Math.round(y-3+j(2)/2),6,6);
+      c.fillStyle='#3ff6ff88';c.fillRect(Math.round(x-3+j(3)),Math.round(y-3+j(4)/2),6,6);
+      if(tick%3===0){c.fillStyle='#ffb347';c.fillRect(Math.round(x-8+j(5)),Math.round(y+j(6)),16,1);}}
+    c.strokeStyle='#ffd08a';c.lineWidth=1;c.strokeRect(x-3,y-3,6,6);c.fillStyle='#ffb347';c.fillRect(x-1,y-1,2,2);
+    const blink=this.reduced||Math.floor(now/500)%2;if(blink){c.fillStyle='#fff1de';c.fillRect(x-4,y-5,1,1);c.fillRect(x+3,y-5,1,1);}
+  }
+  drawLighthouse(x,y,now){
+    // Port lighthouse: a gold lamp with a beam that sweeps every couple of seconds.
+    const c=this.ctx;c.fillStyle='#fff1de';c.fillRect(x-2,y-4,4,8);c.fillStyle='#ff6b6b';c.fillRect(x-2,y-1,4,2);c.fillStyle='#ffd166';c.fillRect(x-1,y-6,2,2);
+    if(this.reduced)return;const a=(now%2400)/2400*Math.PI*2,len=26*Math.max(.6,this.scale/2);
+    for(let r=4;r<len;r+=2)for(const off of[-.12,0,.12]){if((r+Math.round(off*10))%4===1)continue;c.fillStyle=r<len*.5?'#ffe9a8':'#ffd16699';c.fillRect(Math.round(x+Math.cos(a+off*(1+r/len))*r),Math.round(y-5+Math.sin(a+off*(1+r/len))*r),1,1);}
+  }
+  noteReadings(state){
+    // Fires the sonar pulse once each time a new quantum reading is recorded.
+    const count=(state.turnsRecord||[]).filter(r=>r.shots>0).length;
+    if(this.readingCount!==undefined&&count>this.readingCount&&!this.reduced)this.burstStart=performance.now();
+    this.readingCount=count;
+  }
+  drawQuantumFx(x,y,now){
+    if(this.reduced||this.current?.isReplay)return;const c=this.ctx,scale=Math.min(1,Math.max(.42,this.scale/2))*(this.shipLayer?TacticalMapRenderer.SHIP_ZOOM:1);
+    // Three lilac "qubits" orbit the ship: Quoora is always listening.
+    for(let i=0;i<3;i++){const a=now/900+i*Math.PI*2/3,r=22*scale+Math.sin(now/400+i)*1.5;c.fillStyle=i===1?'#ffd166':'#d7c8ff';c.fillRect(Math.round(x+Math.cos(a)*r),Math.round(y+Math.sin(a)*r*.6),1,1);}
+    // Sonar pulse + sparkles right after a reading.
+    if(this.burstStart===undefined)return;const t=(now-this.burstStart)/1400;if(t<0||t>1)return;
+    for(let k=0;k<3;k++){const u=t-k*.18;if(u<=0||u>=1)continue;const r=(8+u*46)*scale*1.4;c.fillStyle=`rgba(215,200,255,${(1-u)*.9})`;
+      for(let d=0;d<48;d++){const a=d/48*Math.PI*2;if(d%2)continue;c.fillRect(Math.round(x+Math.cos(a)*r),Math.round(y+Math.sin(a)*r*.62),1,1);}}
+    for(let i=0;i<14;i++){const a=i/14*Math.PI*2+t*1.4,r=(10+t*30)*scale*1.2,tw=(i+Math.floor(now/80))%3;if(tw===0)continue;c.fillStyle=i%3===0?'#ffd166':'#e9e0ff';c.fillRect(Math.round(x+Math.cos(a)*r),Math.round(y+Math.sin(a)*r*.62-t*6),tw,1);if(tw===2)c.fillRect(Math.round(x+Math.cos(a)*r)+0,Math.round(y+Math.sin(a)*r*.62-t*6)-1,1,3);}
+  }
   drawShip(x,y,heading,now){
     const c=this.ctx,snap=this.reduced||this.current?.isReplay;
     const progress=snap?1:Math.min(1,Math.max(0,(now-(this.headingStart??now))/240)),ease=progress*progress*(3-2*progress);
     this.visualHeading=snap?heading:(this.headingFrom??heading)+PixelShipAtlas.turnDelta(this.headingFrom??heading,this.headingTarget??heading)*ease;
     const bearing=this.visualHeading*Math.PI/180,fx=Math.sin(bearing),fy=-Math.cos(bearing),rx=Math.cos(bearing),ry=Math.sin(bearing);
     // Cache distinct views instead of rotating a flat sprite (which tilted the mast).
-    const scale=Math.min(1,Math.max(.42,this.scale/2)),phase=this.reduced?0:now/320;
-    c.fillStyle='#a1e4e448';
+    const scale=Math.min(1,Math.max(.42,this.scale/2))*(this.shipLayer?TacticalMapRenderer.SHIP_ZOOM:1),phase=this.reduced?0:now/320;
+    c.fillStyle='#ffe9d655';
     for(let i=0;i<14;i++){
       const back=29+i*2.1,spread=4+Math.sin(i*.6+phase)*1.5+i*.22;
       for(const side of[-1,1])c.fillRect(Math.round(x+(-fx*back+rx*spread*side)*scale),Math.round(y+(-fy*back+ry*spread*side)*scale*.78),Math.max(1,Math.round(3*scale)),1);
     }
-    const frame=this.shipAtlas.frames[PixelShipAtlas.frameIndex(this.visualHeading)],size=Math.round(88*scale);
+    // Foam particles shed from the stern, drifting outward and fading.
+    if(!snap){this.foam=this.foam||[];if(!this.lastFoam||now-this.lastFoam>70){this.lastFoam=now;for(const side of[-1,1])this.foam.push({x:x-fx*27*scale+rx*3*side*scale,y:y-fy*27*scale*.78+ry*3*side*scale*.78,vx:(-fx*.5+rx*side*.35),vy:(-fy*.5+ry*side*.35)*.78,born:now});}
+      this.foam=this.foam.filter(p=>now-p.born<1100);for(const p of this.foam){const age=(now-p.born)/1100,d=age*14;c.fillStyle=age<.35?'#fff6ea':age<.7?'#ffe9d6':'#cfd8ff';c.globalAlpha=1-age;c.fillRect(Math.round(p.x+p.vx*d),Math.round(p.y+p.vy*d),age<.5?2:1,1);}c.globalAlpha=1;}
+    const index=PixelShipAtlas.frameIndex(this.visualHeading);
+    if(this.hiAtlas&&this.shipCtx){const frame=this.hiAtlas.frames[index],k=this.hiAtlas.k;this.drawWake(x*2,y*2,k,fx,fy,rx,ry,now);this.shipCtx.drawImage(frame,Math.round(x*2-44*k),Math.round(y*2-48*k));return;}
+    const frame=this.shipAtlas.frames[index],size=Math.round(88*scale);
     c.drawImage(frame,Math.round(x-size/2),Math.round(y-48*size/88),size,size);
   }
-  drawCompass(heading){const cv=document.getElementById('compass-canvas');if(!cv)return;const c=cv.getContext('2d');c.clearRect(0,0,120,120);c.imageSmoothingEnabled=false;c.fillStyle='#04152a';c.strokeStyle='#87a8b8';c.lineWidth=3;c.beginPath();c.arc(60,60,51,0,Math.PI*2);c.fill();c.stroke();c.strokeStyle='#3b6075';c.lineWidth=1;c.beginPath();c.arc(60,60,45,0,Math.PI*2);c.stroke();c.fillStyle='#e6ece3';c.font='bold 14px monospace';c.textAlign='center';c.fillText('N',60,28);c.fillText('S',60,103);c.fillText(window.gameApp?.currentLang==='en'?'W':'O',22,65);c.fillText('E',98,65);c.save();c.translate(60,60);c.rotate(heading*Math.PI/180);c.fillStyle='#ff8791';c.beginPath();c.moveTo(0,-30);c.lineTo(-4,0);c.lineTo(4,0);c.fill();c.fillStyle='#8de3fd';c.beginPath();c.moveTo(0,29);c.lineTo(-4,0);c.lineTo(4,0);c.fill();c.restore();c.fillStyle='#d1eadb';c.fillRect(57,57,6,6);}
-  drawRadar(s,e,now){const cv=document.getElementById('radar-canvas');if(!cv)return;const c=cv.getContext('2d');c.clearRect(0,0,132,112);c.fillStyle='#031d20';c.strokeStyle='#3c8b6e';c.lineWidth=1;c.beginPath();c.arc(66,55,49,0,Math.PI*2);c.fill();c.stroke();for(const r of [16,32]){c.beginPath();c.arc(66,55,r,0,Math.PI*2);c.stroke();}c.strokeStyle='#3c8b6e99';c.beginPath();c.moveTo(17,55);c.lineTo(115,55);c.moveTo(66,6);c.lineTo(66,104);c.stroke();const angle=this.reduced?-Math.PI/3:now/1900;c.fillStyle='#62f8a527';c.beginPath();c.moveTo(66,55);c.arc(66,55,48,angle-.7,angle);c.closePath();c.fill();c.strokeStyle='#a6f9b4';c.beginPath();c.moveTo(66,55);c.lineTo(66+48*Math.cos(angle),55+48*Math.sin(angle));c.stroke();const p=this.current.isReplay?s.realPosition:e.getMAP(),dx=(s.gpsPosition[0]-p[0])*5,dy=(s.gpsPosition[1]-p[1])*5;c.fillStyle='#bbefc9';c.fillRect(64,53,4,4);c.fillStyle='#ffc79a';c.fillRect(65+Math.max(-44,Math.min(44,dx)),54-Math.max(-44,Math.min(44,dy)),3,3);}
+  drawWake(X,Y,k,fx,fy,rx,ry,now){
+    // White pixel waves of a moving ship (full resolution, drawn under the sprite):
+    // a V-shaped Kelvin wake with crests travelling backwards, churned foam behind
+    // the stern and a bow wave peeling off both sides of the hull.
+    const c=this.shipCtx,still=this.reduced||this.current?.isReplay,phase=still?0:now/110;
+    const px=Math.max(2,Math.round(k)),P=(u,v)=>[Math.round(X+(u*fx+v*rx)*k),Math.round(Y+(u*fy+v*ry)*.78*k)];
+    const blob=(u,v,size,alpha,color)=>{const[x,y]=P(u,v);c.globalAlpha=alpha;c.fillStyle=color;c.fillRect(x-(size>>1),y-(size>>1),size,size);};
+    const L=58;
+    // Kelvin arms: dashed white crests that slide away from the stern.
+    for(const side of[-1,1])for(let t=0;t<L;t+=.55){
+      const fade=Math.pow(1-t/L,1.3),cycle=(t+phase)%8;if(cycle>4.5)continue;
+      const bright=cycle<2.2;blob(-24-t,side*(5.5+t*.38),bright?px+1:px,fade*(bright?.95:.6),bright?'#ffffff':'#cfe4ff');
+      // Little feathers: short transverse crests leaning inward from each arm.
+      if(cycle<.6&&t>4){for(let f=0;f<5;f++)blob(-24-t+f*.45,side*(5.5+t*.38-f*1.1),px,fade*.55,'#e9f3ff');}
+    }
+    // Churned foam right behind the stern, widening and dissolving.
+    for(let t=0;t<L*.55;t+=.5){
+      const fade=Math.pow(1-t/(L*.55),1.5),w=2.2+t*.12;
+      for(const o of[-1,0,1]){const n=Math.sin(t*1.9+phase*.8+o*2.1)*w*.6+o*w*.55;if(((t*7+o*3+Math.floor(phase))%5)<2)continue;
+        blob(-25-t,n,o===0&&t<8?px+1:px,fade*.8,t<6?'#ffffff':'#e9f3ff');}
+    }
+    // Bow wave: two white lines curling off the bow along the hull.
+    const halfWidth=u=>u>22?(30-u)*5/8:u>9?5+(22-u)*3/13:8; // hull outline, so the wave hugs it from outside
+    for(const side of[-1,1])for(let i=0;i<16;i++){
+      const u=31-i*1.2,v=side*(halfWidth(u)+1.4+i*.28+Math.sin(i*.8+phase*.9)*.35),fade=1-i/16;
+      blob(u,v,i<5?px+1:px,.95*fade,'#ffffff');
+      if(i%3===0)blob(u-.6,v+side*1.2,px,.5*fade,'#cfe4ff');
+    }
+    c.globalAlpha=1;
+  }
+  drawCompass(heading){const cv=document.getElementById('compass-canvas');if(!cv)return;const c=cv.getContext('2d');c.clearRect(0,0,120,120);c.imageSmoothingEnabled=false;c.fillStyle='#0b061966';c.beginPath();c.arc(62,63,56,0,Math.PI*2);c.fill();c.fillStyle='#160f2ef0';c.strokeStyle='#2a2f3a';c.lineWidth=9;c.beginPath();c.arc(60,60,52,0,Math.PI*2);c.fill();c.stroke();c.strokeStyle='#c3cad6';c.lineWidth=5;c.stroke();c.strokeStyle='#eef2f7';c.lineWidth=1;c.beginPath();c.arc(60,60,54,Math.PI*1.05,Math.PI*1.55);c.stroke();c.strokeStyle='#4a3a6a';c.lineWidth=1;c.beginPath();c.arc(60,60,45,0,Math.PI*2);c.stroke();c.fillStyle='#ffd166';for(let i=0;i<8;i++){const a=i*Math.PI/4;c.fillRect(Math.round(60+Math.cos(a)*48)-1,Math.round(60+Math.sin(a)*48)-1,2,2);}c.fillStyle='#fff1de';c.font='bold 14px monospace';c.textAlign='center';c.fillText('N',60,28);c.fillText('S',60,103);c.fillText(window.gameApp?.currentLang==='en'?'W':'O',22,65);c.fillText('E',98,65);c.save();c.translate(60,60);c.rotate(heading*Math.PI/180);c.fillStyle='#ff6b6b';c.beginPath();c.moveTo(0,-30);c.lineTo(-4,0);c.lineTo(4,0);c.fill();c.fillStyle='#b69cff';c.beginPath();c.moveTo(0,29);c.lineTo(-4,0);c.lineTo(4,0);c.fill();c.restore();c.fillStyle='#ffd166';c.fillRect(57,57,6,6);}
+  drawRadar(s,e,now){const cv=document.getElementById('radar-canvas');if(!cv)return;const c=cv.getContext('2d');c.clearRect(0,0,132,112);c.fillStyle='#1f1408';c.strokeStyle='#8a5a1f';c.lineWidth=1;c.beginPath();c.arc(66,55,49,0,Math.PI*2);c.fill();c.stroke();for(const r of [16,32]){c.beginPath();c.arc(66,55,r,0,Math.PI*2);c.stroke();}c.strokeStyle='#8a5a1f99';c.beginPath();c.moveTo(17,55);c.lineTo(115,55);c.moveTo(66,6);c.lineTo(66,104);c.stroke();const angle=this.reduced?-Math.PI/3:now/1900;c.fillStyle='#ffb34730';c.beginPath();c.moveTo(66,55);c.arc(66,55,48,angle-.7,angle);c.closePath();c.fill();c.strokeStyle='#ffd08a';c.beginPath();c.moveTo(66,55);c.lineTo(66+48*Math.cos(angle),55+48*Math.sin(angle));c.stroke();const p=this.current.isReplay?s.realPosition:e.getMAP(),dx=(s.gpsPosition[0]-p[0])*5,dy=(s.gpsPosition[1]-p[1])*5;c.fillStyle='#d7c8ff';c.fillRect(64,53,4,4);c.fillStyle='#ffb347';c.fillRect(65+Math.max(-44,Math.min(44,dx)),54-Math.max(-44,Math.min(44,dy)),3,3);}
 }
 
 // Original 5 × 7 bitmap lettering: embedded, network-free, crisp at integer scales.
 function drawTitle(){
  const letters={G:['01111','10000','10000','10111','10001','10001','01110'],H:['10001','10001','10001','11111','10001','10001','10001'],O:['01110','10001','10001','10001','10001','10001','01110'],S:['01111','10000','10000','01110','00001','00001','11110'],T:['11111','00100','00100','00100','00100','00100','00100'],R:['11110','10001','10001','11110','10100','10010','10001'],U:['10001','10001','10001','10001','10001','10001','01110'],E:['11111','10000','10000','11110','10000','10000','11111']};
  const cv=document.getElementById('title-canvas'),c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);const pixels=[];let x=10;for(const ch of 'GHOST ROUTE'){if(ch===' '){x+=14;continue;}letters[ch].forEach((row,y)=>{[...row].forEach((v,col)=>{if(v==='1')pixels.push([x+col*5,8+y*5,y]);});});x+=31;}
- for(const[a,b]of pixels){c.fillStyle='#000719';c.fillRect(a-4,b-4,13,14);c.fillStyle='#568cad';c.fillRect(a-2,b-2,9,11);}for(const[a,b,y]of pixels){c.fillStyle=y<3?'#e5faff':y<5?'#a7deed':'#6aaabf';c.fillRect(a,b,5,5);c.fillStyle='#122944';c.fillRect(a,b+5,5,2);}
+ for(const[a,b]of pixels){c.fillStyle='#0d0820';c.fillRect(a-4,b-4,13,14);c.fillStyle='#e0651f';c.fillRect(a-2,b-2,9,11);}for(const[a,b,y]of pixels){c.fillStyle=y<3?'#fff1de':y<5?'#ffd166':'#ff8a3d';c.fillRect(a,b,5,5);c.fillStyle='#2a0f3a';c.fillRect(a,b+5,5,2);}
 }
 
 

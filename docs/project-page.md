@@ -10,7 +10,7 @@ This effort is supported by Qollab & IonQ
 
 The campaign has 100 levels, numbered 00–99, beginning with a guided four-turn voyage. Later missions vary the turn limit, measurement budget, currents and rescue radius. Players avoid reefs and flag observed suspicious GPS readings; a perfect rescue also detects every attack type present in that mission. False alarms are reported separately. The archived example retains the original twelve-turn mission, a 6,000-measurement budget and a 2 km rescue radius.
 
-The whole interface supports English, Portuguese from Portugal, Brazilian Portuguese and Spanish, with separate translations for both Portuguese variants. Portugal Portuguese is the default. Ghost Route retains its English name in all four languages. The game's own pixel ship emblem, nautical interface, mission menu and 32 directional ship sprites establish its visual identity. Local browser storage preserves the language, selected level and completed levels when available.
+The whole interface supports Brazilian Portuguese (the default), English and Spanish. Ghost Route retains its English name in all three languages. The game's own pixel ship emblem, nautical interface, mission menu and 32 directional ship sprites establish its visual identity. Local browser storage preserves the language, selected level and completed levels when available.
 
 ## Quantum contribution
 

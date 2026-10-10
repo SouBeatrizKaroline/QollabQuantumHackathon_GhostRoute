@@ -1,8 +1,8 @@
 # Ghost Route
 
-A fullscreen, 16-bit pixel-art navigation game by QuantGirls for the Qollab × IonQ hackathon. Rescue the Aurora-1 crew aboard **SPOOFED**, navigate around a reef, and identify deceptive GPS readings with Quoora's simulated quantum sensor.
+A fullscreen, 16-bit pixel-art navigation game by QuantGirls for the Qollab × IonQ hackathon. Rescue the Aurora-1 crew aboard **SPOOFED**, navigate around a reef and rock fields, and identify deceptive GPS readings with Quoora's simulated quantum sensor.
 
-The name **Ghost Route** stays the same in every language. The complete interface, dialogue, alerts, menus and replay controls support **English**, **Português (Portugal)**, **Português (Brasil)** and **Español**. Portuguese from Portugal is the default; the Brazilian option has its own translation.
+The name **Ghost Route** stays the same in every language. The complete interface, dialogue, alerts, menus and replay controls support **Português (Brasil)**, **English** and **Español**. Brazilian Portuguese is the default.
 
 Ghost Route has its own nautical identity: a pixel ship emblem, a cyan-and-amber bridge interface, a mission menu and 32 direction-specific views of SPOOFED. The ship's bridge and mast keep their perspective as it turns.
 
@@ -22,7 +22,7 @@ Alternatively, serve the public folder from the repository root:
 python -m http.server 8000 --directory public
 ```
 
-Open http://localhost:8000. Start with **level 00**, a guided four-turn voyage, or choose a level from the mission menu. The campaign contains **100 levels, numbered 00–99**, with missions lasting 4–12 turns. The menu shows each level's measurement budget and rescue radius before you start. Use the heading controls, select a sensor mode and measurement budget, then advance. See [the game guide](docs/game-guide.md) for controls, campaign progress and replay.
+Open http://localhost:8000. Start with **level 00**, a guided four-turn voyage, or choose a level from the mission menu. The campaign contains **100 levels, numbered 00–99**, with missions lasting 4–12 turns. From level 01 the capsule splashes down on the far side of the chart, and a growing field of rocks (2 at level 01, 8 at level 99) sits along the route; `tests/campaign.cjs` proves every level still admits a safe rescue. The menu shows each level's measurement budget and rescue radius before you start. Use the heading controls, select a sensor mode and measurement budget, then advance. See [the game guide](docs/game-guide.md) for controls, campaign progress and replay.
 
 Language, selected level and completed levels are saved in this browser when local storage is available. The game remains playable when storage is restricted. Progress belongs to the current browser and origin; it does not synchronize between devices.
 
@@ -78,7 +78,7 @@ node tests/map-layout.cjs
 python scripts/replay_session.py examples/session-seed-20261011.json
 ```
 
-You can pass your own exported session instead. Campaign exports include their mission configuration, including the selected level, turn limit and rescue radius. Add `--validate-only` to inspect a session without sampling, or `--output dist/replay-report.json` to save a report. The script batches the session's circuit PUBs into **one sampler.run call**, using the saved world and phases as reference. It compares fresh circuit sampling with the same analytical model. The supplied `examples/session-seed-20261011.json` preserves the original twelve-turn mission. Local execution does not demonstrate a completed Qollab run.
+You can pass your own exported session instead. Campaign exports include their mission configuration, including the selected level, turn limit, rescue radius, reef and rocks (`pedras`). Add `--validate-only` to inspect a session without sampling, or `--output dist/replay-report.json` to save a report. The script batches the session's circuit PUBs into **one sampler.run call**, using the saved world and phases as reference. It compares fresh circuit sampling with the same analytical model. The supplied `examples/session-seed-20261011.json` preserves the original twelve-turn mission. Local execution does not demonstrate a completed Qollab run.
 
 ## Deploy the web game on Vercel
 
@@ -109,8 +109,9 @@ vercel.json                       Static deployment of public/
 public/index.html                 Browser game loader
 public/assets/css/game.css        Responsive 16-bit interface
 public/assets/js/engine.js        Physics, estimation and rendering
-public/assets/js/i18n.js          Complete en, pt-PT, pt-BR and es catalogs
+public/assets/js/i18n.js          Complete en, pt-BR and es catalogs
 public/assets/js/app.js           Game controller and interaction
+public/assets/js/console-decor.js Bridge console cables, buttons and screws (desktop)
 tests/                            Sensor and browser-logic checks
 scripts/                          Setup, plotting, replay and packaging
 examples/session-seed-20261011.json
@@ -121,4 +122,4 @@ dist/                             Generated output; ignored by Git
 
 [QA report](docs/qa-report.md) · [Project-page draft](docs/project-page.md) · [Demo script](docs/demo-script.md) · [Submission checklist](docs/submission-checklist.md) · [Hackathon references](docs/hackathon-research.md) · [Git guide](docs/git-guide.md)
 
-MIT License — QuantGirls Team. AI assistance: Gemini Spark assisted the initial implementation; OpenAI Codex assisted the fullscreen interface, procedural sprites, localization, QA and repository organization. User-provided visual references guided the art direction. Review the final disclosure against the team's actual contribution history before submission.
+MIT License — QuantGirls Team. AI assistance: Gemini Spark assisted the initial implementation; OpenAI Codex assisted the fullscreen interface, procedural sprites, localization, QA and repository organization. Claude (Anthropic) assisted the sunset colour theme, animated map effects, particles, the full-resolution 32-bit ship sprite and the bridge cockpit console. User-provided visual references guided the art direction. Review the final disclosure against the team's actual contribution history before submission.

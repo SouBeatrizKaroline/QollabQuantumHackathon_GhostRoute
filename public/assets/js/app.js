@@ -5,7 +5,7 @@ class GhostRouteApp {
     this.estimator = new BayesianGridEstimator();
 
     const preferences = readPreferences();
-    this.currentLang = Object.hasOwn(TEXTOS,preferences.language) ? preferences.language : 'pt-PT';
+    this.currentLang = Object.hasOwn(TEXTOS,preferences.language) ? preferences.language : 'pt-BR';
     this.levelNumber = Number.isInteger(preferences.level) && preferences.level>=0 && preferences.level<=99 ? preferences.level : 0;
     this.completedLevels = new Set(Array.isArray(preferences.completed) ? preferences.completed.filter(n=>Number.isInteger(n)&&n>=0&&n<=99) : []);
     this.debugMode = false;
@@ -190,7 +190,7 @@ class GhostRouteApp {
     ];
 
     // 2. Check collision with reef segment
-    if (checkReefCollision(prevReal, nextReal, MISSAO.recife)) {
+    if (hitsObstacle(prevReal, nextReal)) {
       this.state.isAground = true;
 
     }
@@ -278,7 +278,7 @@ class GhostRouteApp {
     this.alertGps.style.display = gpsInside ? 'none' : 'block';
 
     // Check Reef Proximity (< 3 km from MAP)
-    const reefDist = distToPolygon(mapCoords, MISSAO.recife);
+    const reefDist = distToObstacles(mapCoords);
     this.alertReef.style.display = (reefDist < 3.0) ? 'block' : 'none';
 
     // Record turn decision data
@@ -402,7 +402,7 @@ class GhostRouteApp {
     } else if (turn === 8) {
       speaker = t.speakerAna;
       role = t.roleAstronaut;
-      text = t.diaTurn8;
+      text = fillText(t.diaTurn8, {coords: MISSAO.capsula.pouso_real.map(v => Math.round(v)).join(', ')});
       expr = "happy";
     } else if (turn === 9) {
       speaker = t.speakerHelena;
@@ -643,12 +643,12 @@ GhostRouteApp.prototype.updateTelemetryUI = function () {
   const aligned = rec?.gpsInsideHPD;
   const gpsStatus = document.getElementById('gps-status');
   gpsStatus.textContent = !rec ? t.gpsPending : aligned ? t.gpsAligned : t.gpsMismatch;
-  gpsStatus.style.color = !rec ? '#b9d6dd' : aligned ? '#9febc0' : '#ff9da6';
+  gpsStatus.style.color = !rec ? '#e6d8ef' : aligned ? '#a6e8a0' : '#ff8f86';
   const gpsMeter = document.getElementById('gps-meter');
   gpsMeter.style.width = !rec ? '0%' : '100%';
-  gpsMeter.style.background = aligned ? '#7ddcab' : '#dd697e';
+  gpsMeter.style.background = aligned ? 'linear-gradient(#ffd08a,#e8891f)' : 'linear-gradient(#ff9a8a,#c9344a)';
   document.getElementById('hull-status').textContent = this.state.isAground ? t.hullGrounded : t.hullIntact;
-  document.getElementById('hull-status').style.color = this.state.isAground ? '#ff9da6' : '#9febc0';
+  document.getElementById('hull-status').style.color = this.state.isAground ? '#ff8f86' : '#a6e8a0';
   const reading = rec?.shots ? fillText(t.observedReading, {turn:rec.turn, shots:numberText(rec.shots,this.currentLang,0), mode:rec.sensorMode==='ghz'?t.modeGhz:t.modeSimple}) : rec ? t.sensorOffReading : t.readingNone;
   const exhausted = this.state.remainingShots < 100;
   document.getElementById('last-reading').textContent = reading + (exhausted && !this.state.isFinished ? ' ' + t.budgetExhausted : '');
@@ -793,9 +793,9 @@ GhostRouteApp.prototype.renderScrubberTurn = function (turnIndex) {
     const max = Math.max(rec.NX,rec.NY,1);
     bars.forEach(([label,value],i)=> {
       const x=16+i*128, height=value/max*68;
-      ctx.fillStyle='#13354b';ctx.fillRect(x,14,105,68);
-      ctx.fillStyle=i%2?'#79dde7':'#82a1e5';ctx.fillRect(x,82-height,105,height);
-      ctx.fillStyle='#dbeef2';ctx.font='14px monospace';ctx.textAlign='center';ctx.fillText(`${label}: ${value}`,x+52,105);
+      ctx.fillStyle='#241a40';ctx.fillRect(x,14,105,68);
+      ctx.fillStyle=i<2?'#b69cff':'#ffd166';ctx.fillRect(x,82-height,105,height);
+      ctx.fillStyle='#fbefe2';ctx.font='14px monospace';ctx.textAlign='center';ctx.fillText(`${label}: ${value}`,x+52,105);
     });
   }
   const timeline=document.getElementById('attack-timeline'); timeline.replaceChildren(); timeline.setAttribute('aria-label',t.timelineLabel);
@@ -951,3 +951,91 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 else startGhostRoute();
 
 
+
+
+/* Mission radio as an icon (phones in portrait): it floats on the left, just above the
+   helm, and opens upward over the sea without shrinking the chart. In every layout where
+   the radio can be collapsed, a new message makes it pulse and shows a "!" badge until
+   the player opens it. */
+(function(){
+  const proto=GhostRouteApp.prototype;
+  const matches=query=>typeof window!=='undefined'&&typeof window.matchMedia==='function'&&window.matchMedia(query).matches;
+  const visible=el=>!!el&&typeof getComputedStyle==='function'&&getComputedStyle(el).display!=='none';
+  proto.refreshRadio=function(){
+    const widget=document.querySelector('.radio-widget'),toggle=document.getElementById('btn-radio-toggle');
+    if(!widget||!widget.classList||!toggle)return;
+    const floating=matches('(max-width:850px) and (min-height:521px), (max-width:620px)');
+    widget.classList.toggle('radio-floating',floating);
+    const open=widget.classList.contains('radio-open'),collapsed=!open&&visible(toggle);
+    // A message is identified by the mission moment, not its wording, so switching language is not "new".
+    const key=[this.levelNumber,this.state?.turnsRecord?.length,this.state?.isFinished,this.dialogueStep].join('|');
+    if(!collapsed){this.radioSeen=key;widget.classList.remove('radio-unread');}
+    else if(key!==this.radioSeen)widget.classList.add('radio-unread');
+    if(widget.style){
+      const dock=document.querySelector('.navigation-dock'),shell=document.getElementById('game-shell');
+      if(floating&&dock?.getBoundingClientRect&&shell?.getBoundingClientRect){
+        const d=dock.getBoundingClientRect(),s=shell.getBoundingClientRect();
+        widget.style.top='auto';widget.style.bottom=Math.round(s.bottom-d.top+10)+'px';
+      }else{widget.style.top='';widget.style.bottom='';}
+    }
+    this.updateRadioLabel();
+    const t=TEXTOS[this.currentLang];
+    if(widget.classList.contains('radio-unread')&&t?.radioNew)toggle.setAttribute('aria-label',toggle.getAttribute('aria-label')+' · '+t.radioNew);
+  };
+  const render=proto.renderMap,narrate=proto.updateNarrative;
+  proto.renderMap=function(){this.refreshRadio();return render.apply(this,arguments);};
+  proto.updateNarrative=function(){const out=narrate.apply(this,arguments);this.refreshRadio();return out;};
+  if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('resize',()=>window.gameApp?.refreshRadio?.());
+})();
+
+
+/* First-use explanation of the quantum sensor. It opens the first time the player touches
+   the sensor controls or makes a first reading, is remembered in this browser, and can
+   be reopened from the "?" button in the sensor panel. */
+(function(){
+  const proto=GhostRouteApp.prototype,KEY='ghost-route.sensor-intro-seen';
+  const isElement=el=>typeof HTMLElement!=='undefined'&&el instanceof HTMLElement;
+  const seen=()=>{try{return window.localStorage.getItem(KEY)==='1';}catch{return false;}};
+  const remember=()=>{try{window.localStorage.setItem(KEY,'1');}catch{}};
+  proto.openSensorIntro=function(){
+    const box=document.getElementById('sensor-intro');
+    if(!isElement(box)||!box.hidden)return;
+    const menu=document.getElementById('mission-menu');
+    if(isElement(menu)&&!menu.hidden)return;
+    this.sensorIntroReturn=document.activeElement;box.hidden=false;remember();
+    document.getElementById('btn-sensor-intro-ok')?.focus();
+  };
+  proto.closeSensorIntro=function(){
+    const box=document.getElementById('sensor-intro');
+    if(!isElement(box)||box.hidden)return;
+    box.hidden=true;
+    const back=this.sensorIntroReturn;if(back&&typeof back.focus==='function'&&document.contains(back))back.focus();
+  };
+  const bind=proto.bindEvents;
+  proto.bindEvents=function(){
+    bind.apply(this,arguments);
+    const box=document.getElementById('sensor-intro');if(!isElement(box))return;
+    document.getElementById('btn-sensor-intro-ok').addEventListener('click',()=>this.closeSensorIntro());
+    document.getElementById('btn-sensor-help').addEventListener('click',()=>this.openSensorIntro());
+    box.addEventListener('click',e=>{if(e.target===box)this.closeSensorIntro();});
+    box.addEventListener('keydown',e=>{
+      if(e.key==='Escape'){e.preventDefault();e.stopPropagation();this.closeSensorIntro();}
+      if(e.key==='Tab'){e.preventDefault();document.getElementById('btn-sensor-intro-ok').focus();}
+    });
+    // While the explanation is open, game shortcuts (Enter, arrows, Esc → menu) wait.
+    window.addEventListener('keydown',e=>{
+      if(box.hidden)return;
+      if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();this.closeSensorIntro();return;}
+      if(!box.contains(e.target)){e.preventDefault();e.stopImmediatePropagation();document.getElementById('btn-sensor-intro-ok').focus();}
+    },true);
+    for(const id of['sensor-mode-select','sensor-shots-select'])
+      document.getElementById(id).addEventListener('pointerdown',e=>{if(!seen()){e.preventDefault();this.openSensorIntro();}});
+  };
+  const render=proto.renderMap;
+  proto.renderMap=function(){
+    const out=render.apply(this,arguments);
+    const rec=this.state?.turnsRecord?.at?.(-1);
+    if(rec?.shots>0&&!this.state.isFinished&&!seen())this.openSensorIntro();
+    return out;
+  };
+})();

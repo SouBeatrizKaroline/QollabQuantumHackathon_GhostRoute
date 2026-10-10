@@ -7,10 +7,10 @@ const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/assets/js/i18n.js'), 'utf8');
 const texts = vm.runInNewContext(`${source}\n; TEXTOS`, {}, { timeout: 1000 });
-const locales = ['en', 'pt-PT', 'pt-BR', 'es'];
+const locales = ['en', 'pt-BR', 'es'];
 const placeholders = value => (value.match(/\{\w+\}/g) || []).sort();
 
-test('English, Portuguese Portugal, Portuguese Brazil and Spanish provide complete catalogs', () => {
+test('English, Brazilian Portuguese and Spanish provide complete catalogs', () => {
   assert.deepEqual(Object.keys(texts).sort(), [...locales].sort());
   const englishKeys = Object.keys(texts.en).sort();
   for (const locale of locales) {
@@ -47,7 +47,7 @@ test('HTML text and accessible translation bindings exist in every language', ()
 });
 
 test('both Portuguese variants and Spanish do not retain English sensor or replay labels', () => {
-  for (const locale of ['pt-PT', 'pt-BR', 'es']) {
+  for (const locale of ['pt-BR', 'es']) {
     for (const [key, value] of Object.entries(texts[locale])) {
       const prose = value.replace(/\{\w+\}/g, '');
       assert.ok(!/\b(?:shots?|debug|replay|debriefing)\b/i.test(prose), `${locale}.${key}: untranslated English UI: ${value}`);
@@ -76,26 +76,13 @@ test('mission, observation, sensor exhaustion and replay states are translated',
   assert.notEqual(texts.es.attributionTranslated, texts.en.attributionTranslated);
 });
 
-test('Portuguese Portugal is a distinct complete translation with regional vocabulary', () => {
-  const portugal = texts['pt-PT'], brazil = texts['pt-BR'];
-  assert.notEqual(portugal, brazil);
-  assert.match(portugal.fullscreen, /Ecrã/);
-  assert.match(brazil.fullscreen, /Tela/);
-  assert.match(portugal.navigationControls, /Controlos/);
-  assert.match(brazil.navigationControls, /Controles/);
-  assert.match(portugal.gameSettings, /Definições/);
-  assert.match(brazil.gameSettings, /Configurações/);
-  assert.match(portugal.gridScale, /Grelha/);
-  assert.match(brazil.gridScale, /Grade/);
-  assert.match(portugal.tut2, /contacto/);
-  assert.match(brazil.tut2, /contato/);
-  assert.match(portugal.menuGuideHeadingBody, /este é 90°/);
-  assert.match(brazil.menuGuideHeadingBody, /leste é 90°/);
-  const localizedSeparately = Object.keys(portugal).filter(key => portugal[key] !== brazil[key]);
-  assert.ok(localizedSeparately.length >= 50, 'Expected regional wording throughout the interface and mission dialogue');
+test('Portuguese is Brazilian Portuguese only', () => {
+  assert.equal(Object.hasOwn(texts, 'pt-PT'), false);
+  assert.match(texts['pt-BR'].fullscreen, /Tela/);
+  assert.match(texts['pt-BR'].gameSettings, /Configurações/);
 });
 
-test('menu, campaign, tutorial and accessible controls are complete in all four languages', () => {
+test('menu, campaign, tutorial and accessible controls are complete in all three languages', () => {
   const required = [
     'menuLabel', 'menuEyebrow', 'menuTitle', 'menuIntro', 'menuStart', 'menuContinue',
     'menuClose', 'menuLanguage', 'menuFullscreen', 'menuRestart', 'menuExport', 'menuSettings',
@@ -119,9 +106,9 @@ test('menu, campaign, tutorial and accessible controls are complete in all four 
   }
 });
 
-test('language selectors expose all four locales and default to Portugal Portuguese', () => {
+test('language selectors expose all three locales and default to Brazilian Portuguese', () => {
   const html = fs.readFileSync(path.join(root, 'public/index.html'), 'utf8');
-  assert.match(html, /<html\b[^>]*lang=["']pt-PT["']/);
+  assert.match(html, /<html\b[^>]*lang=["']pt-BR["']/);
   for (const id of ['lang-select', 'menu-lang-select']) {
     const select = html.match(new RegExp(`<select\\b[^>]*\\bid=["']${id}["'][^>]*>([\\s\\S]*?)</select>`));
     assert.ok(select, `Missing language selector ${id}`);
@@ -129,7 +116,7 @@ test('language selectors expose all four locales and default to Portugal Portugu
     assert.deepEqual(options.map(option => option[1].match(/value=["']([^"']+)["']/)?.[1]).sort(), [...locales].sort());
     const selected = options.filter(option => /\bselected\b/.test(option[1]));
     assert.equal(selected.length, 1, `${id}: expected a default selected language`);
-    assert.match(selected[0][1], /value=["']pt-PT["']/);
+    assert.match(selected[0][1], /value=["']pt-BR["']/);
   }
 });
 

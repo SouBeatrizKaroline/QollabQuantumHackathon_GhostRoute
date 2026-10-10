@@ -88,8 +88,8 @@ def validate_session(session):
     speed = _number(ship.get("velocidade_km_turno"), "velocidade_km_turno")
     if speed <= 0:
         raise SessionValidationError("velocidade_km_turno must be positive")
-    if campaign and not 5.5 <= speed <= 8.5:
-        raise SessionValidationError("Version 1.1.0 requires a ship speed between 5.5 and 8.5 km per turn")
+    if campaign and not 5.5 <= speed <= 12.5:
+        raise SessionValidationError("Version 1.1.0 requires a ship speed between 5.5 and 12.5 km per turn")
     _number(ship.get("ruido_corrente_km"), "ruido_corrente_km", 0)
     sensor = _object(mission.get("sensor"), "sensor")
     budget = _integer(sensor.get("shots_total"), "shots_total", 1 if campaign else 0, 100000 if campaign else None)
@@ -108,6 +108,14 @@ def validate_session(session):
             raise SessionValidationError("Version 1.1.0 requires a four-vertex reef")
         for index, vertex in enumerate(reef):
             _coordinate(vertex, f"recife[{index}]")
+        rocks = mission.get("pedras", [])
+        if not isinstance(rocks, list) or len(rocks) > 12:
+            raise SessionValidationError("pedras must be a list of at most 12 rocks")
+        for rock_index, rock in enumerate(rocks):
+            if not isinstance(rock, list) or not 3 <= len(rock) <= 8:
+                raise SessionValidationError(f"pedras[{rock_index}] must have 3 to 8 vertices")
+            for index, vertex in enumerate(rock):
+                _coordinate(vertex, f"pedras[{rock_index}][{index}]")
     field = _object(mission.get("campo"), "campo")
     _number(field.get("base"), "campo.base")
     _number(field.get("kappa"), "campo.kappa")

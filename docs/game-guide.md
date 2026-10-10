@@ -4,9 +4,9 @@ Open [../public/index.html](../public/index.html), keeping the assets folder in 
 
 ## Mission and controls
 
-Rescue Aurora-1 while steering SPOOFED around the charted reef. The campaign contains **100 levels, 00–99**. Level 00 is a guided four-turn introduction: keep a northeast heading while Quoora explains the helm, sensor and GPS comparison. Subsequent levels add false signals, stronger currents, fewer sensor measurements and a smaller rescue radius.
+Rescue Aurora-1 while steering SPOOFED around the charted reef. The campaign contains **100 levels, 00–99**. Level 00 is a guided four-turn introduction: keep a northeast heading while Quoora explains the helm, sensor and GPS comparison. From level 01 the capsule splashes down on the far side of the chart, with rocks along the route that you must steer around. Subsequent levels add more rocks, false signals, stronger currents, fewer sensor measurements and a smaller rescue radius.
 
-Use **Menu** to choose any level. Its briefing shows the mission's turn limit, measurement budget and rescue radius. Missions last 4–12 turns, each representing 20 minutes. Speed and current noise depend on the selected level. To complete a level, finish inside its rescue radius without crossing the reef; completed levels receive a check mark. A successful rescue offers **Next level**.
+Use **Menu** to choose any level. Its briefing shows the mission's turn limit, measurement budget and rescue radius. Missions last 4–12 turns, each representing 20 minutes. Speed and current noise depend on the selected level. To complete a level, finish inside its rescue radius without crossing the reef or a rock; completed levels receive a check mark. A successful rescue offers **Next level**.
 
 Language, selected level and completed levels are saved locally when this browser permits storage. They are specific to the current browser and site. Storage restrictions do not prevent playing, but preferences and completion marks may be lost after reloading.
 
@@ -17,7 +17,7 @@ Language, selected level and completed levels are saved locally when this browse
 - On the map, Enter or Space advances; Left/Right adjusts heading by 5°; D toggles the labeled true-position debug view; R restarts. Escape opens or closes the mission menu.
 - Buttons, sliders and selects retain their native keyboard behavior.
 - Use Fullscreen to enter fullscreen. Escape exits it. Browser permissions may restrict fullscreen or downloads in embedded previews.
-- Switch **English**, **Português (Portugal)**, **Português (Brasil)** or **Español** without starting a new mission. Portugal Portuguese is the default; Brazil has a separate translation.
+- Switch **Português (Brasil)**, **English** or **Español** without starting a new mission. Brazilian Portuguese is the default.
 - On narrow screens, expand or collapse the mission radio with its arrow button.
 
 A depleted measurement budget does not prevent navigation with the sensor off. GPS consistency describes agreement with the current estimated region; it is not a guaranteed probability that a signal is honest.

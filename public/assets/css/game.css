@@ -435,3 +435,400 @@ input[type=range],input[type=checkbox]{accent-color:var(--seafoam)}
  .telemetry-strip{top:128px;left:calc(35% + 12px);right:12px;width:auto;padding:6px 8px;justify-content:space-between}
  .telemetry-strip i{font-size:10px}.telemetry-strip strong{font-size:12px}
 }
+
+/* ==========================================================================
+   SUNSET RESCUE THEME — paleta "Resgate no pôr do sol"
+   Só cores e efeitos; o layout acima não muda.
+   Laranja = resgate/ação · Dourado = destaque · Lilás = quântico/Quoora
+   Âmbar = GPS · Coral = perigo/recife
+   ========================================================================== */
+:root{
+  --ink:#120d24;--panel:#1a1336f5;--white:#fbefe2;--muted:#cbbcd8;--line:#6b5a8e;
+  --sun:#ff8a3d;--sun-deep:#e0651f;--gold:#ffd166;--lilac:#b69cff;--lilac-soft:#d7c8ff;
+  --amber:#ffb347;--coral:#ff6b6b;--good:#a6e8a0;
+  --cyan:var(--gold);--seafoam:var(--gold);--red:var(--coral);--green:var(--good)
+}
+html,body{background:#120d24;color:var(--white)}
+#game-shell{background:#1a1240}
+strong{color:var(--gold)}
+button,select{color:var(--white);background:#24193f;border-color:var(--line);box-shadow:inset 0 0 0 1px #34275a,0 2px 0 #0b0717}
+button:hover,select:hover{background:#33245a;border-color:var(--gold)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline-color:#ffe9a8}
+input[type=range],input[type=checkbox]{accent-color:var(--sun)}
+.scanlines{opacity:.12;background:repeating-linear-gradient(0deg,#0d0820 0,#0d0820 1px,transparent 1px,transparent 4px)}
+.bezel{border-color:#0b0619;box-shadow:inset 0 0 0 1px #6b5a8e,inset 0 0 70px #0b061980}
+.pixel-panel{border-color:#7a64a8;background:linear-gradient(180deg,#221846f5,#130d2af5);box-shadow:0 0 0 2px #0b0717,inset 0 0 0 1px #34275a,3px 3px 0 #06030fa8}
+.pixel-panel:before{background:var(--gold)}
+.hud-top{border-bottom:3px solid var(--sun)}
+.hud-label{color:#f0e2f5}
+.mission-line{color:#e4d3ea}
+.status-dot{background:var(--sun)}
+.meter{border-color:#6b5a8e;background:#0d0820}
+.meter>div{background:repeating-linear-gradient(90deg,transparent 0,transparent 13px,#0d082055 13px,#0d082055 15px),linear-gradient(#e2d6ff,#8b6cf0)}
+.meter #gps-meter{background:repeating-linear-gradient(90deg,transparent 0,transparent 13px,#0d082055 13px,#0d082055 15px),linear-gradient(#ffd08a,#e8891f)}
+.meter #gps-meter.danger,.meter #budget-bar-fill.warn{background:linear-gradient(#ff9a8a,#c9344a)}
+.brand h1{color:#fff1de;text-shadow:2px 2px 0 var(--sun-deep),4px 4px 0 #1a0b2e}
+.brand-sub{color:var(--gold)}
+.menu-trigger{border-color:var(--sun);color:#ffd9b8}
+.compass-widget,.radar-widget{background:#160f2eeb}
+.compass-widget span,.radar-widget>span{color:var(--gold)}
+.radar-widget small{color:#e8d6f0}
+.telemetry-strip{border-color:#5d4c82;background:#1a1236ed}
+.telemetry-strip i{color:#cdbedb}
+.telemetry-strip strong{color:#fff1de}
+.panel-kicker{border-color:#46386a;color:#f3e6f2}
+.radio-led{background:var(--good)}
+.radio-body canvas{border-color:var(--lilac)}
+.radio-body strong{color:var(--lilac-soft)}
+.radio-body span{color:var(--muted)}
+.radio-widget p{color:#f6eadf}
+.warning{border:1px solid #d9776f;border-left:4px solid var(--coral);background:#3a1a2ef2;color:#ffd3c9}
+#alert-gps{border-color:#d8964a;border-left-color:var(--amber);background:#3a2516f2;color:#ffe2b8}
+.navigation-dock{border-top:3px solid var(--sun)}
+.navigation-dock>div+div,.navigation-dock .sensor-module{border-color:#46386a}
+.navigation-dock label{color:#d9c9e4}
+.heading-module .panel-kicker strong{color:var(--gold)}
+.btn-dir.active{border-color:var(--sun);background:#5a2f3a;color:#ffe6cc}
+.sensor-module .panel-kicker h2{color:var(--lilac-soft)}
+.qubit-pips{color:var(--lilac)}
+.sensor-module p{color:#e2d3ee}
+.sail-button{border:1px solid #ffe0b8;background:linear-gradient(#ffb26b,#ff7a2e);box-shadow:inset 0 0 0 2px #e0651f,0 4px 0 #2a1206;color:#2b1206}
+.sail-button:hover{border-color:#fff1de;background:linear-gradient(#ffc489,#ff8a3d)}
+.sail-icon{color:#5a2408}
+.sail-button kbd{border-color:#c45a1c;background:#ffc48f;color:#5a2408}
+.action-module p{color:#d2c2dd}
+.chart-legend .dash-key:before{border-top-color:var(--amber)}
+.chart-legend .heat-key:before{background:var(--lilac)}
+.chart-legend .reef-key:before{background:repeating-linear-gradient(135deg,var(--coral) 0,var(--coral) 2px,#1a1236 2px,#1a1236 4px)}
+#legend-true:before{background:#fff1de}
+#legend-inertial:before{border-top-color:var(--lilac-soft)}
+.bottom-status{color:#d8c8e3}
+.debug-badge{background:#4a2140;color:#ffe9b8;border-color:var(--gold)}
+/* Menu */
+.mission-menu{background:radial-gradient(ellipse at 78% 12%,#ff8a3d40,transparent 38%),radial-gradient(ellipse at 30% 40%,#5b2a6e66,#120d24ed 72%),repeating-linear-gradient(0deg,#0d082022 0,#0d082022 1px,transparent 1px,transparent 4px)}
+.menu-box{border-color:#8a6fb8;background:#160f2ef8}
+.menu-box:before{background:var(--gold)}
+.menu-topbar{border-color:#3c2f5e;background:linear-gradient(90deg,#2a1840,#1d1438 60%,#3a1e3a)}
+.menu-eyebrow{color:#ffcf9e}
+#btn-menu-close{color:#e3d3ec}
+.menu-emblem{background:repeating-linear-gradient(0deg,transparent 0,transparent 17px,#5a3f8a2b 17px,#5a3f8a2b 18px),repeating-linear-gradient(90deg,transparent 0,transparent 17px,#5a3f8a2b 17px,#5a3f8a2b 18px)}
+.emblem-cross{background:var(--sun)}
+.menu-brand-name{color:#fff1de;text-shadow:4px 4px 0 var(--sun-deep),7px 7px 0 #2a0f3a}
+.brand-period{color:var(--sun)}
+.menu-brand-line{color:var(--gold)}
+#menu-title{color:#fff1de}
+#menu-intro{color:#dccbe6}
+.menu-primary{border:1px solid #ffe0b8;background:linear-gradient(#ffb26b,#ff7a2e);box-shadow:inset 0 0 0 2px #e0651f,0 4px 0 #2a1206;color:#2b1206}
+.menu-primary:hover{border-color:#fff1de;background:linear-gradient(#ffc489,#ff8a3d)}
+.menu-keyboard{color:#bfaed0}
+.campaign-card{border-color:#5d4c82;background:linear-gradient(135deg,#2a1d4a,#1a1336)}
+.campaign-card:before{background:var(--sun)}
+.menu-section-heading{border-color:#46386a}
+.menu-section-heading h3{color:#f3e6f2}
+#current-level{border-color:var(--lilac);background:#3d2560;color:var(--gold)}
+.campaign-selector label,.campaign-difficulty>span,.menu-settings label{color:#d0c0dd}
+#level-select{background:#1d1438}
+.campaign-difficulty strong{color:#fff1de}
+.level-description{color:#e2d3ee}
+.campaign-progress{border-color:#46386a;color:#d0c0dd}
+.menu-level-action{border-color:var(--sun);background:#4a2a35;color:#ffd9b8}
+.menu-level-action:hover{border-color:#ffd9b8;background:#5e3540}
+.menu-section-label{color:#e3d3ec}
+.menu-guide{border-color:#46386a;color:#e2d3ee;background:#1d1438}
+.menu-guide summary{color:#f3e6f2}
+.menu-guide li{color:var(--gold)}
+.menu-guide strong{color:#fff1de}
+.menu-guide p{color:#d6c6e1}
+.menu-secondary-actions button{color:#e3d3ec}
+.menu-footer{border-color:#3c2f5e;color:#c4b2d4}
+.menu-footer-code{color:var(--gold)}
+/* Replay */
+.replay-modal{background:linear-gradient(90deg,transparent 25%,#120d24bb)}
+.replay-box>.panel-kicker h2{color:#fff1de}
+.outcome-banner{border-color:#8a6fb8;background:#241a40;color:#fbefe2}
+.scoreboard-grid span{color:#d6c6e1}
+.timeline-cell{border-color:#5d4c82;background:#22183f}
+.timeline-cell.attack{border-color:var(--coral);background:#4a2030}
+#turn-event-info,#meas-details,#timeline-legend{color:#e6d8ef}
+#replay-measurement-box{border-color:#5d4c82}
+.replay-box>label{color:#e3d3ec}
+.tutorial-focus{outline-color:var(--gold);box-shadow:0 0 0 6px #ffd16622}
+
+/* --------------------------------------------------------------------------
+   FRUFRUS: brilhos e animações (desligados com prefers-reduced-motion)
+   -------------------------------------------------------------------------- */
+@keyframes gr-sail-glow{0%,100%{box-shadow:inset 0 0 0 2px #e0651f,0 4px 0 #2a1206,0 0 0 0 #ff8a3d00}50%{box-shadow:inset 0 0 0 2px #e0651f,0 4px 0 #2a1206,0 0 18px 2px #ff8a3d88}}
+@keyframes gr-blink{0%,60%,100%{opacity:1}70%,90%{opacity:.25}}
+@keyframes gr-dot{0%,100%{box-shadow:0 0 0 0 #ff8a3d00}50%{box-shadow:0 0 8px 2px #ff8a3dcc}}
+@keyframes gr-qubits{0%,100%{text-shadow:0 0 0 #b69cff00;color:#b69cff}50%{text-shadow:0 0 8px #b69cffcc;color:#e9e0ff}}
+@keyframes gr-quoora{0%,100%{box-shadow:0 0 0 0 #b69cff00}50%{box-shadow:0 0 12px 1px #b69cffaa}}
+@keyframes gr-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes gr-warn{0%,100%{box-shadow:3px 3px 0 #06030f}50%{box-shadow:3px 3px 0 #06030f,0 0 14px #ffb34766}}
+.sail-button,.menu-primary{animation:gr-sail-glow 2.6s ease-in-out infinite}
+.sail-button:disabled{animation:none}
+.radio-led{animation:gr-blink 1.8s steps(1,end) infinite}
+.status-dot{animation:gr-dot 2s ease-in-out infinite}
+.qubit-pips{animation:gr-qubits 2.4s ease-in-out infinite}
+.radio-body canvas{animation:gr-quoora 3s ease-in-out infinite}
+.brand-mark,.menu-emblem img{animation:gr-bob 2.8s steps(4,end) infinite}
+.warning{animation:gr-warn 1.6s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){
+ .sail-button,.menu-primary,.radio-led,.status-dot,.qubit-pips,.radio-body canvas,.brand-mark,.menu-emblem img,.warning{animation:none!important}
+}
+
+/* 32-bit ship layer: full-resolution sprite above the 16-bit chart, below scanlines and panels. */
+.ship-layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;image-rendering:pixelated;z-index:1}
+
+/* ==========================================================================
+   PAINÉIS DE CONSOLE — moldura de aço com parafusos e tela embutida
+   (referência: arte conceitual do SPOOFED). Só aparência; o layout não muda.
+   ========================================================================== */
+:root{
+  --steel:linear-gradient(180deg,#eef2f7 0%,#c3cad6 25%,#98a1b2 60%,#6b7487 100%);
+  --screen:linear-gradient(180deg,#1b1a44 0%,#14133a 60%,#0f0e2e 100%);
+  --steel-edge:#2a2f3a;--steel-light:#e4e9f0;--steel-mid:#8e97a8;
+  --rivet:radial-gradient(circle,#ffffff 0 .8px,#b9c1ce 1.3px,#3a404d 2.2px,transparent 2.7px);
+  --radius:14px;--radius-sm:10px
+}
+/* Moldura: o fundo "border-box" é o aço, o "padding-box" é a tela escura. */
+.pixel-panel,.menu-box,.telemetry-strip{
+  border:6px solid transparent;border-radius:var(--radius);
+  background:
+    var(--screen) padding-box,
+    var(--rivet) top 0 left 0/6px 6px no-repeat border-box,
+    var(--rivet) top 0 right 0/6px 6px no-repeat border-box,
+    var(--rivet) bottom 0 left 0/6px 6px no-repeat border-box,
+    var(--rivet) bottom 0 right 0/6px 6px no-repeat border-box,
+    var(--steel) border-box;
+  box-shadow:0 0 0 1px #f4f7fb,0 0 0 4px #8e97a8,0 0 0 6px var(--steel-edge),inset 0 0 0 2px #07061a,inset 0 0 22px #00000070,0 8px 0 5px #0b0717aa,0 14px 26px #05020f66;
+}
+.pixel-panel:before{display:none}
+.menu-box:before{display:none}
+.hud-top{border-bottom:6px solid transparent;border-radius:16px}
+.navigation-dock{border-top:6px solid transparent;border-radius:16px}
+.compass-widget,.radar-widget{border-radius:18px}
+.menu-box{border-radius:20px;border-width:8px}
+.telemetry-strip{border-width:4px;border-radius:12px}
+/* LEDs de console no painel de comando */
+.navigation-dock:after{content:'';position:absolute;bottom:-13px;right:28px;width:58px;height:14px;padding:2px 6px;box-sizing:border-box;border:2px solid var(--steel-mid);border-radius:7px;pointer-events:none;background-origin:content-box;background-color:#0b0a24;box-shadow:0 0 0 1px var(--steel-edge);
+  background:radial-gradient(circle,#a6e8a0 0 2px,#3c7a3a 3px,transparent 4px) 0 0/14px 8px no-repeat,
+             radial-gradient(circle,#ffd166 0 2px,#8a6a1f 3px,transparent 4px) 15px 0/14px 8px no-repeat,
+             radial-gradient(circle,#ff6b6b 0 2px,#8a2a2a 3px,transparent 4px) 30px 0/14px 8px no-repeat}
+/* Plaquinhas de título, como "BÚSSOLA" e "RADAR GPS" na arte */
+.radar-widget>span,.panel-kicker h2,.menu-section-heading h3{display:inline-block;padding:3px 10px;border:2px solid var(--steel-mid);border-radius:8px;background:#0b0a24;box-shadow:inset 0 0 0 1px #000,0 2px 0 var(--steel-edge),inset 0 1px 0 #ffffff14;color:var(--gold);letter-spacing:1px}
+.panel-kicker{border-bottom:2px solid #2e2b5a}
+.radar-widget>span{margin-top:2px}
+/* O nome do jogo numa placa central */
+.brand{padding:4px 14px;border:3px solid var(--steel-mid);border-radius:12px;background:#0b0a24;box-shadow:0 0 0 2px var(--steel-edge),inset 0 0 0 1px #000,inset 0 0 14px #00000080}
+/* Botões e seletores: teclas escuras com aro de aço */
+button,select{border:2px solid var(--steel-mid);border-radius:var(--radius-sm);background:linear-gradient(180deg,#2c2a5e,#1a1840);color:var(--white);box-shadow:inset 0 2px 0 #ffffff1f,inset 0 -2px 0 #00000066,0 3px 0 var(--steel-edge)}
+button:hover,select:hover{border-color:var(--gold);background:linear-gradient(180deg,#3a3678,#22204e)}
+button:active{transform:translateY(2px);box-shadow:inset 0 2px 0 #ffffff1f,0 1px 0 var(--steel-edge)}
+.btn-dir{border-radius:8px}
+.btn-dir.active{border-color:var(--sun);background:linear-gradient(180deg,#7a3a3a,#5a2f3a);box-shadow:inset 0 2px 0 #ffffff2a,0 3px 0 #2a1206}
+/* Botão principal: laranja de resgate com aro de aço */
+.sail-button,.menu-primary{border:3px solid #fff1de;border-radius:14px;background:linear-gradient(180deg,#ffc489 0%,#ff8a3d 55%,#ff7a2e 100%);color:#2b1206;box-shadow:inset 0 3px 0 #ffffff55,inset 0 -3px 0 #e0651f,0 0 0 4px var(--steel-mid),0 0 0 6px var(--steel-edge),0 6px 0 5px #0b0717}
+.sail-button:hover,.menu-primary:hover{background:linear-gradient(180deg,#ffd6a8,#ff9a55 55%,#ff8a3d)}
+.sail-button kbd{border-radius:6px;border-width:2px}
+@keyframes gr-sail-glow{0%,100%{box-shadow:inset 0 3px 0 #ffffff55,inset 0 -3px 0 #e0651f,0 0 0 4px var(--steel-mid),0 0 0 6px var(--steel-edge),0 6px 0 5px #0b0717,0 0 0 0 #ff8a3d00}50%{box-shadow:inset 0 3px 0 #ffffff55,inset 0 -3px 0 #e0651f,0 0 0 4px var(--steel-mid),0 0 0 6px var(--steel-edge),0 6px 0 5px #0b0717,0 0 22px 6px #ff8a3d66}}
+.menu-level-action{border-radius:12px;border-width:2px}
+/* Medidores: calha escura com aro de aço */
+.meter{border:2px solid var(--steel-mid);border-radius:99px;padding:2px;background:#07061a;box-shadow:inset 0 2px 0 #00000080,0 0 0 1px var(--steel-edge)}
+.meter>div{border-radius:99px}
+/* Caixas internas */
+.warning{border-radius:12px}
+.campaign-card{border:3px solid var(--steel-mid);border-radius:14px;background:var(--screen);box-shadow:0 0 0 2px var(--steel-edge),inset 0 0 16px #00000060}
+.campaign-card:before{display:none}
+#current-level{border-radius:8px;border-width:2px}
+.menu-guide{border:2px solid var(--steel-mid);border-radius:12px;background:#0f0e2e}
+.menu-topbar{border-radius:12px 12px 0 0;background:linear-gradient(90deg,#24204e,#1b1a44 60%,#2a1e48)}
+.menu-footer{border-radius:0 0 12px 12px}
+.outcome-banner,#replay-measurement-box{border:2px solid var(--steel-mid);border-radius:12px}
+.timeline-cell{border-radius:8px}
+.radio-body canvas{border:2px solid var(--steel-mid);border-radius:10px;background:#0b0a24}
+.menu-emblem{border-radius:16px}
+.debug-badge{border-radius:10px}
+.replay-box{border-radius:18px}
+.compass-widget canvas{width:104px;height:104px;margin:2px auto 0}
+.compass-widget span{display:block;margin-top:-1px}
+@media(max-width:850px),(max-height:520px){.compass-widget,.radar-widget,.telemetry-strip{border-width:4px}.compass-widget canvas{width:64px;height:64px;margin:1px auto 0}.navigation-dock:after{display:none}}
+@keyframes gr-led{0%,100%{filter:none}50%{filter:brightness(1.6)}}
+.navigation-dock:after{animation:gr-led 1.4s steps(2,end) infinite}
+@media(prefers-reduced-motion:reduce){.navigation-dock:after{animation:none!important}}
+@media(max-width:850px),(max-height:520px){
+ .brand{padding:0;border:0;background:none;box-shadow:none}
+ .radio-widget .panel-kicker h2,.navigation-dock .panel-kicker h2{padding:1px 6px;border-width:1px;letter-spacing:0;box-shadow:none}
+ .radio-widget{border-width:4px}
+}
+
+/* ==========================================================================
+   COMPACTO — painéis menores, mapa maior (como na arte conceitual)
+   Só em telas de computador; celular e tablet mantêm o layout acima.
+   ========================================================================== */
+@media(min-width:900px) and (min-height:600px){
+ .pixel-panel,.menu-box{border-width:5px}
+ .hud-top{top:10px;height:66px;padding:5px 16px;gap:18px;grid-template-columns:minmax(0,1fr) 300px minmax(0,1fr)}
+ .brand{padding:2px 10px}.brand h1{font-size:22px;letter-spacing:-1.2px}.brand-mark{width:32px;height:32px}.brand-sub{font-size:8px;margin-top:4px;letter-spacing:3px}
+ .hud-label{font-size:11px}.mission-line{font-size:10px}.meter{height:10px;margin:3px 0;padding:1px}
+ .utility{top:92px}.utility button,.utility select{min-height:28px;font-size:11px;padding:3px 8px}
+ .telemetry-strip{top:132px;gap:14px;padding:3px 8px}.telemetry-strip strong{font-size:15px}.telemetry-strip i{font-size:10px}
+ .compass-widget{top:92px;width:104px;height:118px}.compass-widget canvas{width:82px;height:82px;margin:1px auto 0}.compass-widget span{font-size:11px}
+ .radar-widget{top:224px;width:120px;padding:4px}.radar-widget canvas{width:98px;height:84px;margin:3px auto}.radar-widget>span{font-size:10px;padding:2px 7px}.radar-widget small{font-size:10px}
+ .radio-widget{left:148px;width:236px;bottom:198px;max-height:188px;padding:7px 10px}
+ .radio-widget p{font-size:12px;line-height:1.4}.radio-body{gap:8px;margin-bottom:5px}.radio-body canvas{width:38px;height:38px}.radio-body strong{font-size:12px}.radio-body span{font-size:11px}
+ .radio-widget #dialogue-nav button{min-height:26px;font-size:11px;padding:2px 8px}
+ .panel-kicker{margin-bottom:6px;padding-bottom:5px}
+ .radar-widget>span,.panel-kicker h2,.menu-section-heading h3{padding:2px 8px;font-size:11px}
+ .navigation-dock{bottom:40px;width:min(860px,calc(100% - 300px));min-height:122px;padding:8px 0}
+ .navigation-dock .heading-module,.navigation-dock .sensor-module,.navigation-dock>div{padding:0 13px}
+ .navigation-dock label{font-size:11px}.heading-module>label{display:none}
+ .heading-module input[type=range]{margin:2px 0 6px;height:14px}
+ .btn-dir{min-height:24px;font-size:11px;padding:0}
+ .sensor-fields label{font-size:11px;margin-bottom:2px}.sensor-fields select{min-height:28px;font-size:11px;padding:2px 6px}
+ .sensor-module p{font-size:11px;margin-top:6px}
+ .suspicion-container{font-size:11px;min-height:24px;margin-bottom:7px}
+ .sail-button{min-height:40px;font-size:13px;padding:6px 10px}.sail-button kbd{font-size:10px;padding:1px 4px}
+ .action-module p{font-size:10px;margin-top:6px}
+ .chart-legend{width:192px;bottom:198px;padding:7px 10px;font-size:11px;line-height:1.6}
+ .bottom-status{bottom:6px;font-size:10px}
+}
+@media(min-width:900px) and (min-height:600px) and (max-height:800px){.radio-widget{max-height:160px}.radio-widget .radio-body{display:none}}
+
+/* ==========================================================================
+   PONTE DE COMANDO — você está dentro do Spoofed
+   Janela de metal em volta do mar, barra superior colada, console de ponta
+   a ponta embaixo e bússola solta sobre o mar (sem caixa).
+   ========================================================================== */
+/* Bússola sem moldura em qualquer tela */
+.compass-widget.pixel-panel{background:none;border:0;box-shadow:none;border-radius:0}
+.compass-widget span{color:#fff1de;text-shadow:1px 1px 0 #0b0717,-1px 0 0 #0b0717,0 -1px 0 #0b0717,2px 2px 0 #0b0717}
+
+@media(min-width:1200px) and (min-height:640px){
+ :root{--console-h:200px;--hud-h:72px}
+ /* Console de ponta a ponta: aço escovado, grade de ventilação e parafusos */
+ #game-shell:before{content:'';position:absolute;left:0;right:0;bottom:0;height:var(--console-h);z-index:3;pointer-events:none;
+   border-top:4px solid #dfe5ee;box-shadow:0 -3px 0 #2a2f3a,0 -10px 24px #05020f88;
+   background:
+     var(--rivet) top 10px left 10px/6px 6px no-repeat,var(--rivet) top 10px right 10px/6px 6px no-repeat,
+     var(--rivet) bottom 10px left 10px/6px 6px no-repeat,var(--rivet) bottom 10px right 10px/6px 6px no-repeat,
+     repeating-linear-gradient(90deg,transparent 0 6px,#00000040 6px 9px,transparent 9px 12px) center top 6px/220px 6px no-repeat,
+     repeating-linear-gradient(0deg,#ffffff08 0 1px,transparent 1px 3px),
+     linear-gradient(180deg,#8e97a8 0%,#6b7487 18%,#4c5466 70%,#3a404d 100%)}
+ /* Janela da ponte: moldura de metal com cantos arredondados em volta do mar */
+ .bezel{inset:auto;top:var(--hud-h);bottom:var(--console-h);left:0;right:0;border:0;box-shadow:none;overflow:hidden}
+ .bezel:before{content:'';position:absolute;inset:12px;border-radius:28px;
+   box-shadow:0 0 0 60px #7a8396,inset 0 0 0 2px #2a2f3a,inset 0 0 0 4px #c3cad6,inset 0 0 0 6px #2a2f3a,inset 0 0 50px #000000aa}
+ .bezel:after{content:'';position:absolute;inset:0;border:2px solid #dfe5ee;border-top-color:#a6afbe;pointer-events:none}
+ /* Barra superior colada no topo, placa do nome descendo no meio */
+ .hud-top{top:0;left:0;right:0;height:var(--hud-h);border-radius:0 0 20px 20px;border-top-width:0;padding:6px 22px}
+ .brand{transform:translateY(12px);padding:6px 20px;border-width:4px;border-color:#c3cad6;box-shadow:0 0 0 3px #2a2f3a,inset 0 0 0 2px #000,inset 0 0 18px #000a,0 6px 0 2px #0b0717aa;z-index:9;position:relative}
+ .brand h1{font-size:26px}
+ .utility{top:92px;right:28px}
+ .telemetry-strip{top:132px;right:28px}
+ .compass-widget{top:86px;left:26px;width:126px;height:auto}
+ .compass-widget canvas{width:116px;height:116px;margin:0 auto}
+ .compass-widget span{font-size:12px}
+ .chart-legend{top:200px;bottom:auto;right:28px}
+ /* Instrumentos encaixados no console */
+ .radar-widget{top:auto;bottom:16px;left:18px;width:150px;padding:4px}
+ .radar-widget canvas{width:118px;height:100px}
+ .radio-widget{top:auto;bottom:16px;left:184px;width:272px;max-height:152px;z-index:4}
+ .navigation-dock{left:472px;right:18px;bottom:16px;width:auto;transform:none;min-height:152px}
+ .bottom-status{bottom:calc(var(--console-h) + 16px);z-index:5}
+ .bottom-status .credits{background:#0b0717aa;padding:2px 10px;border-radius:8px}
+}
+@media(min-width:1200px) and (min-height:640px){
+ .bottom-status{left:auto;right:30px;bottom:calc(var(--console-h) + 18px);align-items:flex-end;text-align:right}
+}
+
+/* Decoração do console (cabos, botões, parafusos) — desenhada em console-decor.js */
+.console-deco{position:absolute;left:0;top:0;pointer-events:none;z-index:3;overflow:visible}
+.console-deco.deco-front{z-index:9}
+.console-deco .deco-blink{animation:gr-blink 2.2s steps(1,end) infinite}
+@media(prefers-reduced-motion:reduce){.console-deco .deco-blink{animation:none!important}}
+@media(min-width:1200px) and (min-height:640px){.navigation-dock:after{display:none}}
+
+/* ==========================================================================
+   RÁDIO DA MISSÃO COMO ÍCONE — celular em pé: ícone acima do leme, abre por
+   cima do mar. Mensagem nova: o rádio pulsa e mostra um "!".
+   ========================================================================== */
+.radio-widget.radio-floating{left:12px!important;right:auto!important;z-index:7}
+.radio-widget.radio-floating:not(.radio-open){width:50px!important;height:50px;max-height:none!important;padding:0!important;border-width:3px!important;border-radius:14px;overflow:visible!important}
+.radio-widget.radio-floating:not(.radio-open) .panel-kicker{height:100%;margin:0;padding:0;border:0}
+.radio-widget.radio-floating:not(.radio-open) h2,.radio-widget.radio-floating:not(.radio-open) .radio-led{display:none}
+.radio-widget.radio-floating:not(.radio-open) .radio-toggle{position:absolute;inset:0;width:100%;height:100%;min-width:0;min-height:0;padding:0;border:0;border-radius:10px;font-size:0;color:transparent;background:#0b0a24 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Crect x='10' y='0' width='2' height='5' fill='%23dfe5ee'/%3E%3Crect x='13' y='1' width='1' height='3' fill='%23ffd166'/%3E%3Crect x='14' y='0' width='1' height='5' fill='%23ffd16699'/%3E%3Crect x='4' y='4' width='9' height='12' fill='%23ff8a3d'/%3E%3Crect x='4' y='4' width='9' height='1' fill='%23ffc489'/%3E%3Crect x='5' y='6' width='7' height='4' fill='%23170f2e'/%3E%3Crect x='6' y='7' width='5' height='2' fill='%23b69cff'/%3E%3Crect x='5' y='11' width='7' height='1' fill='%237a2a12'/%3E%3Crect x='5' y='13' width='7' height='1' fill='%237a2a12'/%3E%3Crect x='3' y='6' width='1' height='6' fill='%23fff1de'/%3E%3C/svg%3E") center/30px 30px no-repeat;box-shadow:inset 0 0 10px #000a}
+.radio-widget.radio-floating.radio-open{width:calc(100% - 24px)!important;max-height:min(260px,45dvh)!important;overflow:auto;box-shadow:0 0 0 1px #f4f7fb,0 0 0 4px #8e97a8,0 0 0 6px #2a2f3a,0 12px 30px #05020fcc}
+@keyframes gr-radio-pulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 #ff8a3d00)}50%{transform:scale(1.08);filter:drop-shadow(0 0 10px #ff8a3dcc)}}
+.radio-widget.radio-unread:not(.radio-open){animation:gr-radio-pulse 1.1s ease-in-out infinite}
+.radio-widget.radio-unread:not(.radio-open):after{content:'!';position:absolute;top:-11px;right:-11px;z-index:3;width:22px;height:22px;border-radius:50%;background:#ff8a3d;border:2px solid #fff1de;box-shadow:0 0 0 2px #2a1206,0 3px 0 2px #0b0717;color:#2b1206;font:900 15px/19px var(--font);text-align:center}
+@media(prefers-reduced-motion:reduce){.radio-widget.radio-unread:not(.radio-open){animation:none!important}}
+
+/* ==========================================================================
+   TOPO LIMPO — só idioma e Menu, um de cada lado do nome do jogo.
+   Tela cheia e recomeçar continuam dentro do Menu.
+   ========================================================================== */
+.utility #btn-fullscreen,.utility #btn-restart{display:none!important}
+.utility{z-index:10;pointer-events:none}
+.utility>*{pointer-events:auto}
+#lang-select{text-align:center;font-weight:900;letter-spacing:1px}
+/* Computador e notebook */
+@media(min-width:900px) and (min-height:600px){
+ .hud-top{grid-template-columns:minmax(0,1fr) 508px minmax(0,1fr)}
+ .brand{justify-self:center}
+ .utility{top:26px;left:50%;right:auto;transform:translateX(-50%);width:508px;display:flex;justify-content:space-between;align-items:center;gap:0}
+ .utility select{width:84px;max-width:84px}
+ .utility button,.utility select{min-height:32px}
+ .telemetry-strip{top:92px}
+}
+@media(min-width:1200px) and (min-height:640px){
+ .utility{top:20px}
+ .telemetry-strip{top:92px}
+ .chart-legend{top:156px}
+}
+/* Celular e tablet em pé */
+@media(max-width:850px){
+ .utility{top:20px;left:18px;right:18px;display:flex;justify-content:space-between;align-items:center;gap:0;grid-template-columns:none}
+ .utility select{width:62px!important;max-width:62px!important;min-width:0;padding:2px 4px;font-size:13px}
+ .utility #btn-menu{width:46px;min-width:46px;padding:0;justify-content:center}
+ .utility #btn-menu [data-i18n]{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+ .brand{width:210px}.brand h1{font-size:22px;letter-spacing:-1.2px}.brand-mark{width:28px;height:28px}
+ .compass-widget{top:150px;width:76px;height:auto}.compass-widget canvas{width:64px;height:64px}
+ .telemetry-strip{top:150px}
+}
+@media(min-width:521px) and (max-width:850px) and (min-height:521px){
+ .compass-widget,.telemetry-strip{top:140px}
+}
+@media(max-width:620px) and (max-height:700px){
+ .utility{top:16px}
+ .compass-widget,.telemetry-strip{top:140px}
+}
+/* Celular deitado */
+@media(max-height:520px) and (min-width:621px){
+ .hud-top{grid-template-columns:minmax(0,1fr) 412px minmax(0,1fr)}
+ .brand{justify-self:center}
+ .utility{top:22px;left:50%;right:auto;transform:translateX(-50%);width:412px;display:flex;justify-content:space-between;align-items:center;max-width:none}
+ .utility select{width:70px!important;max-width:70px!important}
+ .telemetry-strip{top:84px}
+}
+
+/* Caixa de explicação do sensor quântico (primeiro uso) e botão "?" */
+.help-btn{width:24px;min-width:24px;height:24px;min-height:24px;padding:0;border-radius:50%;font:900 13px/1 var(--font);color:#2b1206;background:linear-gradient(180deg,#ffd6a8,#ff8a3d);border:2px solid #fff1de;box-shadow:0 0 0 2px #2a1206,0 2px 0 2px #0b0717;margin-left:auto;margin-right:8px}
+.help-btn:hover{background:linear-gradient(180deg,#ffe6c8,#ff9a55)}
+.sensor-intro{position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;padding:16px;background:#0b0717b3}
+.sensor-intro[hidden]{display:none!important}
+.sensor-intro-box.pixel-panel{position:relative;inset:auto;width:min(540px,100%);max-height:calc(100dvh - 32px);overflow:auto;padding:20px 22px;border-radius:18px}
+.sensor-intro-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.sensor-intro-atom{width:44px;height:44px;flex-shrink:0;filter:drop-shadow(0 0 6px #b69cff88)}
+.sensor-intro h2{font-size:17px;color:var(--gold);letter-spacing:.3px;text-transform:none;display:block;padding:0;border:0;background:none;box-shadow:none}
+.sensor-intro p{font-size:14px;line-height:1.55;font-weight:400;color:#f6eadf;margin:0 0 10px}
+.sensor-intro ul{margin:4px 0 16px;padding:12px 14px 12px 30px;border:2px solid var(--steel-mid,#8e97a8);border-radius:12px;background:#0b0a24;display:grid;gap:8px}
+.sensor-intro li{font-size:13px;line-height:1.5;font-weight:400;color:#e6d8ef}
+.sensor-intro li::marker{color:var(--lilac)}
+.sensor-intro-ok{display:block;width:100%;min-height:46px;border:3px solid #fff1de;border-radius:14px;background:linear-gradient(180deg,#ffc489,#ff8a3d 55%,#ff7a2e);color:#2b1206;font-size:15px;box-shadow:inset 0 3px 0 #ffffff55,inset 0 -3px 0 #e0651f,0 0 0 3px #5a2408,0 5px 0 3px #2a1206}
+@media(max-width:520px){.sensor-intro-box.pixel-panel{padding:16px}.sensor-intro p{font-size:13px}.sensor-intro li{font-size:12px}}
+
+/* Dropdown lists: Windows draws options on a light sheet, so give them the panel colors explicitly. */
+select{background-color:#221f4f;color:#fbefe2;color-scheme:dark}
+select option,select optgroup{background:#221f4f!important;background-color:#221f4f!important;color:#fbefe2!important}
+select option:checked,select option:hover{background:#ff8a3d!important;color:#1a0b2e!important}
+.histogram-caption{margin-top:6px;font-size:12px;line-height:1.45;font-weight:400;color:#cbbcd8}

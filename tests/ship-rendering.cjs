@@ -23,4 +23,17 @@ for(const frame of atlas.frames){
 for(const[heading,bow]of[[0,[44,24]],[90,[70,44]],[180,[44,64]],[270,[18,44]]]){
   assert.equal(atlas.frames[Atlas.frameIndex(heading)].pixels.get(bow.join(',')),'#baf9ed');
 }
-console.log('PASS 32 distinct pixel views, intact bounds, upright anchored mast, cardinal bow lights and shortest turns');
+// The full-resolution "32-bit" atlas keeps the same invariants at twice the detail.
+const hi=new Atlas(2);
+assert.equal(new Set(hi.frames.map(frame=>JSON.stringify([...frame.pixels]))).size,32,'Every high-resolution view needs its own perspective');
+for(const frame of hi.frames){
+  assert.equal(frame.width,176);assert.equal(frame.height,176);
+  const positions=[...frame.pixels.keys()].map(key=>key.split(',').map(Number));
+  assert.ok(positions.every(([x,y])=>x>=0&&x<176&&y>=0&&y<176),'No high-resolution perspective is cropped');
+  assert.ok(frame.pixels.has('88,52'),'High-resolution mast tip stays upright and anchored');
+  assert.ok(frame.pixels.size>atlas.frames[0].pixels.size*3,'High-resolution sprite carries more detail');
+}
+for(const[heading,bow]of[[0,[88,47]],[90,[140,88]],[180,[88,129]],[270,[36,88]]]){
+  assert.equal(hi.frames[Atlas.frameIndex(heading)].pixels.get(bow.join(',')),'#baf9ed');
+}
+console.log('PASS 32 distinct pixel views (88 px and 176 px), intact bounds, upright anchored mast, cardinal bow lights and shortest turns');
