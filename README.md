@@ -10,6 +10,8 @@ This effort is supported by Qollab & IonQ
 
 ![Ghost Route navigation screen](docs/ghost-route-preview.jpg)
 
+Play the published frontend at [ghostroutegame.vercel.app](https://ghostroutegame.vercel.app/). The Qollab project and submission remain separate steps described in [the submission checklist](docs/submission-checklist.md).
+
 ## Play locally
 
 Open [public/index.html](public/index.html) in a browser. Keep the `public/assets/` folder beside it. The frontend has no external runtime dependencies or build step.

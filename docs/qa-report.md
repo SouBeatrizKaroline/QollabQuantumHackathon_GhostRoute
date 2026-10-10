@@ -35,7 +35,9 @@ Distribution: the Vercel configuration serves `public/` without a build step. Th
 
 ## Remaining submission checks
 
-The official hackathon process, terms and runtime documentation were reviewed on 2026-10-10. The GitHub API reported the supporting repository as **private**. Eligibility still requires public repository visibility, an actual successful Qollab simulator run, public MIT-licensed Qollab publication, a public 2–3 minute demo and the registered captain's submission before the deadline. The local Qiskit runs do not establish execution on Qollab or IonQ. A live Vercel deployment was not verified. Keyboard and responsive checks do not establish formal accessibility certification.
+Live frontend: [ghostroutegame.vercel.app](https://ghostroutegame.vercel.app/) loaded the new menu, all 100 level choices and all four locales. A browser run completed level 00 and advanced to level 01; the new instrument wrapper and notice row were present. No application warnings or errors appeared in the captured console.
+
+The official hackathon process, terms and runtime documentation were reviewed on 2026-10-10. The GitHub API reported the supporting repository as **private**. Eligibility still requires public repository visibility, an actual successful Qollab simulator run, public MIT-licensed Qollab publication, a public 2–3 minute demo and the registered captain's submission before the deadline. The local Qiskit runs do not establish execution on Qollab or IonQ. Keyboard and responsive checks do not establish formal accessibility certification.
 
 The batching interface follows the [Qiskit primitives documentation](https://quantum.cloud.ibm.com/docs/en/guides/primitive-input-output). See [submission-checklist.md](submission-checklist.md) for platform tasks.
 

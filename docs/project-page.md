@@ -54,7 +54,7 @@ See [the README](../README.md) for installation and JavaScript tests, and [the s
 
 ## Links to fill before publishing
 
-- Playable deployment URL
+- Playable frontend: [Ghost Route](https://ghostroutegame.vercel.app/)
 - Actual Qollab project URL and execution evidence
 - Public demo video URL
 - Source: [Ghost Route on GitHub](https://github.com/SouBeatrizKaroline/QollabQuantumHackathon_GhostRoute)
