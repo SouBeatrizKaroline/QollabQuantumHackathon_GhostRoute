@@ -91,7 +91,8 @@ class RotaFantasmaApp {
     this.btnExportJson.addEventListener('click', () => this.exportDecisionsJSON());
 
     window.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' && e.target.type === 'text') return;
+      if (e.target.closest('input, select, button') || e.target.isContentEditable) return;
+      if (this.replayModal.style.display === 'flex') return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         this.advanceTurn();
@@ -187,15 +188,12 @@ class RotaFantasmaApp {
     // 2. Check collision with reef segment
     if (checkReefCollision(prevReal, nextReal, MISSAO.recife)) {
       this.state.isAground = true;
-      this.state.isFinished = true;
-      this.recordTurnDecisions(commanded, prevReal, nextReal, 0, 0, 0, 0, 'none', 0);
-      this.openReplayModal();
-      return;
+
     }
 
     this.state.realPosition = nextReal;
     this.state.realHistory.push([...nextReal]);
-    this.state.totalDistanceKm += MISSAO.navio.velocidade_km_turno;
+    this.state.totalDistanceKm += Math.hypot(nextReal[0]-prevReal[0], nextReal[1]-prevReal[1]);
 
     // 3. Move inertial dead-reckoning
     this.state.inertialPosition = [
@@ -225,7 +223,7 @@ class RotaFantasmaApp {
     // Freeze attack (Turns 9 and 10)
     if (turn >= 9 && turn <= 10) {
       if (!this.frozenGpsPos && this.state.gpsHistory.length >= 8) {
-        this.frozenGpsPos = [...this.state.gpsHistory[7]]; // Turn 8 displayed position
+        this.frozenGpsPos = [...this.state.gpsHistory[this.state.gpsHistory.length - 1]]; // Turn 8 displayed position
       }
       if (this.frozenGpsPos) {
         reportedGPS = [...this.frozenGpsPos];
@@ -244,7 +242,7 @@ class RotaFantasmaApp {
     this.estimator.predict(commanded.dx, commanded.dy);
 
     // 6. Sensor Reading & Update
-    const mode = this.sensorModeSelect.value;
+    const mode = this.state.isAground ? 'none' : this.sensorModeSelect.value;
     const requestedShots = parseInt(this.sensorShotsSelect.value, 10);
     let actualShots = 0;
     let kX = 0, kY = 0, NX = 0, NY = 0;
@@ -284,7 +282,7 @@ class RotaFantasmaApp {
     this.recordTurnDecisions(commanded, prevReal, nextReal, kX, NX, kY, NY, mode, actualShots, phaseCandidates, gpsInside);
 
     // Advance Turn Counter
-    if (turn >= this.state.maxTurns) {
+    if (this.state.isAground || turn >= this.state.maxTurns) {
       this.state.isFinished = true;
       this.openReplayModal();
     } else {
@@ -312,7 +310,7 @@ class RotaFantasmaApp {
       shots: shots,
       kX: kX, NX: NX, kY: kY, NY: NY,
       phaseCandidates: phaseCandidates || [],
-      markedSuspicious: this.chkSuspicious.checked,
+      markedSuspicious: false,
       gpsInsideHPD: gpsInside,
       remainingShots: this.state.remainingShots
     });
@@ -472,7 +470,7 @@ class RotaFantasmaApp {
       banner.classList.add("outcome-aground");
       banner.textContent = t.endingAground;
     } else if (finalDist <= MISSAO.vitoria.raio_resgate_km) {
-      if (attacksDetected === 3 && falseAlarms === 0) {
+      if (attacksDetected === 3) {
         banner.classList.add("outcome-perfect");
         banner.textContent = t.endingPerfect;
       } else {
@@ -526,7 +524,7 @@ class RotaFantasmaApp {
 
   exportDecisionsJSON() {
     const exportData = {
-      projeto: "Rota Fantasma",
+      projeto: "Ghost Route",
       versao: "1.0.0",
       hackathon: "Qollab x IonQ Quantum Hackathon 2026",
       equipe: "QuantGirls",
@@ -548,7 +546,7 @@ class RotaFantasmaApp {
     const jsonStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
     const dlAnchor = document.createElement('a');
     dlAnchor.setAttribute("href", jsonStr);
-    dlAnchor.setAttribute("download", `rota_fantasma_seed_${this.seed}_decisions.json`);
+    dlAnchor.setAttribute("download", `ghost_route_seed_${this.seed}_decisions.json`);
     document.body.appendChild(dlAnchor);
     dlAnchor.click();
     dlAnchor.remove();
@@ -623,7 +621,186 @@ class RotaFantasmaApp {
   }
 }
 
-// Startup bootstrap
-window.addEventListener('DOMContentLoaded', () => {
-  window.gameApp = new RotaFantasmaApp();
-});
+// Fullscreen HUD controller. Sensor sampling stays offline; no Qiskit claim.
+const fillText = (template, values) => String(template || '').replace(/\{(\w+)\}/g, (_, key) => values[key] ?? '');
+const coordText = p => `[${p.map(v => Number(v).toFixed(1)).join(', ')}]`;
+const lastRecord = app => app.state.turnsRecord.at(-1);
+const baseLocalization = RotaFantasmaApp.prototype.updateLocalization;
+const baseTelemetry = RotaFantasmaApp.prototype.updateTelemetryUI;
+const baseNarrative = RotaFantasmaApp.prototype.updateNarrative;
+const baseStart = RotaFantasmaApp.prototype.startNewGame;
+const baseReplay = RotaFantasmaApp.prototype.openReplayModal;
+const baseBind = RotaFantasmaApp.prototype.bindEvents;
+
+RotaFantasmaApp.prototype.updateLocalization = function () {
+  document.documentElement.lang = this.currentLang;
+  document.title = 'Ghost Route — QuantGirls';
+  const t = TEXTOS[this.currentLang];
+  document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = t[el.dataset.i18n]);
+  document.querySelector('.utility').setAttribute('aria-label', t.gameSettings);
+  document.querySelector('.navigation-dock').setAttribute('aria-label', t.navigationControls);
+  this.headingSlider.setAttribute('aria-label', t.headingHelp);
+  this.debugBadge.textContent = t.debugLabel;
+  document.getElementById('btn-radio-toggle').setAttribute('aria-label',t.radioTitle);
+  this.liveAnnouncer.textContent = '';
+  this.dirButtons.forEach(btn => {
+    const west = this.currentLang === 'en' ? 'W' : 'O';
+    btn.textContent = getDirectionName(Number(btn.dataset.deg)).replace('W', west);
+    btn.setAttribute('aria-label', `${t.lblHeading} ${formatHeading(Number(btn.dataset.deg))}`);
+  });
+  baseLocalization.call(this);
+  this.updateFullscreenLabel();
+  if (this.replayModal.style.display === 'flex') baseReplay.call(this);
+};
+
+RotaFantasmaApp.prototype.updateTelemetryUI = function () {
+  baseTelemetry.call(this);
+  const t = TEXTOS[this.currentLang], rec = lastRecord(this);
+  const direction = getDirectionName(this.state.currentHeading).replace('W',this.currentLang==='en'?'W':'O');
+  const headingText = `${formatHeading(this.state.currentHeading)} (${direction})`;
+  this.sliderValDisplay.textContent = headingText;
+  document.getElementById('val-heading').textContent = headingText;
+  const completed = this.state.turnsRecord.length;
+  document.getElementById('val-time').textContent = `${String(Math.floor(completed * MISSAO.minutos_por_turno / 60)).padStart(2,'0')}:${String(completed * MISSAO.minutos_por_turno % 60).padStart(2,'0')}`;
+  const aligned = rec?.gpsInsideHPD;
+  const gpsStatus = document.getElementById('gps-status');
+  gpsStatus.textContent = !rec ? t.gpsPending : aligned ? t.gpsAligned : t.gpsMismatch;
+  gpsStatus.style.color = !rec ? '#b9d6dd' : aligned ? '#9febc0' : '#ff9da6';
+  const gpsMeter = document.getElementById('gps-meter');
+  gpsMeter.style.width = !rec ? '0%' : '100%';
+  gpsMeter.style.background = aligned ? '#7ddcab' : '#dd697e';
+  document.getElementById('hull-status').textContent = this.state.isAground ? t.hullGrounded : t.hullIntact;
+  document.getElementById('hull-status').style.color = this.state.isAground ? '#ff9da6' : '#9febc0';
+  document.getElementById('last-reading').textContent = rec?.shots ? fillText(t.readingSummary, {shots:rec.shots, mode:rec.sensorMode==='ghz'?t.modeGhz:t.modeSimple}) : t.readingNone;
+  this.chkSuspicious.disabled = !rec || this.state.isFinished;
+  this.chkSuspicious.checked = Boolean(rec?.markedSuspicious);
+  document.getElementById('txt-advance').textContent = this.state.isFinished ? t.btnViewReplay : t.advanceTurn;
+  const map = this.estimator.getMAP();
+  const target = completed >= 8 ? MISSAO.capsula.pouso_real : MISSAO.capsula.elipse_prevista.centro;
+  document.getElementById('map-description').textContent = fillText(t.mapDescription, {
+    x:map[0].toFixed(1), y:map[1].toFixed(1), distance:Math.hypot(map[0]-target[0],map[1]-target[1]).toFixed(1),
+    turn:completed, alerts:(!rec?t.gpsPending:aligned?t.gpsAligned:t.gpsMismatch)
+  });
+  this.sensorShotsSelect.disabled = this.sensorModeSelect.value === 'none' || this.state.isFinished;
+  this.sensorModeSelect.disabled = this.state.isFinished;
+  this.headingSlider.disabled = this.state.isFinished;
+  this.dirButtons.forEach(btn => btn.disabled = this.state.isFinished);
+  const usable = Array.from(this.sensorShotsSelect.options).filter(opt => !opt.disabled);
+  if (this.sensorShotsSelect.selectedOptions[0]?.disabled && usable.length) this.sensorShotsSelect.value = usable.at(-1).value;
+};
+
+RotaFantasmaApp.prototype.updateNarrative = function () {
+  const nextTurn = this.state.currentTurn;
+  this.state.currentTurn = Math.max(1, this.state.turnsRecord.length);
+  baseNarrative.call(this);
+  this.state.currentTurn = nextTurn;
+  if (this.state.turnsRecord.length || this.dialogueStep) this.dialogueNav.style.display = 'none';
+  if (this.state.isFinished) document.getElementById('dialogue-box').textContent = document.getElementById('outcome-banner').textContent;
+};
+
+RotaFantasmaApp.prototype.startNewGame = function (seed) {
+  this.replayModal.style.display = 'none';
+  this.renderer.displayWorld = null;
+  this.renderer.target = null;
+  this.alertGps.style.display = 'none';
+  this.alertReef.style.display = 'none';
+  baseStart.call(this, seed);
+  this.announce(TEXTOS[this.currentLang].missionStarted);
+};
+
+RotaFantasmaApp.prototype.updateFullscreenLabel = function () {
+  document.getElementById('btn-fullscreen').textContent = TEXTOS[this.currentLang][document.fullscreenElement ? 'exitFullscreen' : 'fullscreen'];
+};
+
+RotaFantasmaApp.prototype.bindEvents = function () {
+  baseBind.call(this);
+  this.renderer.canvas.setAttribute('tabindex', '0');
+  this.chkSuspicious.addEventListener('change', () => {
+    const rec = lastRecord(this);
+    if (rec && !this.state.isFinished) {
+      rec.markedSuspicious = this.chkSuspicious.checked;
+      this.renderMap();
+      this.announce(TEXTOS[this.currentLang].markSaved);
+    }
+  });
+  this.sensorModeSelect.addEventListener('change', () => this.updateTelemetryUI());
+  document.getElementById('btn-radio-toggle').addEventListener('click', e => {
+    const open = document.querySelector('.radio-widget').classList.toggle('radio-open');
+    e.currentTarget.setAttribute('aria-expanded',String(open));
+    e.currentTarget.textContent = open ? '▲' : '▼';
+  });
+  document.getElementById('btn-fullscreen').addEventListener('click', async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen();
+    } catch { this.announce(TEXTOS[this.currentLang].fullscreenUnavailable); }
+    this.updateFullscreenLabel();
+  });
+  document.addEventListener('fullscreenchange', () => this.updateFullscreenLabel());
+  this.btnCloseReplay.addEventListener('click', () => { this.renderMap(); this.btnAdvance.focus(); });
+  this.replayModal.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); this.btnCloseReplay.click(); }
+    if (e.key !== 'Tab') return;
+    const focusable = Array.from(this.replayModal.querySelectorAll('button:not(:disabled), input:not(:disabled)')).filter(el => el.getClientRects().length);
+    const first = focusable[0], last = focusable.at(-1);
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+};
+
+RotaFantasmaApp.prototype.openReplayModal = function () {
+  baseReplay.call(this);
+  this.updateTelemetryUI();
+  this.btnCloseReplay.focus();
+};
+
+RotaFantasmaApp.prototype.renderScrubberTurn = function (turnIndex) {
+  const rec = this.state.turnsRecord[turnIndex - 1];
+  if (!rec) return;
+  const t = TEXTOS[this.currentLang];
+  document.getElementById('turn-event-info').textContent = fillText(t.replayTurnSummary, {
+    turn:rec.turn, heading:formatHeading(rec.heading), gps:coordText(rec.gpsReported), real:coordText(rec.realAfter), marked:rec.markedSuspicious?t.yes:t.no
+  });
+  document.getElementById('lbl-meas-title').textContent = fillText(t.measTitle,{turn:rec.turn});
+  const details = document.getElementById('meas-details');
+  details.textContent = rec.shots ? `${rec.sensorMode==='ghz'?t.modeGhz:t.modeSimple} · ${t.shotsTotal}: ${rec.shots}. X: ${rec.kX}/${rec.NX} · Y: ${rec.kY}/${rec.NY}. ${t.phaseCandidates}: ${rec.phaseCandidates.map(c=>c.toFixed(3)+' rad').join(', ')}.` : t.measurementNone;
+  const cv = document.getElementById('histogram-canvas'), ctx = cv.getContext('2d');
+  ctx.clearRect(0,0,cv.width,cv.height);
+  cv.style.display = rec.shots ? 'block' : 'none';
+  if(rec.shots) {
+    const bars = [['X0',rec.NX-rec.kX],['X1',rec.kX],['Y0',rec.NY-rec.kY],['Y1',rec.kY]];
+    const max = Math.max(rec.NX,rec.NY,1);
+    bars.forEach(([label,value],i)=> {
+      const x=16+i*128, height=value/max*68;
+      ctx.fillStyle='#13354b';ctx.fillRect(x,14,105,68);
+      ctx.fillStyle=i%2?'#79dde7':'#82a1e5';ctx.fillRect(x,82-height,105,height);
+      ctx.fillStyle='#dbeef2';ctx.font='14px monospace';ctx.textAlign='center';ctx.fillText(`${label}: ${value}`,x+52,105);
+    });
+  }
+  const timeline=document.getElementById('attack-timeline'); timeline.replaceChildren(); timeline.setAttribute('aria-label',t.timelineLabel);
+  for (const r of this.state.turnsRecord) {
+    const names=[], symbols=[];
+    if(r.turn===4){names.push(t.attackJump);symbols.push('J');}
+    if(r.turn>=6&&r.turn<=10){names.push(t.attackDrift);symbols.push('D');}
+    if(r.turn===9||r.turn===10){names.push(t.attackFreeze);symbols.push('F');}
+    const btn=document.createElement('button');btn.type='button';btn.className='timeline-cell'+(names.length?' attack':'')+(r.markedSuspicious?' marked':'')+(r.turn===rec.turn?' current':'');
+    btn.textContent=`${r.turn}${symbols.length?' '+symbols.join(''):''}`;
+    btn.title=`${t.lblTurn} ${r.turn}: ${names.join(' + ')||t.attackNone}. ${t.markedLabel}: ${r.markedSuspicious?t.yes:t.no}`;
+    btn.setAttribute('aria-label',btn.title);btn.setAttribute('aria-pressed',String(r.turn===rec.turn));
+    btn.addEventListener('click',()=>{this.scrubberRange.value=r.turn;this.renderScrubberTurn(r.turn);});timeline.appendChild(btn);
+  }
+  timeline.title=t.timelineHint;
+  this.renderer.render({
+    ...this.state,currentTurn:rec.turn,currentHeading:rec.heading,realPosition:rec.realAfter,gpsPosition:rec.gpsReported,inertialPosition:rec.inertial,
+    inertialRadiusKm:MISSAO.inercial.erro_inicial_km+MISSAO.inercial.crescimento_km_turno*rec.turn,
+    turnsRecord:this.state.turnsRecord.slice(0,turnIndex),
+    realHistory:[[...MISSAO.porto],...this.state.turnsRecord.slice(0,turnIndex).map(r=>r.realAfter)],
+    gpsHistory:[[...MISSAO.porto],...this.state.turnsRecord.slice(0,turnIndex).map(r=>r.gpsReported)],
+    inertialHistory:[[...MISSAO.porto],...this.state.turnsRecord.slice(0,turnIndex).map(r=>r.inertial)]
+  },this.estimator,true,true);
+};
+
+function startGhostRoute(){ drawTitle(); window.gameApp = new RotaFantasmaApp(); }
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startGhostRoute,{once:true});
+else startGhostRoute();
+

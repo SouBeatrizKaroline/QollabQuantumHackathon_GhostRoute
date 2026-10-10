@@ -172,11 +172,12 @@ function getDirectionName(deg) {
   return 'NW';
 }
 
-function segmentsIntersect(a, b, c, d) {
-  function ccw(p1, p2, p3) {
-    return (p3[1] - p1[1]) * (p2[0] - p1[0]) > (p2[1] - p1[1]) * (p3[0] - p1[0]);
-  }
-  return (ccw(a, c, d) !== ccw(b, c, d)) && (ccw(a, b, c) !== ccw(a, b, d));
+function segmentsIntersect(a,b,c,d) {
+  const eps=1e-9;
+  const cross=(p,q,r)=>(q[0]-p[0])*(r[1]-p[1])-(q[1]-p[1])*(r[0]-p[0]);
+  const on=(p,q,r)=>Math.abs(cross(p,q,r))<=eps&&r[0]>=Math.min(p[0],q[0])-eps&&r[0]<=Math.max(p[0],q[0])+eps&&r[1]>=Math.min(p[1],q[1])-eps&&r[1]<=Math.max(p[1],q[1])+eps;
+  const u=cross(a,b,c),v=cross(a,b,d),w=cross(c,d,a),z=cross(c,d,b);
+  return ((u>eps&&v<-eps||u<-eps&&v>eps)&&(w>eps&&z<-eps||w<-eps&&z>eps))||on(a,b,c)||on(a,b,d)||on(c,d,a)||on(c,d,b);
 }
 
 function isPointInPoly(pt, poly) {
@@ -490,378 +491,81 @@ const AssetRegistry = {
 /* ==========================================================================
    MAP CANVAS RENDERER
    ========================================================================= */
+/* Full-viewport 16-bit chart. Coordinates remain in kilometers, north up.
+   Only the posterior estimate is drawn as the ship during normal play. */
 class TacticalMapRenderer {
-  constructor(canvasId) {
-    this.canvas = document.getElementById(canvasId);
-    this.ctx = this.canvas.getContext('2d');
-    this.padding = 44;
-    this.worldMax = 100;
+  constructor(canvasId){
+    this.canvas=document.getElementById(canvasId);this.ctx=this.canvas.getContext('2d');this.padding=32;this.worldMax=100;this.current=null;this.displayWorld=null;this.reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;this.lastFrame=0;
+    this.sprite=this.makeShip();this.ocean=document.createElement('canvas');this.resize();
+    window.addEventListener('resize',()=>{this.resize();if(this.current)this.drawScene(performance.now());});
+    this.loop=(now)=>{if(this.current&&now-this.lastFrame>48){this.lastFrame=now;this.drawScene(now);}requestAnimationFrame(this.loop);};requestAnimationFrame(this.loop);
   }
-
-  worldToScreen(wx, wy) {
-    const plotSize = this.canvas.width - this.padding * 2;
-    const sx = this.padding + (wx / this.worldMax) * plotSize;
-    const sy = this.canvas.height - this.padding - (wy / this.worldMax) * plotSize;
-    return { sx, sy };
+  resize(){
+    const r=this.canvas.getBoundingClientRect();this.canvas.width=Math.max(180,Math.round(r.width/2));this.canvas.height=Math.max(270,Math.round(r.height/2));this.ctx.imageSmoothingEnabled=false;
+    const w=this.canvas.width,h=this.canvas.height;const mobile=r.width<850;const top=mobile?Math.min(r.width<520?127:108,h*.45):64; const dock=document.querySelector(".navigation-dock")?.getBoundingClientRect();const bottom=dock?dock.top/2-12:h-92;this.scale=Math.max(.45,Math.min((w-(mobile?52:64))/100,(bottom-top)/100));this.chartSize=100*this.scale;this.ox=(w-this.chartSize)/2+(mobile?20:0);this.oy=top;this.makeOcean();
   }
-
-  render(state, estimator, isReplay = false, debug = false) {
-    const ctx = this.ctx;
-    const w = this.canvas.width;
-    const h = this.canvas.height;
-    const plotSize = w - this.padding * 2;
-
-    ctx.fillStyle = "#040e1d";
-    ctx.fillRect(0, 0, w, h);
-
-    const oceanGrad = ctx.createLinearGradient(this.padding, this.padding, w - this.padding, h - this.padding);
-    oceanGrad.addColorStop(0, "#081f3d");
-    oceanGrad.addColorStop(0.5, "#061833");
-    oceanGrad.addColorStop(1, "#031124");
-    ctx.fillStyle = oceanGrad;
-    ctx.fillRect(this.padding, this.padding, plotSize, plotSize);
-
-    ctx.save();
-    ctx.strokeStyle = "rgba(0, 240, 255, 0.04)";
-    for (let y = this.padding; y < this.padding + plotSize; y += 12) {
-      ctx.beginPath();
-      ctx.moveTo(this.padding, y);
-      ctx.lineTo(this.padding + plotSize, y);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    ctx.save();
-    for (let km = 0; km <= 100; km += 10) {
-      const pt = this.worldToScreen(km, km);
-      ctx.strokeStyle = (km === 0 || km === 100) ? "#1e4976" : "rgba(14, 52, 92, 0.5)";
-      ctx.lineWidth = (km % 20 === 0) ? 1.5 : 1.0;
-
-      ctx.beginPath();
-      ctx.moveTo(pt.sx, this.padding);
-      ctx.lineTo(pt.sx, this.padding + plotSize);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(this.padding, pt.sy);
-      ctx.lineTo(this.padding + plotSize, pt.sy);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    this.drawReef(ctx);
-    this.drawPosteriorHeatmap(ctx, estimator);
-    this.drawCapsuleTarget(ctx, state.currentTurn);
-    this.drawInertialDeadReckoning(ctx, state);
-    this.drawGPSTrail(ctx, state.gpsHistory);
-
-    if (isReplay || debug) {
-      this.drawTrueRoute(ctx, state.realHistory);
-    }
-
-    this.drawPort(ctx);
-
-    const renderPos = (debug || isReplay) ? state.realPosition : state.estimatorPosition;
-    AssetRegistry.draw16BitShip(ctx, renderPos.sx, renderPos.sy, state.currentHeading);
-
-    this.drawCompass(ctx, w - 85, this.padding + 55, state.currentHeading);
-    this.drawScaleBar(ctx, this.padding + 16, h - this.padding - 18);
-    this.drawAxes(ctx, plotSize);
+  worldToScreen(x,y){return{sx:this.ox+x*this.scale,sy:this.oy+(100-y)*this.scale};}
+  screenToWorld(x,y){return[(x-this.ox)/this.scale,100-(y-this.oy)/this.scale];}
+  makeOcean(){
+    const c=this.ocean;c.width=this.canvas.width;c.height=this.canvas.height;const g=c.getContext('2d');
+    const gradient=g.createLinearGradient(0,0,c.width,c.height);gradient.addColorStop(0,'#0c4266');gradient.addColorStop(.45,'#093657');gradient.addColorStop(1,'#08264c');g.fillStyle=gradient;g.fillRect(0,0,c.width,c.height);
+    const rng=mulberry32(837211);for(let i=0;i<c.width*c.height/150;i++){const x=Math.floor(rng()*c.width),y=Math.floor(rng()*c.height);g.fillStyle=['#174b6c','#1b5273','#28627b','#0b2b4c'][Math.floor(rng()*4)];g.fillRect(x,y,Math.ceil(rng()*5)+2,1);if(rng()>.6){g.fillRect(x+2,y-1,2,1);g.fillRect(x+4,y+1,2,1);}}
+    for(let y=0;y<c.height;y+=3){g.fillStyle='#04193420';g.fillRect(0,y,c.width,1);}
   }
-
-  drawReef(ctx) {
-    ctx.save();
-    const poly = MISSAO.recife.map(pt => this.worldToScreen(pt[0], pt[1]));
-
-    ctx.fillStyle = "rgba(239, 68, 68, 0.25)";
-    ctx.strokeStyle = "#ef4444";
-    ctx.lineWidth = 2;
-
-    ctx.beginPath();
-    ctx.moveTo(poly[0].sx, poly[0].sy);
-    for (let i = 1; i < poly.length; i++) ctx.lineTo(poly[i].sx, poly[i].sy);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(239, 68, 68, 0.4)";
-    ctx.lineWidth = 1;
-    const minX = Math.min(...poly.map(p => p.sx));
-    const maxX = Math.max(...poly.map(p => p.sx));
-    const minY = Math.min(...poly.map(p => p.sy));
-    const maxY = Math.max(...poly.map(p => p.sy));
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(poly[0].sx, poly[0].sy);
-    for (let i = 1; i < poly.length; i++) ctx.lineTo(poly[i].sx, poly[i].sy);
-    ctx.closePath();
-    ctx.clip();
-
-    for (let x = minX - 50; x < maxX + 50; x += 12) {
-      ctx.beginPath();
-      ctx.moveTo(x, maxY);
-      ctx.lineTo(x + 50, minY);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    ctx.fillStyle = "#fca5a5";
-    ctx.font = "bold 11px monospace";
-    ctx.fillText("RECIFE PERIGOSO", poly[0].sx + 6, poly[0].sy + 16);
-    ctx.restore();
+  makeShip(){
+    const s=document.createElement('canvas');s.width=66;s.height=28;const g=s.getContext('2d');g.imageSmoothingEnabled=false;
+    // Pixel rows form a gray cutter, bridge, radar mast and cyan bow lamp.
+    for(let y=7;y<23;y++){const edge=Math.abs(y-15);const start=edge>6?10:5;const end=62-Math.max(0,edge-1)*2;g.fillStyle='#05101a';g.fillRect(start,y,end-start,1);g.fillStyle=y<15?'#b6c8bd':'#506e70';g.fillRect(start+2,y,end-start-5,1);}
+    g.fillStyle='#172c35';g.fillRect(10,10,40,11);g.fillStyle='#7e9691';g.fillRect(10,11,40,8);g.fillStyle='#bed2bf';g.fillRect(13,11,35,2);g.fillStyle='#536d6b';g.fillRect(12,16,36,3);
+    g.fillStyle='#1f363e';g.fillRect(29,5,16,13);g.fillStyle='#d7d8bc';g.fillRect(31,6,12,9);g.fillStyle='#667f7d';g.fillRect(32,7,10,6);g.fillStyle='#9feafa';g.fillRect(34,8,3,3);g.fillRect(39,8,3,3);
+    g.fillStyle='#172b35';g.fillRect(24,7,4,10);g.fillStyle='#9ab3a8';g.fillRect(25,8,2,7);g.fillStyle='#1b303b';g.fillRect(36,0,2,7);g.fillStyle='#c2d6c5';g.fillRect(31,2,12,2);g.fillStyle='#d9ead4';g.fillRect(37,0,1,3);
+    g.fillStyle='#253d43';g.fillRect(14,12,7,5);g.fillStyle='#c7d1b2';g.fillRect(15,12,5,2);g.fillStyle='#75e5fc';g.fillRect(56,14,3,2);g.fillStyle='#dae6c6';g.fillRect(46,11,2,8);g.fillStyle='#304b52';g.fillRect(8,13,2,5);
+    g.fillStyle='#224a64';g.fillRect(10,23,42,2);g.fillStyle='#80b6c0';g.fillRect(14,23,32,1);return s;
   }
-
-  drawPosteriorHeatmap(ctx, estimator) {
-    if (!estimator) return;
-    ctx.save();
-    const hpdSet = estimator.getHPD95();
-    const plotSize = this.canvas.width - this.padding * 2;
-    const cellSize = plotSize / 100.0;
-
-    for (const idx of hpdSet) {
-      const x = idx % 100;
-      const y = Math.floor(idx / 100);
-      const p = estimator.grid[idx];
-      const pt = this.worldToScreen(x, y);
-
-      const alpha = Math.min(0.7, 0.15 + p * 30.0);
-      ctx.fillStyle = `rgba(0, 240, 255, ${alpha})`;
-      ctx.fillRect(pt.sx - cellSize/2, pt.sy - cellSize/2, cellSize + 0.5, cellSize + 0.5);
-    }
-    ctx.restore();
+  render(state,estimator,isReplay=false,debug=false){
+    this.current={state,estimator,isReplay,debug};const target=(debug||isReplay)?state.realPosition:estimator.getMAP();
+    if(!this.target||Math.hypot(this.target[0]-target[0],this.target[1]-target[1])>.01){this.animFrom=this.displayWorld?[...this.displayWorld]:[...target];this.target=[...target];this.animStart=performance.now();}
+    if(this.reduced||isReplay)this.displayWorld=[...target];this.drawScene(performance.now());
   }
-
-  drawCapsuleTarget(ctx, turn) {
-    ctx.save();
-    if (turn >= MISSAO.capsula.turno_revelacao) {
-      const p = this.worldToScreen(MISSAO.capsula.pouso_real[0], MISSAO.capsula.pouso_real[1]);
-      ctx.strokeStyle = "#38bdf8";
-      ctx.fillStyle = "#0284c7";
-      ctx.lineWidth = 2;
-
-      ctx.beginPath();
-      ctx.arc(p.sx, p.sy, 8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(p.sx, p.sy, 16, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.fillStyle = "#bae6fd";
-      ctx.font = "bold 11px monospace";
-      ctx.fillText("AURORA-1 [70, 74]", p.sx + 14, p.sy + 4);
-    } else if (turn >= MISSAO.capsula.turno_blackout_inicio) {
-      const center = this.worldToScreen(MISSAO.capsula.elipse_prevista.centro[0], MISSAO.capsula.elipse_prevista.centro[1]);
-      const plotSize = this.canvas.width - this.padding * 2;
-      const rx = (MISSAO.capsula.elipse_prevista.semi_eixo_x / 100.0) * plotSize;
-      const ry = (MISSAO.capsula.elipse_prevista.semi_eixo_y / 100.0) * plotSize;
-
-      ctx.strokeStyle = "#fbbf24";
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([5, 4]);
-
-      ctx.beginPath();
-      ctx.ellipse(center.sx, center.sy, rx, ry, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      ctx.fillStyle = "#fde68a";
-      ctx.font = "bold 11px monospace";
-      ctx.fillText("ELIPSE REENTRADA [70, 70]", center.sx - rx, center.sy - ry - 6);
-    }
-    ctx.restore();
+  text(label,x,y,color='#cee7df',align='left'){const c=this.ctx;c.font='bold 7px monospace';c.textAlign=align;c.fillStyle='#041024';c.fillText(label,x+1,y+1);c.fillStyle=color;c.fillText(label,x,y);c.textAlign='left';}
+  line(points,color,width,dash=[]){if(!points?.length)return;const c=this.ctx;c.strokeStyle=color;c.lineWidth=width;c.setLineDash(dash);c.beginPath();points.forEach((p,i)=>{const s=this.worldToScreen(...p);i?c.lineTo(s.sx,s.sy):c.moveTo(s.sx,s.sy);});c.stroke();c.setLineDash([]);}
+  drawScene(now){
+    const{state:s,estimator:e,isReplay:replay,debug}=this.current;const c=this.ctx,w=this.canvas.width,h=this.canvas.height;const t=TEXTOS[window.gameApp?.currentLang||'pt-BR'];c.imageSmoothingEnabled=false;c.drawImage(this.ocean,0,0);
+    const u=this.reduced||replay?1:Math.min(1,(now-this.animStart)/650);const f=u*u*(3-2*u);this.displayWorld=this.target.map((v,i)=>this.animFrom[i]+(v-this.animFrom[i])*f);
+    // Grid and a low-key map boundary; the ocean itself fills the viewport.
+    c.strokeStyle='#5189a031';c.lineWidth=.5;for(let km=0;km<=100;km+=10){const p=this.worldToScreen(km,km);c.beginPath();c.moveTo(p.sx,this.oy);c.lineTo(p.sx,this.oy+this.chartSize);c.moveTo(this.ox,p.sy);c.lineTo(this.ox+this.chartSize,p.sy);c.stroke();if(km%20===0){this.text(String(km),p.sx,this.oy+this.chartSize+9,'#9fc4cd','center');this.text(String(km),this.ox-5,p.sy+2,'#9fc4cd','right');}}
+    // A decorative port shoreline is rasterized into the chart's lower edge.
+    const port=this.worldToScreen(...MISSAO.porto);c.fillStyle='#203e41';c.beginPath();c.moveTo(this.ox,this.oy+this.chartSize);c.lineTo(this.ox+this.scale*8,this.oy+this.chartSize);c.lineTo(this.ox+this.scale*6,this.oy+this.chartSize-this.scale*8);c.lineTo(this.ox+this.scale*2,this.oy+this.chartSize-this.scale*18);c.lineTo(this.ox,this.oy+this.chartSize-this.scale*21);c.fill();c.fillStyle='#487367';for(let i=0;i<9;i++)c.fillRect(this.ox+1+i%3*3,this.oy+this.chartSize-9-Math.floor(i/3)*4,3,2);
+    // Known magnetic anomalies: contour rings, not revealed attack locations.
+    c.strokeStyle='#3c719334';c.lineWidth=.5;for(const a of MISSAO.campo.anomalias){const p=this.worldToScreen(a.x,a.y);for(const k of [1,1.45]){c.beginPath();c.arc(p.sx,p.sy,a.raio_km*this.scale*k,0,Math.PI*2);c.stroke();}}
+    this.drawReef(t);if(!replay)this.drawHeatmap(e);this.drawTarget(s,t);
+    const inertial=this.worldToScreen(...s.inertialPosition);c.strokeStyle='#97d3f280';c.lineWidth=.6;c.setLineDash([1,3]);c.beginPath();c.arc(inertial.sx,inertial.sy,s.inertialRadiusKm*this.scale,0,Math.PI*2);c.stroke();c.setLineDash([]);
+    if(replay){this.line(s.realHistory,'#a7f2ce',2);this.line(s.inertialHistory,'#b1c8ff',.8,[1,3]);}else if(debug)this.line(s.realHistory,'#a7f2ce',1.6);
+    this.line(s.gpsHistory,'#e6bc72',1,[3,3]);
+    const gps=this.worldToScreen(...s.gpsPosition);c.strokeStyle='#ead59c';c.lineWidth=1;c.strokeRect(gps.sx-3,gps.sy-3,6,6);c.fillStyle='#f3db91';c.fillRect(gps.sx-1,gps.sy-1,2,2);
+    const recorded=s.turnsRecord||[];for(const r of recorded.filter(r=>r.markedSuspicious)){const p=this.worldToScreen(...r.gpsReported);this.drawInterference(p.sx,p.sy,14,now);this.text(t.suspectedSignal,p.sx+15,p.sy-9,'#ffc0b6');}
+    const hpd=e.getHPD95();if(!replay&&recorded.length&&!e.isGPSInsideHPD(...s.gpsPosition,hpd)){this.drawInterference(gps.sx,gps.sy,19,now);this.text(t.signalMismatch,gps.sx+21,gps.sy+3,'#ffc0b6');}
+    c.fillStyle='#7bcaca';c.fillRect(port.sx-4,port.sy-4,8,8);c.fillStyle='#0a2334';c.fillRect(port.sx-2,port.sy-2,4,4);this.text(t.portLabel,port.sx+8,port.sy+12);
+    const ship=this.worldToScreen(...this.displayWorld);this.drawShip(ship.sx,ship.sy,s.currentHeading,now);this.text('SPOOFED',ship.sx,ship.sy+20,'#e6f5de','center');
+    const b=this.worldToScreen(0,0);c.strokeStyle='#bed5ce';c.beginPath();c.moveTo(b.sx,b.sy+17);c.lineTo(b.sx+this.scale*10,b.sy+17);c.stroke();this.text('10 km',b.sx,b.sy+26,'#b7d6d6');this.text(t.northLabel,this.ox+this.chartSize-2,this.oy-8,'#b4d4dc','right');
+    this.drawCompass(s.currentHeading);this.drawRadar(s,e,now);
   }
-
-  drawInertialDeadReckoning(ctx, state) {
-    ctx.save();
-    const p = this.worldToScreen(state.inertialPosition[0], state.inertialPosition[1]);
-    const plotSize = this.canvas.width - this.padding * 2;
-    const radiusPix = (state.inertialRadiusKm / 100.0) * plotSize;
-
-    ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
-    ctx.lineWidth = 1;
-    ctx.setLineDash([3, 3]);
-
-    ctx.beginPath();
-    ctx.arc(p.sx, p.sy, radiusPix, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.restore();
-  }
-
-  drawGPSTrail(ctx, gpsHistory) {
-    if (!gpsHistory || gpsHistory.length < 1) return;
-    ctx.save();
-    ctx.strokeStyle = "#f59e0b";
-    ctx.lineWidth = 2.0;
-    ctx.setLineDash([4, 4]);
-
-    ctx.beginPath();
-    for (let i = 0; i < gpsHistory.length; i++) {
-      const pt = this.worldToScreen(gpsHistory[i][0], gpsHistory[i][1]);
-      if (i === 0) ctx.moveTo(pt.sx, pt.sy);
-      else ctx.lineTo(pt.sx, pt.sy);
-    }
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = "#f59e0b";
-    for (const pt of gpsHistory) {
-      const s = this.worldToScreen(pt[0], pt[1]);
-      ctx.fillRect(s.sx - 2, s.sy - 2, 4, 4);
-    }
-    ctx.restore();
-  }
-
-  drawTrueRoute(ctx, realHistory) {
-    if (!realHistory || realHistory.length < 1) return;
-    ctx.save();
-    ctx.strokeStyle = "#22c55e";
-    ctx.lineWidth = 3.0;
-
-    ctx.beginPath();
-    for (let i = 0; i < realHistory.length; i++) {
-      const pt = this.worldToScreen(realHistory[i][0], realHistory[i][1]);
-      if (i === 0) ctx.moveTo(pt.sx, pt.sy);
-      else ctx.lineTo(pt.sx, pt.sy);
-    }
-    ctx.stroke();
-
-    ctx.fillStyle = "#4ade80";
-    for (const pt of realHistory) {
-      const s = this.worldToScreen(pt[0], pt[1]);
-      ctx.beginPath();
-      ctx.arc(s.sx, s.sy, 4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  drawPort(ctx) {
-    const p = this.worldToScreen(MISSAO.porto[0], MISSAO.porto[1]);
-    ctx.save();
-    ctx.strokeStyle = "rgba(34, 197, 94, 0.5)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.arc(p.sx, p.sy, 10, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.fillStyle = "#22c55e";
-    ctx.beginPath();
-    ctx.arc(p.sx, p.sy, 5, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = "#86efac";
-    ctx.font = "bold 11px monospace";
-    ctx.fillText("PORTO [10, 15]", p.sx + 12, p.sy + 4);
-    ctx.restore();
-  }
-
-  drawCompass(ctx, cx, cy, headingDeg) {
-    ctx.save();
-    const r = 30;
-    ctx.fillStyle = "rgba(7, 21, 39, 0.85)";
-    ctx.strokeStyle = "#1e3a5f";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.font = "bold 11px monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    ctx.fillStyle = "#ef4444";
-    ctx.fillText("N", cx, cy - r + 8);
-    ctx.fillStyle = "#8bb2d9";
-    ctx.fillText("S", cx, cy + r - 8);
-    ctx.fillText("E", cx + r - 8, cy);
-    ctx.fillText("W", cx - r + 8, cy);
-
-    const needleRad = ((headingDeg - 90) * Math.PI) / 180.0;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(needleRad);
-
-    ctx.fillStyle = "#00f0ff";
-    ctx.beginPath();
-    ctx.moveTo(18, 0);
-    ctx.lineTo(6, -4);
-    ctx.lineTo(6, 4);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.strokeStyle = "#38bdf8";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(-12, 0);
-    ctx.lineTo(6, 0);
-    ctx.stroke();
-    ctx.restore();
-
-    ctx.fillStyle = "#fff";
-    ctx.beginPath();
-    ctx.arc(cx, cy, 3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-  }
-
-  drawScaleBar(ctx, sx, sy) {
-    ctx.save();
-    const p0 = this.worldToScreen(0, 0);
-    const p10 = this.worldToScreen(10, 0);
-    const barWidth = p10.sx - p0.sx;
-
-    ctx.strokeStyle = "#e2f1ff";
-    ctx.fillStyle = "#e2f1ff";
-    ctx.lineWidth = 2;
-
-    ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.lineTo(sx + barWidth, sy);
-    ctx.moveTo(sx, sy - 4);
-    ctx.lineTo(sx, sy + 4);
-    ctx.moveTo(sx + barWidth, sy - 4);
-    ctx.lineTo(sx + barWidth, sy + 4);
-    ctx.stroke();
-
-    ctx.font = "11px monospace";
-    ctx.fillText("10 km", sx + barWidth / 2 - 14, sy - 6);
-    ctx.restore();
-  }
-
-  drawAxes(ctx, plotSize) {
-    ctx.save();
-    ctx.fillStyle = "#8bb2d9";
-    ctx.font = "11px monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    for (let km = 0; km <= 100; km += 20) {
-      const pt = this.worldToScreen(km, 0);
-      ctx.fillText(km + "k", pt.sx, this.canvas.height - 18);
-    }
-    ctx.fillText("Leste (km) →", this.padding + plotSize / 2, this.canvas.height - 4);
-
-    ctx.textAlign = "right";
-    for (let km = 0; km <= 100; km += 20) {
-      const pt = this.worldToScreen(0, km);
-      ctx.fillText(km + "k", this.padding - 8, pt.sy);
-    }
-
-    ctx.save();
-    ctx.translate(14, this.padding + plotSize / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.textAlign = "center";
-    ctx.fillText("Norte (km) →", 0, 0);
-    ctx.restore();
-
-    ctx.strokeStyle = "#1e3a5f";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(this.padding, this.padding, plotSize, plotSize);
-    ctx.restore();
-  }
+  drawReef(t){const c=this.ctx,p=MISSAO.recife.map(p=>this.worldToScreen(...p));c.fillStyle='#5a334d99';c.strokeStyle='#f18c97';c.lineWidth=1;c.beginPath();p.forEach((q,i)=>i?c.lineTo(q.sx,q.sy):c.moveTo(q.sx,q.sy));c.closePath();c.fill();c.stroke();c.save();c.clip();c.strokeStyle='#ed829680';for(let x=p[0].sx-30;x<p[1].sx+30;x+=4){c.beginPath();c.moveTo(x,p[0].sy+3);c.lineTo(x+20,p[2].sy-3);c.stroke();}c.restore();this.text(t.reefLabel,p[3].sx,p[3].sy-5,'#ffb6b9');}
+  drawHeatmap(e){const c=this.ctx;let max=0;for(const p of e.grid)if(p>max)max=p;if(!max)return;for(let i=0;i<e.grid.length;i++){const p=e.grid[i];if(p<max*.004)continue;const s=this.worldToScreen(i%100,Math.floor(i/100));c.fillStyle=`rgba(95,211,247,${.12+.5*Math.sqrt(p/max)})`;c.fillRect(Math.round(s.sx-this.scale/2),Math.round(s.sy-this.scale/2),Math.ceil(this.scale),Math.ceil(this.scale));}}
+  drawTarget(s,t){const c=this.ctx,observed=s.turnsRecord?.at(-1)?.turn||0;if(observed>=8){const p=this.worldToScreen(...MISSAO.capsula.pouso_real);c.strokeStyle='#afefdb';c.fillStyle='#cefbdc';c.fillRect(p.sx-3,p.sy-2,6,4);c.beginPath();c.arc(p.sx,p.sy,8,0,Math.PI*2);c.stroke();this.text('AURORA-1',p.sx+12,p.sy+2,'#cefbdc');}else if(observed>=2){const m=MISSAO.capsula.elipse_prevista,p=this.worldToScreen(...m.centro);c.setLineDash([3,2]);c.strokeStyle='#ecd09c';c.beginPath();c.ellipse(p.sx,p.sy,m.semi_eixo_x*this.scale,m.semi_eixo_y*this.scale,0,0,Math.PI*2);c.stroke();c.setLineDash([]);this.text(t.landingLabel,p.sx,p.sy-m.semi_eixo_y*this.scale-5,'#f1d1a0','center');}}
+  drawInterference(x,y,r,now){const c=this.ctx;const phase=this.reduced?0:(now%3000)/3000;c.fillStyle='#c92d5930';c.strokeStyle='#eb5c7d99';for(let k=0;k<4;k++){c.beginPath();c.arc(x,y,r*(.25+k*.25)+phase*2,0,Math.PI*2);k===3&&c.fill();c.stroke();}c.fillStyle='#ff667b';c.fillRect(x-2,y-2,4,4);c.strokeStyle='#ffa0a6';c.beginPath();c.moveTo(x-r-4,y);c.lineTo(x-r-1,y);c.moveTo(x+r+1,y);c.lineTo(x+r+4,y);c.stroke();}
+  drawShip(x,y,heading,now){const c=this.ctx;c.save();c.translate(Math.round(x),Math.round(y));c.rotate((heading-90)*Math.PI/180);const spriteScale=Math.min(1,Math.max(.45,this.scale/2));c.scale(spriteScale,spriteScale);c.fillStyle='#9adbe14d';for(let i=0;i<12;i++){c.fillRect(-35-i*2,Math.round(Math.sin(i*.7+(this.reduced?0:now/450))*2)+(i%2?5:-5),3,1);}c.fillStyle='#43bbe91a';c.beginPath();c.moveTo(27,-2);c.lineTo(64,-18);c.lineTo(74,-5);c.lineTo(74,5);c.lineTo(64,18);c.lineTo(27,2);c.fill();c.drawImage(this.sprite,-33,-14);c.restore();}
+  drawCompass(heading){const cv=document.getElementById('compass-canvas');if(!cv)return;const c=cv.getContext('2d');c.clearRect(0,0,120,120);c.imageSmoothingEnabled=false;c.fillStyle='#04152a';c.strokeStyle='#87a8b8';c.lineWidth=3;c.beginPath();c.arc(60,60,51,0,Math.PI*2);c.fill();c.stroke();c.strokeStyle='#3b6075';c.lineWidth=1;c.beginPath();c.arc(60,60,45,0,Math.PI*2);c.stroke();c.fillStyle='#e6ece3';c.font='bold 14px monospace';c.textAlign='center';c.fillText('N',60,28);c.fillText('S',60,103);c.fillText(window.gameApp?.currentLang==='en'?'W':'O',22,65);c.fillText('E',98,65);c.save();c.translate(60,60);c.rotate(heading*Math.PI/180);c.fillStyle='#ff8791';c.beginPath();c.moveTo(0,-30);c.lineTo(-4,0);c.lineTo(4,0);c.fill();c.fillStyle='#8de3fd';c.beginPath();c.moveTo(0,29);c.lineTo(-4,0);c.lineTo(4,0);c.fill();c.restore();c.fillStyle='#d1eadb';c.fillRect(57,57,6,6);}
+  drawRadar(s,e,now){const cv=document.getElementById('radar-canvas');if(!cv)return;const c=cv.getContext('2d');c.clearRect(0,0,132,112);c.fillStyle='#031d20';c.strokeStyle='#3c8b6e';c.lineWidth=1;c.beginPath();c.arc(66,55,49,0,Math.PI*2);c.fill();c.stroke();for(const r of [16,32]){c.beginPath();c.arc(66,55,r,0,Math.PI*2);c.stroke();}c.strokeStyle='#3c8b6e99';c.beginPath();c.moveTo(17,55);c.lineTo(115,55);c.moveTo(66,6);c.lineTo(66,104);c.stroke();const angle=this.reduced?-Math.PI/3:now/1900;c.fillStyle='#62f8a527';c.beginPath();c.moveTo(66,55);c.arc(66,55,48,angle-.7,angle);c.closePath();c.fill();c.strokeStyle='#a6f9b4';c.beginPath();c.moveTo(66,55);c.lineTo(66+48*Math.cos(angle),55+48*Math.sin(angle));c.stroke();const p=this.current.isReplay?s.realPosition:e.getMAP(),dx=(s.gpsPosition[0]-p[0])*5,dy=(s.gpsPosition[1]-p[1])*5;c.fillStyle='#bbefc9';c.fillRect(64,53,4,4);c.fillStyle='#ffc79a';c.fillRect(65+Math.max(-44,Math.min(44,dx)),54-Math.max(-44,Math.min(44,dy)),3,3);}
 }
+
+// Original 5 × 7 bitmap lettering: embedded, network-free, crisp at integer scales.
+function drawTitle(){
+ const letters={G:['01111','10000','10000','10111','10001','10001','01110'],H:['10001','10001','10001','11111','10001','10001','10001'],O:['01110','10001','10001','10001','10001','10001','01110'],S:['01111','10000','10000','01110','00001','00001','11110'],T:['11111','00100','00100','00100','00100','00100','00100'],R:['11110','10001','10001','11110','10100','10010','10001'],U:['10001','10001','10001','10001','10001','10001','01110'],E:['11111','10000','10000','11110','10000','10000','11111']};
+ const cv=document.getElementById('title-canvas'),c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);const pixels=[];let x=10;for(const ch of 'GHOST ROUTE'){if(ch===' '){x+=14;continue;}letters[ch].forEach((row,y)=>{[...row].forEach((v,col)=>{if(v==='1')pixels.push([x+col*5,8+y*5,y]);});});x+=31;}
+ for(const[a,b]of pixels){c.fillStyle='#000719';c.fillRect(a-4,b-4,13,14);c.fillStyle='#568cad';c.fillRect(a-2,b-2,9,11);}for(const[a,b,y]of pixels){c.fillStyle=y<3?'#e5faff':y<5?'#a7deed':'#6aaabf';c.fillRect(a,b,5,5);c.fillStyle='#122944';c.fillRect(a,b+5,5,2);}
+}
+
+
+
+

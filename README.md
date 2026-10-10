@@ -1,4 +1,4 @@
-# Rota Fantasma (Ghost Route)
+# Ghost Route
 
 > **Quantum Hackathon Project — Qollab × IonQ 2026**  
 > **Team:** QuantGirls  
@@ -8,9 +8,20 @@
 
 ---
 
+
+## Fullscreen web game
+
+Ghost Route now has a fullscreen 16-bit pixel-art ocean, an animated ship, compass, radar, mission radio and keyboard controls. English, Brazilian Portuguese and Spanish can be switched during play. The game's name is **Ghost Route** in every language; the rescue cutter is **SPOOFED**.
+
+Open `index.html` with `main.css`, `main.js` and `js/` beside it, or serve this repository as a static website. No frontend dependencies or build step are required. See [WEB_GAME.md](WEB_GAME.md) for controls, tests and Vercel settings.
+
+The browser frontend samples the Ramsey Born probabilities in JavaScript. It does **not** execute Qiskit. The existing Python sensor and Qollab runner remain separate; a frontend deployment does not verify the official Qollab execution or submission.
+
+![Ghost Route fullscreen navigation](docs/ghost-route-preview.jpg)
+
 ## 🌊 1. Project Overview & Background
 
-**Rota Fantasma** is an interactive, 16-bit retro naval navigation tactical game that bridges quantum metrology with maritime security. Set in the South Atlantic in 2031, the player navigates the rescue cutter **SPOOFED**, dispatched ~300 km off the northeastern coast of Brazil to retrieve three astronauts aboard the **Aurora-1** space capsule after orbital atmospheric reentry.
+**Ghost Route** is an interactive, 16-bit retro naval navigation tactical game that bridges quantum metrology with maritime security. Set in the South Atlantic in 2031, the player navigates the rescue cutter **SPOOFED**, dispatched ~300 km off the northeastern coast of Brazil to retrieve three astronauts aboard the **Aurora-1** space capsule after orbital atmospheric reentry.
 
 In this maritime sector, an invisible adversary—**The Ghost**—actively spoofs satellite GPS signals. The vessel's conventional receivers report plausible yet falsified positioning data designed to lure the rescue cutter into treacherous seabed reefs.
 
@@ -30,7 +41,7 @@ The only trustworthy instrument aboard is **QUOORA**, a cybernetic quantum navig
   - `thoughtful`: Single raised brow and amber data-processing sensor.
   - `worried`: Drooped brows and amber alert when GPS discrepancies grow.
   - `alert`: Red flashing warning eyes and open alarm beacon during reef proximity or major GPS jumps.
-- **Modular Asset Architecture (`AssetRegistry`):** Sprite renderers are decoupled from physics logic, allowing procedural drawings to be replaced with custom PNG or Aseprite sprites by simply injecting image objects into `AssetRegistry.shipSpriteConfig.customImage`.
+- **Modular Asset Architecture (`AssetRegistry`):** Sprite drawing is separate from the movement and sensing logic. The cutter is drawn in `TacticalMapRenderer.makeShip`; the Quoora avatar is drawn by `AssetRegistry.drawQuooraAvatar`. These renderers can be adapted for custom PNG or Aseprite assets.
 
 ---
 
@@ -44,7 +55,7 @@ The accumulated quantum phase shift is $\phi(x, y) = \kappa \cdot B(x, y)$ (with
 ### Sensor Modes
 1. **Simple Mode ($n = 1$):** Single-qubit Ramsey cycle.
    $$P_X(\phi) = \sin^2\left(\frac{\phi}{2}\right), \quad P_Y(\phi) = \frac{1 - \sin(\phi)}{2}$$
-2. **GHZ Entangled Mode ($n = 3$):** 3-qubit maximally entangled Greenberger-Horne-Zeilinger state $|GHZ\rangle = \frac{|000\rangle + |111\rangle}{\sqrt{2}}$. Reaches the **Heisenberg Limit** ($\Delta \phi \sim 1/N$):
+2. **GHZ Entangled Mode ($n = 3$):** 3-qubit maximally entangled Greenberger-Horne-Zeilinger state $|GHZ\rangle = \frac{|000\rangle + |111\rangle}{\sqrt{2}}$. The ideal measurement probabilities depend on the amplified phase:
    $$P_X(\phi) = \sin^2\left(\frac{3\phi}{2}\right), \quad P_Y(\phi) = \frac{1 - \sin(3\phi)}{2}$$
 
 ### Scientific Honesty & 3-Fold Phase Ambiguity
@@ -72,7 +83,7 @@ The accumulated quantum phase shift is $\phi(x, y) = \kappa \cdot B(x, y)$ (with
 
 ## 🏆 5. Mission Endings & Interactive Replay
 
-1. **PERFECT RESCUE:** Reached the capsule within $2.0\text{ km}$ at Turn 12, with all 3 spoofing attacks flagged and zero false alarms.
+1. **PERFECT RESCUE:** Reached the capsule within $2.0\text{ km}$ at Turn 12, with all 3 spoofing attacks flagged. False alarms are reported separately.
 2. **RESCUE:** Capsule recovered within $2.0\text{ km}$, but at least one spoofing attack went undetected.
 3. **DECEIVED:** Arrived at spoofed coordinates $> 2.0\text{ km}$ away from the real capsule.
 4. **AGROUND:** Vessel grounded on the hazardous reef polygon.
@@ -89,17 +100,17 @@ The accumulated quantum phase shift is $\phi(x, y) = \kappa \cdot B(x, y)$ (with
 
 The game features on-the-fly language switching via an integrated dictionary `TEXTOS`:
 - **English (`en`):** Full English localization.
-- **Brazilian Portuguese (`pt-BR`):** Original Portuguese briefing and dialogue preserved verbatim.
+- **Brazilian Portuguese (`pt-BR`):** Original Portuguese briefing and dialogue.
 - **Spanish (`es`):** Complete Spanish localization.
 
 Language selection preserves all active game variables, seeds, and replay timelines.
 
 ---
 
-## ♿ 7. Accessibility (WCAG AA/AAA)
+## ♿ 7. Accessibility Features
 
-- High-contrast tactical palette ($> 4.5:1$ ratio on all text elements).
-- Minimum typography floor of $14\text{ px}$.
+- High-contrast tactical palette with visible keyboard focus.
+- Responsive controls, with a collapsible radio panel on narrow screens.
 - Full keyboard support: `Enter`/`Space` (advance), `Left`/`Right` Arrows (steer ±5°), `D` (toggle debug), `R` (restart).
 - Screen reader `aria-live="polite"` telemetry announcer.
 - Respects `prefers-reduced-motion` settings.
@@ -109,7 +120,7 @@ Language selection preserves all active game variables, seeds, and replay timeli
 ## 📁 8. Project Structure & Deliverables
 
 ```
-├── index.html                   # Complete standalone 16-bit offline browser game
+├── index.html                   # Static 16-bit browser game loader
 ├── sensor.py                    # Quantum Ramsey interferometry Qiskit/Python sensor
 ├── test_sensor.py               # Unit test suite verifying Born-rule statistics
 ├── grafico_franjas.py           # Script plotting Ramsey interference fringes
@@ -133,8 +144,8 @@ Language selection preserves all active game variables, seeds, and replay timeli
 
 ## 🚀 9. How to Run
 
-### Standalone Offline Version
-Double-click `index.html` in any web browser. Zero server setup or internet connection required.
+### Offline Web Version
+Open `index.html` in a browser while keeping `main.css`, `main.js` and the `js/` directory beside it. No server or internet connection is required.
 
 ### Python Quantum Tests
 ```bash
@@ -148,3 +159,6 @@ python grafico_franjas.py
 
 MIT License — Copyright (c) 2026 QuantGirls Team.  
 *This effort is supported by Qollab & IonQ.*
+
+
+AI assistance: OpenAI Codex assisted the fullscreen UI, procedural sprites, localization and JavaScript regression checks. User-provided visual references guided the art direction.

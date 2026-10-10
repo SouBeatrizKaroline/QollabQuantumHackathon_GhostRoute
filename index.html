@@ -1,291 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rota Fantasma — Qollab × IonQ Quantum Hackathon</title>
-  <!--
-    MIT License
+<!doctype html>
+<!--
+MIT License
 
-    Copyright (c) 2026 QuantGirls Team
+Copyright (c) 2026 QuantGirls Team
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-    Attribution Notice:
-    This effort is supported by Qollab & IonQ
-  -->
-  <link rel="stylesheet" href="main.css">
-</head>
-<body>
+Attribution Notice:
+This effort is supported by Qollab & IonQ
 
-  <!-- Screen reader announcer -->
-  <div id="live-announcer" class="sr-only" aria-live="polite"></div>
 
-  <!-- Header -->
-  <header>
-    <div class="title-group">
-      <h1 id="app-title">Rota Fantasma</h1>
-      <span class="mission-badge" id="mission-badge">Operação Maré Silenciosa</span>
-      <span class="debug-badge" id="debug-badge">DEBUG MODE [D]</span>
-    </div>
-    <div class="header-actions">
-      <div class="lang-selector-group">
-        <label for="lang-select" id="lbl-language">Language:</label>
-        <select id="lang-select" aria-label="Select Game Language">
-          <option value="en">English (EN)</option>
-          <option value="pt-BR" selected>Português (PT-BR)</option>
-          <option value="es">Español (ES)</option>
-        </select>
-      </div>
-      <button id="btn-restart" class="btn-secondary" aria-label="Restart Mission">
-        🔄 <span id="txt-restart">Reiniciar</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- Main Grid -->
-  <main>
-    <!-- Map Section -->
-    <section class="map-container" aria-label="Tactical Navigation Map">
-      <div class="map-header">
-        <div class="map-title">
-          <span>🧭</span>
-          <span id="txt-map-title">MAPA TÁTICO DE NAVEGAÇÃO</span>
-        </div>
-        <div class="map-scale-info" style="font-family:var(--font-mono); font-size:13px; color:var(--text-muted);">
-          <span id="txt-grid-scale">Grade: 10 × 10 km (100 × 100 km)</span>
-        </div>
-      </div>
-
-      <div class="canvas-wrapper">
-        <canvas id="map-canvas" width="700" height="700" role="img" aria-label="Nautical map showing ship, GPS trail, and quantum probability distribution"></canvas>
-        <div class="crt-overlay"></div>
-      </div>
-
-      <div class="map-footer-bar">
-        <div class="legend-item">
-          <span class="legend-marker marker-port"></span>
-          <span id="legend-port">Porto [10, 15]</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-marker marker-ship"></span>
-          <span id="legend-ship">SPOOFED (Estimador MAP)</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-marker marker-gps"></span>
-          <span id="legend-gps">Rota GPS</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-marker marker-heat"></span>
-          <span id="legend-heat">Região Quântica 95%</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-marker marker-reef"></span>
-          <span id="legend-reef">Recife Perigoso</span>
-        </div>
-      </div>
-
-      <!-- Live Tactical Alerts -->
-      <div id="alert-reef" class="alert-banner alert-reef">⚠️ ALERTA: Proximidade perigosa do recife (&lt; 3 km)!</div>
-      <div id="alert-gps" class="alert-banner alert-gps">⚠️ ALERTA: Leitura GPS fora da região de 95% de confiança quântica!</div>
-    </section>
-
-    <!-- Controls & Communications Section -->
-    <aside class="controls-panel">
-      <!-- Communications / Radio Box -->
-      <section class="card radio-card" aria-labelledby="heading-comms">
-        <h2 id="heading-comms" class="card-title">📡 <span id="txt-radio-title">Transmissão de Rádio &amp; Quoora</span></h2>
-        <div class="speaker-header">
-          <canvas id="avatar-canvas" class="avatar-canvas" width="48" height="48"></canvas>
-          <div class="speaker-info">
-            <div class="speaker-name" id="speaker-name">Quoora</div>
-            <div class="speaker-role" id="speaker-role">Sensor Quântico de Navegação</div>
-          </div>
-        </div>
-        <div class="dialogue-text" id="dialogue-box">Carregando telemetria...</div>
-        <div class="dialogue-nav" id="dialogue-nav" style="display:none;">
-          <button type="button" id="btn-next-tutorial" class="btn-ack">Entendido ⏩</button>
-        </div>
-      </section>
-
-      <!-- Telemetry Card -->
-      <section class="card" aria-labelledby="heading-telemetry">
-        <h2 id="heading-telemetry" class="card-title">📊 <span id="txt-telemetry-title">Telemetria de Bordo</span></h2>
-        <div class="telemetry-grid">
-          <div class="stat-box">
-            <div class="stat-label" id="lbl-turn">Turno</div>
-            <div class="stat-value" id="val-turn">1 / 12</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label" id="lbl-time">Tempo</div>
-            <div class="stat-value" id="val-time">00:00</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label" id="lbl-pos">Pos. GPS</div>
-            <div class="stat-value" id="val-pos">[10.0, 15.0]</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label" id="lbl-heading">Rumo</div>
-            <div class="stat-value" id="val-heading">045° (NE)</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label" id="lbl-speed">Velocidade</div>
-            <div class="stat-value" id="val-speed">7.5 km/t</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label" id="lbl-dist">Distância</div>
-            <div class="stat-value" id="val-dist">0.0 km</div>
-          </div>
-        </div>
-
-        <!-- Energy / Shot Budget -->
-        <div class="budget-section">
-          <div class="budget-header">
-            <span id="lbl-budget">Orçamento Quântico (Shots):</span>
-            <strong id="val-budget" style="font-family:var(--font-mono);">6000 / 6000</strong>
-          </div>
-          <div class="budget-bar-bg">
-            <div id="budget-bar-fill" class="budget-bar-fill"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Navigation & Quantum Controls -->
-      <section class="card" aria-labelledby="heading-helm">
-        <h2 id="heading-helm" class="card-title">⚓ <span id="txt-helm-title">Controle do Timão &amp; Sensor</span></h2>
-
-        <!-- Course Setting -->
-        <div class="heading-control">
-          <div class="slider-header">
-            <label for="heading-slider" id="lbl-slider-heading">Definir Rumo (0° - 359°):</label>
-            <span class="heading-display" id="slider-val-display">045° (NE)</span>
-          </div>
-          <input type="range" id="heading-slider" min="0" max="359" value="45" aria-valuemin="0" aria-valuemax="359" aria-valuenow="45">
-        </div>
-
-        <div class="compass-grid" role="group" aria-label="Cardinal Directions">
-          <button type="button" class="btn-dir" data-deg="0">N<span class="deg">0°</span></button>
-          <button type="button" class="btn-dir active" data-deg="45">NE<span class="deg">45°</span></button>
-          <button type="button" class="btn-dir" data-deg="90">E<span class="deg">90°</span></button>
-          <button type="button" class="btn-dir" data-deg="135">SE<span class="deg">135°</span></button>
-          <button type="button" class="btn-dir" data-deg="180">S<span class="deg">180°</span></button>
-          <button type="button" class="btn-dir" data-deg="225">SW<span class="deg">225°</span></button>
-          <button type="button" class="btn-dir" data-deg="270">W<span class="deg">270°</span></button>
-          <button type="button" class="btn-dir" data-deg="315">NW<span class="deg">315°</span></button>
-        </div>
-
-        <!-- Sensor Parameters -->
-        <div class="sensor-options-grid">
-          <div class="field-group">
-            <label for="sensor-mode-select" id="lbl-sensor-mode">Modo do Sensor:</label>
-            <select id="sensor-mode-select">
-              <option value="none" id="opt-mode-none">Nenhum (0 shots)</option>
-              <option value="simple" id="opt-mode-simple" selected>Simples (n = 1)</option>
-              <option value="ghz" id="opt-mode-ghz">Emaranhado (GHZ n = 3)</option>
-            </select>
-          </div>
-          <div class="field-group">
-            <label for="sensor-shots-select" id="lbl-sensor-shots">Disparos (Shots):</label>
-            <select id="sensor-shots-select">
-              <option value="100">100 shots</option>
-              <option value="250" selected>250 shots</option>
-              <option value="500">500 shots</option>
-              <option value="1000">1000 shots</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Suspicion Mark -->
-        <label class="suspicion-container">
-          <input type="checkbox" id="chk-suspicious">
-          <span class="suspicion-label" id="lbl-suspicious">Marcar sinal de GPS como suspeito neste turno</span>
-        </label>
-
-        <!-- Advance Button -->
-        <button type="button" id="btn-advance" class="btn-primary">
-          <span>⏩</span>
-          <span id="txt-advance">Avançar Turno</span>
-        </button>
-
-        <p style="font-size:12px; color:var(--text-muted); margin-top:8px; text-align:center;" id="txt-shortcut-hint">
-          Atalho: [Enter]/[Espaço] avançar · [Setas] rumo · [D] debug
-        </p>
-      </section>
-    </aside>
-  </main>
-
-  <!-- Replay Modal Dialog -->
-  <div id="replay-modal" class="replay-modal" role="dialog" aria-modal="true" aria-labelledby="replay-title-text">
-    <div class="replay-box">
-      <div class="replay-title">
-        <span id="replay-title-text">Relatório da Missão &amp; Replay</span>
-        <button type="button" id="btn-close-replay" class="btn-secondary" style="padding:4px 8px;">✕</button>
-      </div>
-
-      <div id="outcome-banner" class="outcome-banner"></div>
-
-      <div class="scoreboard-grid">
-        <div class="stat-box">
-          <div class="stat-label" id="lbl-rep-score">Ataques Detectados</div>
-          <div class="stat-value" id="val-rep-score">0 / 3</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label" id="lbl-rep-false">Alarmes Falsos</div>
-          <div class="stat-value" id="val-rep-false">0</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label" id="lbl-rep-dist">Distância Final</div>
-          <div class="stat-value" id="val-rep-dist">0.0 km</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-label" id="lbl-rep-shots">Shots Economizados</div>
-          <div class="stat-value" id="val-rep-shots">0</div>
-        </div>
-      </div>
-
-      <!-- Scrubber Timeline -->
-      <div style="margin: 14px 0;">
-        <label for="scrubber-range" id="lbl-scrubber" style="font-weight:600; font-size:13px; color:var(--text-accent);">Linha do Tempo de Navegação:</label>
-        <input type="range" id="scrubber-range" min="1" max="12" value="12" style="margin-top:6px;">
-        <div id="turn-event-info" style="font-size:13px; color:var(--text-muted); margin-top:6px; font-family:var(--font-mono);"></div>
-      </div>
-
-      <!-- Replay measurement details -->
-      <div id="replay-measurement-box" style="background:#071529; border:1px solid #1a365d; padding:10px; border-radius:4px; font-size:13px; margin-bottom:12px; display:none;">
-        <h4 style="color:var(--text-highlight); margin-bottom:4px;" id="lbl-meas-title">Dados Quânticos do Turno:</h4>
-        <div id="meas-details" style="font-family:var(--font-mono); line-height:1.5;"></div>
-      </div>
-
-      <div class="replay-controls">
-        <button type="button" id="btn-replay-same" class="btn-secondary">🔁 <span id="txt-btn-same">Repetir Mesma Semente</span></button>
-        <button type="button" id="btn-replay-new" class="btn-secondary">🎲 <span id="txt-btn-new">Nova Semente</span></button>
-        <button type="button" id="btn-export-json" class="btn-primary" style="width:auto; margin-left:auto;">📥 <span id="txt-btn-export">Exportar Decisões (JSON)</span></button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Footer -->
-  <footer>
-    <div class="attribution-text">This effort is supported by Qollab &amp; IonQ</div>
-    <div>Rota Fantasma · Qollab × IonQ Quantum Hackathon 2026 · QuantGirls Team · MIT License</div>
-  </footer>
-
-  <script src="main.js"></script>
-</body>
-</html>
+-->
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#06162a"><title>Ghost Route — QuantGirls</title><link rel="stylesheet" href="main.css"></head><body>
+<div id="game-shell">
+ <canvas id="map-canvas" role="img" aria-describedby="map-description"></canvas><div class="scanlines" aria-hidden="true"></div><div class="bezel" aria-hidden="true"></div>
+ <header class="hud-top pixel-panel">
+  <section class="signal"><div class="hud-label"><span data-i18n="signalLabel"></span><strong id="gps-status"></strong></div><div class="meter"><div id="gps-meter"></div></div><div class="mission-line"><span class="status-dot"></span><span id="mission-badge"></span></div></section>
+  <div class="brand"><h1 id="app-title" class="sr-only">Ghost Route</h1><canvas id="title-canvas" width="364" height="58" aria-hidden="true"></canvas><span class="brand-sub">SPOOFED / QUANTGIRLS</span></div>
+  <section class="energy"><div class="hud-label"><span id="lbl-budget"></span><strong id="val-budget"></strong></div><div class="meter"><div id="budget-bar-fill"></div></div><div class="mission-line hull"><span data-i18n="hullLabel"></span><strong id="hull-status"></strong></div></section>
+ </header>
+ <nav class="utility" aria-label="Game settings"><label for="lang-select" id="lbl-language" class="sr-only"></label><select id="lang-select"><option value="en">ENGLISH</option><option value="pt-BR" selected>PORTUGUÊS</option><option value="es">ESPAÑOL</option></select><button id="btn-fullscreen" type="button" data-i18n="fullscreen"></button><button id="btn-restart" type="button"><span id="txt-restart"></span></button></nav>
+ <div id="debug-badge" class="debug-badge"></div>
+ <section class="compass-widget pixel-panel"><canvas id="compass-canvas" width="120" height="120" aria-hidden="true"></canvas><span id="val-heading"></span></section>
+ <section class="radar-widget pixel-panel"><span data-i18n="radarLabel"></span><canvas id="radar-canvas" width="132" height="112" aria-hidden="true"></canvas><small id="val-pos"></small></section>
+ <div class="telemetry-strip"><span><i id="lbl-turn"></i><strong id="val-turn"></strong></span><span><i id="lbl-time"></i><strong id="val-time"></strong></span><span><i id="lbl-dist"></i><strong id="val-dist"></strong></span></div>
+ <section class="radio-widget pixel-panel" aria-labelledby="heading-comms"><div class="panel-kicker"><h2 id="heading-comms"><span id="txt-radio-title"></span></h2><span class="radio-led">●</span><button id="btn-radio-toggle" class="radio-toggle" type="button" aria-expanded="false">▼</button></div><div class="radio-body"><canvas id="avatar-canvas" width="48" height="48" aria-hidden="true"></canvas><div><strong id="speaker-name"></strong><span id="speaker-role"></span></div></div><p id="dialogue-box"></p><div id="dialogue-nav"><button id="btn-next-tutorial" data-i18n="acknowledge"></button></div></section>
+ <div class="warning-stack" aria-live="assertive" aria-atomic="true"><div id="alert-gps" class="warning"></div><div id="alert-reef" class="warning"></div></div>
+ <section class="navigation-dock pixel-panel" aria-label="Navigation controls">
+  <div class="heading-module"><div class="panel-kicker"><h2 id="txt-helm-title"></h2><strong id="slider-val-display"></strong></div><label id="lbl-slider-heading" for="heading-slider"></label><input id="heading-slider" type="range" min="0" max="359" value="45"><div class="compass-grid" role="group"><button class="btn-dir" data-deg="315">NW</button><button class="btn-dir" data-deg="0">N</button><button class="btn-dir" data-deg="45">NE</button><button class="btn-dir" data-deg="270">W</button><button class="btn-dir" data-deg="90">E</button><button class="btn-dir" data-deg="225">SW</button><button class="btn-dir" data-deg="180">S</button><button class="btn-dir" data-deg="135">SE</button></div></div>
+  <div class="sensor-module"><div class="panel-kicker"><h2 data-i18n="sensorTitle"></h2><span class="qubit-pips" aria-hidden="true">▣ ▣ ▣</span></div><div class="sensor-fields"><div><label id="lbl-sensor-mode" for="sensor-mode-select"></label><select id="sensor-mode-select"><option id="opt-mode-none" value="none"></option><option id="opt-mode-simple" value="simple" selected></option><option id="opt-mode-ghz" value="ghz"></option></select></div><div><label id="lbl-sensor-shots" for="sensor-shots-select"></label><select id="sensor-shots-select"><option value="100">100</option><option value="250">250</option><option value="500" selected>500</option><option value="1000">1000</option></select></div></div><p id="last-reading"></p></div>
+  <div class="action-module"><label class="suspicion-container"><input id="chk-suspicious" type="checkbox"><span id="lbl-suspicious"></span></label><button id="btn-advance" class="sail-button"><span class="sail-icon" aria-hidden="true">▶</span><span id="txt-advance"></span><kbd>ENTER</kbd></button><p id="txt-shortcut-hint"></p></div>
+ </section>
+ <div class="chart-legend pixel-panel"><span id="legend-port"></span><span id="legend-ship"></span><span id="legend-gps" class="dash-key"></span><span id="legend-heat" class="heat-key"></span><span id="legend-reef" class="reef-key"></span></div>
+ <div class="bottom-status"><span id="txt-grid-scale"></span><span>This effort is supported by Qollab &amp; IonQ</span></div>
+ <div id="live-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div><p id="map-description" class="sr-only"></p>
+ <div hidden><span id="txt-map-title"></span><span id="txt-telemetry-title"></span><span id="lbl-pos"></span><span id="lbl-heading"></span><span id="lbl-speed"></span><span id="val-speed"></span></div>
+</div>
+<div id="replay-modal" class="replay-modal" role="dialog" aria-modal="true" aria-labelledby="replay-title-text"><section class="replay-box pixel-panel"><div class="panel-kicker"><h2 id="replay-title-text"></h2><button id="btn-close-replay" data-i18n="close"></button></div><p id="outcome-banner" class="outcome-banner"></p><div class="scoreboard-grid"><div><span id="lbl-rep-score"></span><strong id="val-rep-score"></strong></div><div><span id="lbl-rep-false"></span><strong id="val-rep-false"></strong></div><div><span id="lbl-rep-dist"></span><strong id="val-rep-dist"></strong></div><div><span id="lbl-rep-shots"></span><strong id="val-rep-shots"></strong></div></div><label id="lbl-scrubber" for="scrubber-range"></label><input id="scrubber-range" type="range" min="1" max="12" value="12"><div id="turn-event-info"></div><div id="attack-timeline"></div><div id="replay-measurement-box"><h3 id="lbl-meas-title"></h3><div id="meas-details"></div><canvas id="histogram-canvas" width="520" height="112" aria-hidden="true"></canvas></div><div class="replay-controls"><button id="btn-replay-same"><span id="txt-btn-same"></span></button><button id="btn-replay-new"><span id="txt-btn-new"></span></button><button id="btn-export-json"><span id="txt-btn-export"></span></button></div></section></div>
+<script src="js/texts.js"></script><script src="js/engine.js"></script><script src="main.js"></script></body></html>
