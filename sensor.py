@@ -1,5 +1,5 @@
 """
-Rota Fantasma — sensor quântico (Demo 1)
+Ghost Route — sensor quântico (Demo 1)
 
 O sensor é um interferômetro de Ramsey: o campo magnético na posição real
 do navio vira uma fase φ no qubit, e só a estatística de medição revela φ.
@@ -20,7 +20,9 @@ próprios qubits e no seu próprio registrador clássico.
 from __future__ import annotations
 
 import math
+import sys
 from dataclasses import dataclass
+from numbers import Integral, Real
 
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.primitives import StatevectorSampler
@@ -30,6 +32,19 @@ from qiskit.primitives import StatevectorSampler
 # Leituras
 # ---------------------------------------------------------------------------
 
+def _inteiro_positivo(valor, nome: str) -> int:
+    """Valida recursos discretos antes de criar um circuito ou enviar um job."""
+    if isinstance(valor, bool) or not isinstance(valor, Integral) or valor < 1:
+        raise ValueError(f"{nome} precisa ser um inteiro positivo")
+    return int(valor)
+
+
+def _contagem_valida(valor, shots: int, nome: str) -> int:
+    if isinstance(valor, bool) or not isinstance(valor, Integral) or not 0 <= valor <= shots:
+        raise ValueError(f"{nome} precisa ser um inteiro entre 0 e {shots}")
+    return int(valor)
+
+
 @dataclass(frozen=True)
 class Leitura:
     """Uma leitura do sensor: a fase que o campo imprime, o modo e a quadratura."""
@@ -38,8 +53,10 @@ class Leitura:
     quadratura: str = "X"   # "X" ou "Y"
 
     def __post_init__(self):
-        if self.n < 1:
-            raise ValueError("n precisa ser >= 1")
+        if isinstance(self.phi, bool) or not isinstance(self.phi, Real) or not math.isfinite(self.phi):
+            raise ValueError("phi precisa ser um número real finito")
+        object.__setattr__(self, "phi", float(self.phi))
+        object.__setattr__(self, "n", _inteiro_positivo(self.n, "n"))
         if self.quadratura not in ("X", "Y"):
             raise ValueError("quadratura precisa ser 'X' ou 'Y'")
 
@@ -62,6 +79,10 @@ def _aplicar_ramsey(qc: QuantumCircuit, qubits, clbit, leitura: Leitura) -> None
 
 def circuito_leitura(leitura: Leitura) -> QuantumCircuit:
     """Circuito de uma leitura isolada (bom para mostrar na página e no vídeo)."""
+    if not isinstance(leitura, Leitura):
+        raise ValueError("leitura precisa ser uma instância de Leitura")
+    if leitura.n > LIMITE_QUBITS:
+        raise ValueError(f"{leitura.n} qubits passa do limite de {LIMITE_QUBITS}")
     q = QuantumRegister(leitura.n, "q")
     c = ClassicalRegister(1, "c")
     qc = QuantumCircuit(q, c, name=f"ramsey_n{leitura.n}_{leitura.quadratura}")
@@ -80,6 +101,10 @@ def circuito_empacotado(leituras: list[Leitura]) -> QuantumCircuit:
     Todas as leituras num circuito só (regra da IonQ: 1 job por execução).
     Cada leitura i ganha seus próprios qubits e o registrador clássico 'm{i}'.
     """
+    if not isinstance(leituras, (list, tuple)) or not leituras:
+        raise ValueError("leituras precisa conter pelo menos uma Leitura")
+    if any(not isinstance(lt, Leitura) for lt in leituras):
+        raise ValueError("cada leitura precisa ser uma instância de Leitura")
     total = sum(lt.n for lt in leituras)
     if total > LIMITE_QUBITS:
         raise ValueError(
@@ -108,9 +133,10 @@ def rodar(leituras: list[Leitura], shots: int = 1000, sampler=None, seed: int | 
     local exato (StatevectorSampler). No Qollab, troque pelo sampler do
     backend escolhido (por ex. o simulador da IonQ).
     """
+    shots = _inteiro_positivo(shots, "shots")
+    qc = circuito_empacotado(leituras)
     if sampler is None:
         sampler = StatevectorSampler(seed=seed)
-    qc = circuito_empacotado(leituras)
     resultado = sampler.run([qc], shots=shots).result()[0]
     saida = []
     for i in range(len(leituras)):
@@ -126,6 +152,7 @@ def rodar(leituras: list[Leitura], shots: int = 1000, sampler=None, seed: int | 
 
 def prob_um(phi: float, n: int = 1, quadratura: str = "X") -> float:
     """Probabilidade teórica de medir 1."""
+    Leitura(phi, n, quadratura)
     if quadratura == "X":
         return math.sin(n * phi / 2) ** 2
     return (1 - math.sin(n * phi)) / 2
@@ -139,6 +166,11 @@ def estimar_fase(uns_x: int, shots_x: int, uns_y: int, shots_y: int, n: int = 1)
     conhece n·φ módulo 2π, então há n candidatas igualmente espaçadas
     (ambiguidade de franja). n = 1 → uma candidata; GHZ → várias.
     """
+    n = _inteiro_positivo(n, "n")
+    shots_x = _inteiro_positivo(shots_x, "shots_x")
+    shots_y = _inteiro_positivo(shots_y, "shots_y")
+    uns_x = _contagem_valida(uns_x, shots_x, "uns_x")
+    uns_y = _contagem_valida(uns_y, shots_y, "uns_y")
     cos_nphi = 1 - 2 * (uns_x / shots_x)
     sin_nphi = 1 - 2 * (uns_y / shots_y)
     nphi = math.atan2(sin_nphi, cos_nphi) % (2 * math.pi)
@@ -150,6 +182,8 @@ def incerteza_fase(shots: int, n: int = 1) -> float:
     Desvio padrão aproximado da estimativa de φ (rad).
     Limite quântico padrão ~ 1/√shots; com GHZ, ~ 1/(n·√shots) (limite de Heisenberg).
     """
+    shots = _inteiro_positivo(shots, "shots")
+    n = _inteiro_positivo(n, "n")
     return 1 / (n * math.sqrt(shots))
 
 
@@ -164,9 +198,23 @@ def ler_fase(phi: float, n: int = 1, shots: int = 1000, sampler=None, seed: int 
     return estimar_fase(ux, shots, uy, shots, n)
 
 
+def demonstrar_sensor(phi_real: float = 1.1, shots: int = 2000, sampler=None, seed: int | None = 7):
+    """Compara os modos simples/GHZ com quatro leituras em um único job."""
+    modos = (1, 3)
+    leituras = [leitura for n in modos for leitura in leituras_par(phi_real, n)]
+    contagens = rodar(leituras, shots=shots, sampler=sampler, seed=seed)
+    return {
+        n: estimar_fase(contagens[2 * i][1], shots, contagens[2 * i + 1][1], shots, n)
+        for i, n in enumerate(modos)
+    }
+
+
 if __name__ == "__main__":
+    # Windows shells may inherit a legacy encoding that cannot print circuit
+    # diagrams or Greek phase labels. The standalone demo emits UTF-8.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     phi_real = 1.1
-    for n in (1, 3):
-        cands = ler_fase(phi_real, n=n, shots=2000, seed=7)
+    for n, cands in demonstrar_sensor(phi_real).items():
         print(f"n={n}  φ real={phi_real:.3f}  candidatas={[round(c, 3) for c in cands]}")
     print(circuito_leitura(Leitura(phi_real, 3, "X")).draw())

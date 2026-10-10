@@ -1,0 +1,566 @@
+{
+  "projeto": "Ghost Route",
+  "versao": "1.0.0",
+  "hackathon": "Qollab x IonQ Quantum Hackathon 2026",
+  "equipe": "QuantGirls",
+  "atribuicao": "This effort is supported by Qollab & IonQ",
+  "semente": 20261011,
+  "configuracao_missao": {
+    "turnos": 12,
+    "minutos_por_turno": 20,
+    "porto": [
+      10,
+      15
+    ],
+    "navio": {
+      "velocidade_km_turno": 7.5,
+      "ruido_corrente_km": 0.3
+    },
+    "inercial": {
+      "erro_inicial_km": 0.2,
+      "crescimento_km_turno": 0.6
+    },
+    "campo": {
+      "kappa": 1,
+      "base": 2,
+      "anomalias": [
+        {
+          "x": 25,
+          "y": 30,
+          "amplitude": 2.5,
+          "raio_km": 9
+        },
+        {
+          "x": 45,
+          "y": 45,
+          "amplitude": -1.8,
+          "raio_km": 12
+        },
+        {
+          "x": 60,
+          "y": 65,
+          "amplitude": 2,
+          "raio_km": 8
+        },
+        {
+          "x": 75,
+          "y": 80,
+          "amplitude": -1.5,
+          "raio_km": 10
+        }
+      ]
+    },
+    "recife": [
+      [
+        38,
+        50
+      ],
+      [
+        48,
+        50
+      ],
+      [
+        48,
+        56
+      ],
+      [
+        38,
+        56
+      ]
+    ],
+    "capsula": {
+      "elipse_prevista": {
+        "centro": [
+          70,
+          70
+        ],
+        "semi_eixo_x": 8,
+        "semi_eixo_y": 5
+      },
+      "pouso_real": [
+        70,
+        74
+      ],
+      "turno_blackout_inicio": 2,
+      "turno_revelacao": 8
+    },
+    "sensor": {
+      "shots_total": 6000,
+      "ghz_n": 3,
+      "opcoes_shots": [
+        100,
+        250,
+        500,
+        1000
+      ]
+    },
+    "ataques": [
+      {
+        "tipo": "salto",
+        "inicio": 4,
+        "fim": 4,
+        "deslocamento_km": [
+          -6,
+          0
+        ]
+      },
+      {
+        "tipo": "deriva",
+        "inicio": 6,
+        "fim": 10,
+        "km_por_turno": [
+          0.28,
+          -0.28
+        ]
+      },
+      {
+        "tipo": "congelamento",
+        "inicio": 9,
+        "fim": 10
+      }
+    ],
+    "vitoria": {
+      "raio_resgate_km": 2
+    }
+  },
+  "total_turnos": 12,
+  "registros_turnos": [
+    {
+      "turn": 1,
+      "heading": 45,
+      "commanded": {
+        "dx": 5.303300858899106,
+        "dy": 5.303300858899107
+      },
+      "realBefore": [
+        10,
+        15
+      ],
+      "realAfter": [
+        15.474637695579053,
+        20.23507508272439
+      ],
+      "gpsReported": [
+        15.474637695579053,
+        20.23507508272439
+      ],
+      "inertial": [
+        15.303300858899107,
+        20.303300858899107
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 239,
+      "NX": 250,
+      "kY": 73,
+      "NY": 250,
+      "phaseCandidates": [
+        2.7136441572683108
+      ],
+      "markedSuspicious": false,
+      "gpsInsideHPD": true,
+      "remainingShots": 5500
+    },
+    {
+      "turn": 2,
+      "heading": 45,
+      "commanded": {
+        "dx": 5.303300858899106,
+        "dy": 5.303300858899107
+      },
+      "realBefore": [
+        15.474637695579053,
+        20.23507508272439
+      ],
+      "realAfter": [
+        21.349221551983973,
+        25.4092296505344
+      ],
+      "gpsReported": [
+        21.349221551983973,
+        25.4092296505344
+      ],
+      "inertial": [
+        20.606601717798213,
+        25.606601717798213
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 206,
+      "NX": 250,
+      "kY": 229,
+      "NY": 250,
+      "phaseCandidates": [
+        4.050680475637501
+      ],
+      "markedSuspicious": false,
+      "gpsInsideHPD": false,
+      "remainingShots": 5000
+    },
+    {
+      "turn": 3,
+      "heading": 45,
+      "commanded": {
+        "dx": 5.303300858899106,
+        "dy": 5.303300858899107
+      },
+      "realBefore": [
+        21.349221551983973,
+        25.4092296505344
+      ],
+      "realAfter": [
+        26.43502098954516,
+        30.541849973676268
+      ],
+      "gpsReported": [
+        26.43502098954516,
+        30.541849973676268
+      ],
+      "inertial": [
+        25.90990257669732,
+        30.90990257669732
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 186,
+      "NX": 250,
+      "kY": 239,
+      "NY": 250,
+      "phaseCandidates": [
+        4.221066777817443
+      ],
+      "markedSuspicious": false,
+      "gpsInsideHPD": true,
+      "remainingShots": 4500
+    },
+    {
+      "turn": 4,
+      "heading": 45,
+      "commanded": {
+        "dx": 5.303300858899106,
+        "dy": 5.303300858899107
+      },
+      "realBefore": [
+        26.43502098954516,
+        30.541849973676268
+      ],
+      "realAfter": [
+        32.446002389657714,
+        35.68923042298856
+      ],
+      "gpsReported": [
+        26.446002389657714,
+        35.68923042298856
+      ],
+      "inertial": [
+        31.213203435596427,
+        36.21320343559643
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 240,
+      "NX": 250,
+      "kY": 74,
+      "NY": 250,
+      "phaseCandidates": [
+        2.724175426337329
+      ],
+      "markedSuspicious": true,
+      "gpsInsideHPD": false,
+      "remainingShots": 4000
+    },
+    {
+      "turn": 5,
+      "heading": 45,
+      "commanded": {
+        "dx": 5.303300858899106,
+        "dy": 5.303300858899107
+      },
+      "realBefore": [
+        32.446002389657714,
+        35.68923042298856
+      ],
+      "realAfter": [
+        37.60554049129981,
+        41.169504960120825
+      ],
+      "gpsReported": [
+        37.60554049129981,
+        41.169504960120825
+      ],
+      "inertial": [
+        36.51650429449553,
+        41.51650429449553
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 56,
+      "NX": 250,
+      "kY": 13,
+      "NY": 250,
+      "phaseCandidates": [
+        1.0186433363393927
+      ],
+      "markedSuspicious": false,
+      "gpsInsideHPD": true,
+      "remainingShots": 3500
+    },
+    {
+      "turn": 6,
+      "heading": 45,
+      "commanded": {
+        "dx": 5.303300858899106,
+        "dy": 5.303300858899107
+      },
+      "realBefore": [
+        37.60554049129981,
+        41.169504960120825
+      ],
+      "realAfter": [
+        42.725267933416674,
+        46.56539306059126
+      ],
+      "gpsReported": [
+        43.005267933416675,
+        46.28539306059126
+      ],
+      "inertial": [
+        41.81980515339464,
+        46.81980515339464
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 4,
+      "NX": 250,
+      "kY": 91,
+      "NY": 250,
+      "phaseCandidates": [
+        0.27392810215343033
+      ],
+      "markedSuspicious": true,
+      "gpsInsideHPD": true,
+      "remainingShots": 3000
+    },
+    {
+      "turn": 7,
+      "heading": 90,
+      "commanded": {
+        "dx": 7.5,
+        "dy": 4.592425496802575e-16
+      },
+      "realBefore": [
+        42.725267933416674,
+        46.56539306059126
+      ],
+      "realAfter": [
+        50.853096277033075,
+        46.572404185727635
+      ],
+      "gpsReported": [
+        51.41309627703308,
+        46.01240418572763
+      ],
+      "inertial": [
+        49.31980515339464,
+        46.81980515339464
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 16,
+      "NX": 250,
+      "kY": 60,
+      "NY": 250,
+      "phaseCandidates": [
+        0.5377168041485749
+      ],
+      "markedSuspicious": false,
+      "gpsInsideHPD": true,
+      "remainingShots": 2500
+    },
+    {
+      "turn": 8,
+      "heading": 45,
+      "commanded": {
+        "dx": 5.303300858899106,
+        "dy": 5.303300858899107
+      },
+      "realBefore": [
+        50.853096277033075,
+        46.572404185727635
+      ],
+      "realAfter": [
+        55.96400000396403,
+        51.61187802369307
+      ],
+      "gpsReported": [
+        56.804000003964035,
+        50.77187802369307
+      ],
+      "inertial": [
+        54.623106012293746,
+        52.123106012293746
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 100,
+      "NX": 250,
+      "kY": 0,
+      "NY": 250,
+      "phaseCandidates": [
+        1.3734007669450161
+      ],
+      "markedSuspicious": false,
+      "gpsInsideHPD": true,
+      "remainingShots": 2000
+    },
+    {
+      "turn": 9,
+      "heading": 45,
+      "commanded": {
+        "dx": 5.303300858899106,
+        "dy": 5.303300858899107
+      },
+      "realBefore": [
+        55.96400000396403,
+        51.61187802369307
+      ],
+      "realAfter": [
+        61.366998008565865,
+        56.49334778161004
+      ],
+      "gpsReported": [
+        56.804000003964035,
+        50.77187802369307
+      ],
+      "inertial": [
+        59.92640687119285,
+        57.42640687119285
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 239,
+      "NX": 250,
+      "kY": 54,
+      "NY": 250,
+      "phaseCandidates": [
+        2.5845718689003956
+      ],
+      "markedSuspicious": true,
+      "gpsInsideHPD": false,
+      "remainingShots": 1500
+    },
+    {
+      "turn": 10,
+      "heading": 45,
+      "commanded": {
+        "dx": 5.303300858899106,
+        "dy": 5.303300858899107
+      },
+      "realBefore": [
+        61.366998008565865,
+        56.49334778161004
+      ],
+      "realAfter": [
+        66.53194227188311,
+        62.37188367987882
+      ],
+      "gpsReported": [
+        56.804000003964035,
+        50.77187802369307
+      ],
+      "inertial": [
+        65.22970773009196,
+        62.72970773009196
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 250,
+      "NX": 250,
+      "kY": 109,
+      "NY": 250,
+      "phaseCandidates": [
+        3.0142849117189385
+      ],
+      "markedSuspicious": false,
+      "gpsInsideHPD": false,
+      "remainingShots": 1000
+    },
+    {
+      "turn": 11,
+      "heading": 45,
+      "commanded": {
+        "dx": 5.303300858899106,
+        "dy": 5.303300858899107
+      },
+      "realBefore": [
+        66.53194227188311,
+        62.37188367987882
+      ],
+      "realAfter": [
+        71.70635930939456,
+        67.97779685772944
+      ],
+      "gpsReported": [
+        71.70635930939456,
+        67.97779685772944
+      ],
+      "inertial": [
+        70.53300858899107,
+        68.03300858899107
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 166,
+      "NX": 250,
+      "kY": 7,
+      "NY": 250,
+      "phaseCandidates": [
+        1.9052044330255917
+      ],
+      "markedSuspicious": false,
+      "gpsInsideHPD": true,
+      "remainingShots": 500
+    },
+    {
+      "turn": 12,
+      "heading": 350,
+      "commanded": {
+        "dx": -1.3023613325019845,
+        "dy": 7.38605814759156
+      },
+      "realBefore": [
+        71.70635930939456,
+        67.97779685772944
+      ],
+      "realAfter": [
+        70.33187942331615,
+        75.63705189683375
+      ],
+      "gpsReported": [
+        70.33187942331615,
+        75.63705189683375
+      ],
+      "inertial": [
+        69.23064725648908,
+        75.41906673658262
+      ],
+      "sensorMode": "simple",
+      "shots": 500,
+      "kX": 62,
+      "NX": 250,
+      "kY": 8,
+      "NY": 250,
+      "phaseCandidates": [
+        1.076854957875315
+      ],
+      "markedSuspicious": false,
+      "gpsInsideHPD": true,
+      "remainingShots": 0
+    }
+  ],
+  "estatisticas_finais": {
+    "distancia_capsula_km": 1.6703541135183437,
+    "shots_economizados": 0,
+    "casco_encalhado": false
+  }
+}

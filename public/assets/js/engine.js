@@ -222,11 +222,12 @@ function distToSegment(p, v, w) {
 }
 
 /* ==========================================================================
-   BAYESIAN ESTIMATOR (100x100 Grid, 1 km resolution)
+   BAYESIAN ESTIMATOR (101x101 nodes covering 0..100 km, 1 km resolution)
    ========================================================================== */
 class BayesianGridEstimator {
   constructor() {
-    this.size = 100;
+    // The continuous world includes both endpoints, so 100 km needs a node too.
+    this.size = 101;
     this.grid = new Float32Array(this.size * this.size);
     this.reset();
   }
@@ -251,38 +252,63 @@ class BayesianGridEstimator {
   }
 
   predict(dx, dy) {
-    const nextGrid = new Float32Array(this.size * this.size);
-    const spreadStd = MISSAO.navio.ruido_corrente_km;
-    const kernelRadius = 2;
+    const sigma = MISSAO.navio.ruido_corrente_km;
+    // Integrating each noise cell avoids sampling a narrow Gaussian only at
+    // integer coordinates, which used to bias fractional headings toward the
+    // nearest integer step. The omitted tails beyond 2.5 km are negligible.
+    const normalCDF = z => {
+      const sign = z < 0 ? -1 : 1;
+      const x = Math.abs(z) / Math.SQRT2;
+      const t = 1 / (1 + 0.3275911 * x);
+      const erf = 1 - (((((1.061405429 * t - 1.453152027) * t +
+        1.421413741) * t - 0.284496736) * t + 0.254829592) * t) * Math.exp(-x * x);
+      return (1 + sign * erf) / 2;
+    };
+    const noise = [];
+    let noiseMass = 0;
+    for (let offset = -2; offset <= 2; offset++) {
+      const mass = sigma > 0 ? normalCDF((offset + 0.5) / sigma) -
+        normalCDF((offset - 0.5) / sigma) : Number(offset === 0);
+      noise.push({ offset, mass });
+      noiseMass += mass;
+    }
+    noise.forEach(cell => cell.mass /= noiseMass);
 
+    const axisTransitions = delta => Array.from({ length: this.size }, (_, value) => {
+      const destinations = new Map();
+      for (const { offset, mass } of noise) {
+        // The true movement adds current noise before clamping to the coast.
+        // Keep escaped mass on the boundary instead of conditioning it away.
+        const target = Math.max(0, Math.min(this.size - 1, value + delta + offset));
+        const lower = Math.floor(target), upper = Math.min(this.size - 1, lower + 1);
+        const fraction = target - lower;
+        destinations.set(lower, (destinations.get(lower) || 0) + mass * (1 - fraction));
+        if (fraction) destinations.set(upper, (destinations.get(upper) || 0) + mass * fraction);
+      }
+      return Array.from(destinations);
+    });
+    const moveX = axisTransitions(dx), moveY = axisTransitions(dy);
+    const horizontal = new Float64Array(this.grid.length);
+    const next = new Float64Array(this.grid.length);
+    // The independent x/y current model is separable. Fractional redistribution
+    // is bilinear in two dimensions and preserves the commanded mean inland.
     for (let y = 0; y < this.size; y++) {
       for (let x = 0; x < this.size; x++) {
         const p = this.grid[y * this.size + x];
-        if (p < 1e-6) continue;
-
-        const targetX = x + dx;
-        const targetY = y + dy;
-
-        for (let ky = -kernelRadius; ky <= kernelRadius; ky++) {
-          for (let kx = -kernelRadius; kx <= kernelRadius; kx++) {
-            const nx = Math.round(targetX + kx);
-            const ny = Math.round(targetY + ky);
-            if (nx >= 0 && nx < this.size && ny >= 0 && ny < this.size) {
-              const dist2 = (nx - targetX)**2 + (ny - targetY)**2;
-              const weight = Math.exp(-dist2 / (2 * spreadStd * spreadStd));
-              nextGrid[ny * this.size + nx] += p * weight;
-            }
-          }
-        }
+        if (!p) continue;
+        for (const [nx, weight] of moveX[x]) horizontal[y * this.size + nx] += p * weight;
       }
     }
-
-    let sum = 0;
-    for (let i = 0; i < nextGrid.length; i++) sum += nextGrid[i];
-    if (sum > 0) {
-      for (let i = 0; i < nextGrid.length; i++) nextGrid[i] /= sum;
-      this.grid = nextGrid;
+    for (let y = 0; y < this.size; y++) {
+      for (let x = 0; x < this.size; x++) {
+        const p = horizontal[y * this.size + x];
+        if (!p) continue;
+        for (const [ny, weight] of moveY[y]) next[ny * this.size + x] += p * weight;
+      }
     }
+    let sum = 0;
+    for (const p of next) sum += p;
+    if (sum > 0) this.grid = Float32Array.from(next, p => p / sum);
   }
 
   update(kX, NX, kY, NY, n) {
@@ -349,7 +375,7 @@ class BayesianGridEstimator {
   getHPD95() {
     const items = [];
     for (let i = 0; i < this.grid.length; i++) {
-      if (this.grid[i] > 1e-6) {
+      if (this.grid[i] > 0) {
         items.push({ idx: i, p: this.grid[i] });
       }
     }
@@ -366,6 +392,8 @@ class BayesianGridEstimator {
   }
 
   isGPSInsideHPD(gpsX, gpsY, hpdSet) {
+    if (!Number.isFinite(gpsX) || !Number.isFinite(gpsY) ||
+      gpsX < 0 || gpsX > this.size - 1 || gpsY < 0 || gpsY > this.size - 1) return false;
     const gx = Math.round(gpsX);
     const gy = Math.round(gpsY);
     if (gx < 0 || gx >= this.size || gy < 0 || gy >= this.size) return false;
@@ -501,8 +529,16 @@ class TacticalMapRenderer {
     this.loop=(now)=>{if(this.current&&now-this.lastFrame>48){this.lastFrame=now;this.drawScene(now);}requestAnimationFrame(this.loop);};requestAnimationFrame(this.loop);
   }
   resize(){
-    const r=this.canvas.getBoundingClientRect();this.canvas.width=Math.max(180,Math.round(r.width/2));this.canvas.height=Math.max(270,Math.round(r.height/2));this.ctx.imageSmoothingEnabled=false;
-    const w=this.canvas.width,h=this.canvas.height;const mobile=r.width<850;const top=mobile?Math.min(r.width<520?127:108,h*.45):64; const dock=document.querySelector(".navigation-dock")?.getBoundingClientRect();const bottom=dock?dock.top/2-12:h-92;this.scale=Math.max(.45,Math.min((w-(mobile?52:64))/100,(bottom-top)/100));this.chartSize=100*this.scale;this.ox=(w-this.chartSize)/2+(mobile?20:0);this.oy=top;this.makeOcean();
+    const r=this.canvas.getBoundingClientRect();this.canvas.width=Math.max(1,Math.round(r.width/2));this.canvas.height=Math.max(1,Math.round(r.height/2));this.ctx.imageSmoothingEnabled=false;
+    const w=this.canvas.width,h=this.canvas.height,ratioX=w/r.width,ratioY=h/r.height;
+    const bounds=selector=>document.querySelector(selector)?.getBoundingClientRect();
+    const hud=bounds('.hud-top'),dock=bounds('.navigation-dock'),telemetry=bounds('.telemetry-strip');
+    const portrait=r.width<620&&r.height>r.width;
+    const short=r.height<500;
+    const top=((portrait?Math.max(hud?.bottom||0,telemetry?.bottom||0):(hud?.bottom||100))+(short?18:26)-r.top)*ratioY;
+    const bottom=dock?(dock.top-r.top-(short?28:52))*ratioY:h-50;
+    this.scale=Math.max(.12,Math.min((w-42)/100,(bottom-top)/100));
+    this.chartSize=100*this.scale;this.ox=(w-this.chartSize)/2+(r.width<850?10:0);this.oy=top;this.makeOcean();
   }
   worldToScreen(x,y){return{sx:this.ox+x*this.scale,sy:this.oy+(100-y)*this.scale};}
   screenToWorld(x,y){return[(x-this.ox)/this.scale,100-(y-this.oy)/this.scale];}
@@ -533,7 +569,7 @@ class TacticalMapRenderer {
     const{state:s,estimator:e,isReplay:replay,debug}=this.current;const c=this.ctx,w=this.canvas.width,h=this.canvas.height;const t=TEXTOS[window.gameApp?.currentLang||'pt-BR'];c.imageSmoothingEnabled=false;c.drawImage(this.ocean,0,0);
     const u=this.reduced||replay?1:Math.min(1,(now-this.animStart)/650);const f=u*u*(3-2*u);this.displayWorld=this.target.map((v,i)=>this.animFrom[i]+(v-this.animFrom[i])*f);
     // Grid and a low-key map boundary; the ocean itself fills the viewport.
-    c.strokeStyle='#5189a031';c.lineWidth=.5;for(let km=0;km<=100;km+=10){const p=this.worldToScreen(km,km);c.beginPath();c.moveTo(p.sx,this.oy);c.lineTo(p.sx,this.oy+this.chartSize);c.moveTo(this.ox,p.sy);c.lineTo(this.ox+this.chartSize,p.sy);c.stroke();if(km%20===0){this.text(String(km),p.sx,this.oy+this.chartSize+9,'#9fc4cd','center');this.text(String(km),this.ox-5,p.sy+2,'#9fc4cd','right');}}
+    c.strokeStyle='#5189a031';c.lineWidth=.5;for(let km=0;km<=100;km+=10){const p=this.worldToScreen(km,km);c.beginPath();c.moveTo(p.sx,this.oy);c.lineTo(p.sx,this.oy+this.chartSize);c.moveTo(this.ox,p.sy);c.lineTo(this.ox+this.chartSize,p.sy);c.stroke();if(km%(this.scale<.7?100:20)===0){this.text(String(km),p.sx,this.oy+this.chartSize+9,'#9fc4cd','center');this.text(String(km),this.ox-5,p.sy+2,'#9fc4cd','right');}}
     // A decorative port shoreline is rasterized into the chart's lower edge.
     const port=this.worldToScreen(...MISSAO.porto);c.fillStyle='#203e41';c.beginPath();c.moveTo(this.ox,this.oy+this.chartSize);c.lineTo(this.ox+this.scale*8,this.oy+this.chartSize);c.lineTo(this.ox+this.scale*6,this.oy+this.chartSize-this.scale*8);c.lineTo(this.ox+this.scale*2,this.oy+this.chartSize-this.scale*18);c.lineTo(this.ox,this.oy+this.chartSize-this.scale*21);c.fill();c.fillStyle='#487367';for(let i=0;i<9;i++)c.fillRect(this.ox+1+i%3*3,this.oy+this.chartSize-9-Math.floor(i/3)*4,3,2);
     // Known magnetic anomalies: contour rings, not revealed attack locations.
@@ -545,16 +581,16 @@ class TacticalMapRenderer {
     const gps=this.worldToScreen(...s.gpsPosition);c.strokeStyle='#ead59c';c.lineWidth=1;c.strokeRect(gps.sx-3,gps.sy-3,6,6);c.fillStyle='#f3db91';c.fillRect(gps.sx-1,gps.sy-1,2,2);
     const recorded=s.turnsRecord||[];for(const r of recorded.filter(r=>r.markedSuspicious)){const p=this.worldToScreen(...r.gpsReported);this.drawInterference(p.sx,p.sy,14,now);this.text(t.suspectedSignal,p.sx+15,p.sy-9,'#ffc0b6');}
     const hpd=e.getHPD95();if(!replay&&recorded.length&&!e.isGPSInsideHPD(...s.gpsPosition,hpd)){this.drawInterference(gps.sx,gps.sy,19,now);this.text(t.signalMismatch,gps.sx+21,gps.sy+3,'#ffc0b6');}
-    c.fillStyle='#7bcaca';c.fillRect(port.sx-4,port.sy-4,8,8);c.fillStyle='#0a2334';c.fillRect(port.sx-2,port.sy-2,4,4);this.text(t.portLabel,port.sx+8,port.sy+12);
-    const ship=this.worldToScreen(...this.displayWorld);this.drawShip(ship.sx,ship.sy,s.currentHeading,now);this.text('SPOOFED',ship.sx,ship.sy+20,'#e6f5de','center');
-    const b=this.worldToScreen(0,0);c.strokeStyle='#bed5ce';c.beginPath();c.moveTo(b.sx,b.sy+17);c.lineTo(b.sx+this.scale*10,b.sy+17);c.stroke();this.text('10 km',b.sx,b.sy+26,'#b7d6d6');this.text(t.northLabel,this.ox+this.chartSize-2,this.oy-8,'#b4d4dc','right');
+    c.fillStyle='#7bcaca';c.fillRect(port.sx-4,port.sy-4,8,8);c.fillStyle='#0a2334';c.fillRect(port.sx-2,port.sy-2,4,4);if(Math.hypot(this.displayWorld[0]-MISSAO.porto[0],this.displayWorld[1]-MISSAO.porto[1])>10)this.text(t.portLabel,port.sx+8,port.sy+12);
+    const ship=this.worldToScreen(...this.displayWorld);this.drawShip(ship.sx,ship.sy,s.currentHeading,now);this.text('SPOOFED',ship.sx,ship.sy+(this.scale<.7?12:20),'#e6f5de','center');
+    const b=this.worldToScreen(0,0);if(this.scale>=.7){c.strokeStyle='#bed5ce';c.beginPath();c.moveTo(b.sx,b.sy+17);c.lineTo(b.sx+this.scale*10,b.sy+17);c.stroke();this.text('10 km',b.sx,b.sy+26,'#b7d6d6');}this.text(t.northLabel,this.ox+this.chartSize-2,this.oy-8,'#b4d4dc','right');
     this.drawCompass(s.currentHeading);this.drawRadar(s,e,now);
   }
   drawReef(t){const c=this.ctx,p=MISSAO.recife.map(p=>this.worldToScreen(...p));c.fillStyle='#5a334d99';c.strokeStyle='#f18c97';c.lineWidth=1;c.beginPath();p.forEach((q,i)=>i?c.lineTo(q.sx,q.sy):c.moveTo(q.sx,q.sy));c.closePath();c.fill();c.stroke();c.save();c.clip();c.strokeStyle='#ed829680';for(let x=p[0].sx-30;x<p[1].sx+30;x+=4){c.beginPath();c.moveTo(x,p[0].sy+3);c.lineTo(x+20,p[2].sy-3);c.stroke();}c.restore();this.text(t.reefLabel,p[3].sx,p[3].sy-5,'#ffb6b9');}
-  drawHeatmap(e){const c=this.ctx;let max=0;for(const p of e.grid)if(p>max)max=p;if(!max)return;for(let i=0;i<e.grid.length;i++){const p=e.grid[i];if(p<max*.004)continue;const s=this.worldToScreen(i%100,Math.floor(i/100));c.fillStyle=`rgba(95,211,247,${.12+.5*Math.sqrt(p/max)})`;c.fillRect(Math.round(s.sx-this.scale/2),Math.round(s.sy-this.scale/2),Math.ceil(this.scale),Math.ceil(this.scale));}}
+  drawHeatmap(e){const c=this.ctx;let max=0;for(const p of e.grid)if(p>max)max=p;if(!max)return;for(let i=0;i<e.grid.length;i++){const p=e.grid[i];if(p<max*.004)continue;const s=this.worldToScreen(i%e.size,Math.floor(i/e.size));c.fillStyle=`rgba(95,211,247,${.12+.5*Math.sqrt(p/max)})`;c.fillRect(Math.round(s.sx-this.scale/2),Math.round(s.sy-this.scale/2),Math.ceil(this.scale),Math.ceil(this.scale));}}
   drawTarget(s,t){const c=this.ctx,observed=s.turnsRecord?.at(-1)?.turn||0;if(observed>=8){const p=this.worldToScreen(...MISSAO.capsula.pouso_real);c.strokeStyle='#afefdb';c.fillStyle='#cefbdc';c.fillRect(p.sx-3,p.sy-2,6,4);c.beginPath();c.arc(p.sx,p.sy,8,0,Math.PI*2);c.stroke();this.text('AURORA-1',p.sx+12,p.sy+2,'#cefbdc');}else if(observed>=2){const m=MISSAO.capsula.elipse_prevista,p=this.worldToScreen(...m.centro);c.setLineDash([3,2]);c.strokeStyle='#ecd09c';c.beginPath();c.ellipse(p.sx,p.sy,m.semi_eixo_x*this.scale,m.semi_eixo_y*this.scale,0,0,Math.PI*2);c.stroke();c.setLineDash([]);this.text(t.landingLabel,p.sx,p.sy-m.semi_eixo_y*this.scale-5,'#f1d1a0','center');}}
   drawInterference(x,y,r,now){const c=this.ctx;const phase=this.reduced?0:(now%3000)/3000;c.fillStyle='#c92d5930';c.strokeStyle='#eb5c7d99';for(let k=0;k<4;k++){c.beginPath();c.arc(x,y,r*(.25+k*.25)+phase*2,0,Math.PI*2);k===3&&c.fill();c.stroke();}c.fillStyle='#ff667b';c.fillRect(x-2,y-2,4,4);c.strokeStyle='#ffa0a6';c.beginPath();c.moveTo(x-r-4,y);c.lineTo(x-r-1,y);c.moveTo(x+r+1,y);c.lineTo(x+r+4,y);c.stroke();}
-  drawShip(x,y,heading,now){const c=this.ctx;c.save();c.translate(Math.round(x),Math.round(y));c.rotate((heading-90)*Math.PI/180);const spriteScale=Math.min(1,Math.max(.45,this.scale/2));c.scale(spriteScale,spriteScale);c.fillStyle='#9adbe14d';for(let i=0;i<12;i++){c.fillRect(-35-i*2,Math.round(Math.sin(i*.7+(this.reduced?0:now/450))*2)+(i%2?5:-5),3,1);}c.fillStyle='#43bbe91a';c.beginPath();c.moveTo(27,-2);c.lineTo(64,-18);c.lineTo(74,-5);c.lineTo(74,5);c.lineTo(64,18);c.lineTo(27,2);c.fill();c.drawImage(this.sprite,-33,-14);c.restore();}
+  drawShip(x,y,heading,now){const c=this.ctx;c.save();c.translate(Math.round(x),Math.round(y));c.rotate((heading-90)*Math.PI/180);const spriteScale=Math.min(1,Math.max(.3,this.scale/2));c.scale(spriteScale,spriteScale);c.fillStyle='#9adbe14d';for(let i=0;i<12;i++){c.fillRect(-35-i*2,Math.round(Math.sin(i*.7+(this.reduced?0:now/450))*2)+(i%2?5:-5),3,1);}c.fillStyle='#43bbe91a';c.beginPath();c.moveTo(27,-2);c.lineTo(64,-18);c.lineTo(74,-5);c.lineTo(74,5);c.lineTo(64,18);c.lineTo(27,2);c.fill();c.drawImage(this.sprite,-33,-14);c.restore();}
   drawCompass(heading){const cv=document.getElementById('compass-canvas');if(!cv)return;const c=cv.getContext('2d');c.clearRect(0,0,120,120);c.imageSmoothingEnabled=false;c.fillStyle='#04152a';c.strokeStyle='#87a8b8';c.lineWidth=3;c.beginPath();c.arc(60,60,51,0,Math.PI*2);c.fill();c.stroke();c.strokeStyle='#3b6075';c.lineWidth=1;c.beginPath();c.arc(60,60,45,0,Math.PI*2);c.stroke();c.fillStyle='#e6ece3';c.font='bold 14px monospace';c.textAlign='center';c.fillText('N',60,28);c.fillText('S',60,103);c.fillText(window.gameApp?.currentLang==='en'?'W':'O',22,65);c.fillText('E',98,65);c.save();c.translate(60,60);c.rotate(heading*Math.PI/180);c.fillStyle='#ff8791';c.beginPath();c.moveTo(0,-30);c.lineTo(-4,0);c.lineTo(4,0);c.fill();c.fillStyle='#8de3fd';c.beginPath();c.moveTo(0,29);c.lineTo(-4,0);c.lineTo(4,0);c.fill();c.restore();c.fillStyle='#d1eadb';c.fillRect(57,57,6,6);}
   drawRadar(s,e,now){const cv=document.getElementById('radar-canvas');if(!cv)return;const c=cv.getContext('2d');c.clearRect(0,0,132,112);c.fillStyle='#031d20';c.strokeStyle='#3c8b6e';c.lineWidth=1;c.beginPath();c.arc(66,55,49,0,Math.PI*2);c.fill();c.stroke();for(const r of [16,32]){c.beginPath();c.arc(66,55,r,0,Math.PI*2);c.stroke();}c.strokeStyle='#3c8b6e99';c.beginPath();c.moveTo(17,55);c.lineTo(115,55);c.moveTo(66,6);c.lineTo(66,104);c.stroke();const angle=this.reduced?-Math.PI/3:now/1900;c.fillStyle='#62f8a527';c.beginPath();c.moveTo(66,55);c.arc(66,55,48,angle-.7,angle);c.closePath();c.fill();c.strokeStyle='#a6f9b4';c.beginPath();c.moveTo(66,55);c.lineTo(66+48*Math.cos(angle),55+48*Math.sin(angle));c.stroke();const p=this.current.isReplay?s.realPosition:e.getMAP(),dx=(s.gpsPosition[0]-p[0])*5,dy=(s.gpsPosition[1]-p[1])*5;c.fillStyle='#bbefc9';c.fillRect(64,53,4,4);c.fillStyle='#ffc79a';c.fillRect(65+Math.max(-44,Math.min(44,dx)),54-Math.max(-44,Math.min(44,dy)),3,3);}
 }
@@ -565,7 +601,6 @@ function drawTitle(){
  const cv=document.getElementById('title-canvas'),c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);const pixels=[];let x=10;for(const ch of 'GHOST ROUTE'){if(ch===' '){x+=14;continue;}letters[ch].forEach((row,y)=>{[...row].forEach((v,col)=>{if(v==='1')pixels.push([x+col*5,8+y*5,y]);});});x+=31;}
  for(const[a,b]of pixels){c.fillStyle='#000719';c.fillRect(a-4,b-4,13,14);c.fillStyle='#568cad';c.fillRect(a-2,b-2,9,11);}for(const[a,b,y]of pixels){c.fillStyle=y<3?'#e5faff':y<5?'#a7deed':'#6aaabf';c.fillRect(a,b,5,5);c.fillStyle='#122944';c.fillRect(a,b+5,5,2);}
 }
-
 
 
 

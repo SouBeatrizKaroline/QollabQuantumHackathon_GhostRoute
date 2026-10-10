@@ -1,5 +1,0 @@
-# Requirements for Rota Fantasma Qiskit Sensor Backend
-# Qollab × IonQ Quantum Hackathon 2026
-qiskit>=1.0.0
-numpy>=1.23.0
-matplotlib>=3.6.0

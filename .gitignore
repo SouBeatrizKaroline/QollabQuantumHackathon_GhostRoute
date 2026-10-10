@@ -7,3 +7,16 @@ Thumbs.db
 /artifacts/
 tmp/
 *.log
+.venv/
+venv/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.qa/
+node_modules/
+.env
+.env.*
+!.env.example

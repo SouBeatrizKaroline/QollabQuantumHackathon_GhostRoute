@@ -3,18 +3,18 @@ const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 const assert=require('node:assert/strict');
-const base=path.resolve(__dirname,'..');
+const base=path.resolve(__dirname,'../public');
 const useBuilt=true;
-let core=fs.readFileSync(path.join(base,'js/engine.js'),'utf8').replace(/\r\n/g,'\n');
+let core=fs.readFileSync(path.join(base,'assets/js/engine.js'),'utf8').replace(/\r\n/g,'\n');
 core=core.slice(0,core.indexOf('/* ==========================================================================\n   RENDER'));
-let main=fs.readFileSync(path.join(base,'main.js'),'utf8').replace(/\r\n/g,'\n');
+let main=fs.readFileSync(path.join(base,'assets/js/app.js'),'utf8').replace(/\r\n/g,'\n');
 main=main.slice(0,main.indexOf('\n}\n')+3);
 // This script exercises the game controller itself with UI/renderer callbacks isolated.
-if(!main.includes('class RotaFantasmaApp'))throw new Error('Controller was not found');
-const context=vm.createContext({console,Float32Array,Set,Math});
-vm.runInContext(core+'\n'+main+'\nthis.API={MISSAO,mulberry32,getRamseyProbabilities,reconstructPhaseCandidates,checkReefCollision,distToPolygon,BayesianGridEstimator,RotaFantasmaApp};',context);
+if(!main.includes('class GhostRouteApp'))throw new Error('Controller was not found');
+const context=vm.createContext({console,Float32Array,Set,Math,Intl,TEXTOS:{'pt-BR':{missionStarted:'Mission started'}}});
+vm.runInContext(core+'\n'+main+'\nthis.API={MISSAO,mulberry32,getRamseyProbabilities,reconstructPhaseCandidates,checkReefCollision,distToPolygon,BayesianGridEstimator,GhostRouteApp};',context);
 const a=context.API;
-const originalStart=a.RotaFantasmaApp.prototype.startNewGame;
+const originalStart=a.GhostRouteApp.prototype.startNewGame;
 const near=(x,y,eps=1e-9)=>assert.ok(Math.abs(x-y)<eps,`${x} != ${y}`);
 for(const n of[1,3])for(const phase of[0,.5,Math.PI/2,Math.PI,4.1,2*Math.PI]){
  const p=a.getRamseyProbabilities(phase,n);
@@ -36,12 +36,12 @@ near(total(),1,1e-5);assert.equal(e.getMAP().join(','),'10,15');
 for(let turn=0;turn<12;turn++){e.predict(5.3033008589,5.3033008589);e.update(150,250,120,250,turn%2?3:1);near(total(),1,1e-4);assert.ok(Array.from(e.grid).every(p=>Number.isFinite(p)&&p>=0));const hpd=e.getHPD95();assert.ok(Array.from(hpd).reduce((s,i)=>s+e.grid[i],0)>=.9499,'HPD region must contain 95% posterior');}
 console.log('PASS estimator normalization and credible mass across 12 updates');
 function game(mode,heading=90){
- const app=Object.create(a.RotaFantasmaApp.prototype);app.estimator=new a.BayesianGridEstimator();
+ const app=Object.create(a.GhostRouteApp.prototype);app.estimator=new a.BayesianGridEstimator();
  app.startNewGame=originalStart;
  app.sensorModeSelect={value:mode};app.sensorShotsSelect={value:'500'};app.chkSuspicious={checked:false};app.alertGps={style:{}};app.alertReef={style:{}};
  app.worldToScreenCoords=(x,y)=>({sx:x,sy:y});app.setHeading=function(deg){this.state.currentHeading=deg;};
  for(const name of['updateLocalization','updateTelemetryUI','updateNarrative','renderMap','announce','openReplayModal'])app[name]=()=>{};
- app.startNewGame(20261011);app.state.currentHeading=heading;return app;
+ app.currentLang='pt-BR';app.startNewGame(20261011);app.state.currentHeading=heading;return app;
 }
 const g1=game('simple'),g2=game('ghz'),g3=game('none');
 for(let i=0;i<12;i++){g1.advanceTurn();g2.advanceTurn();g3.advanceTurn();}
@@ -71,7 +71,7 @@ if(useBuilt){
  context.document={getElementById:()=>fullscreen,addEventListener(){}};
  context.window={addEventListener(){}};
  context.TEXTOS={'pt-BR':{markSaved:'saved'}};
- let enhancements=fs.readFileSync(path.join(base,'main.js'),'utf8').replace(/\r\n/g,'\n');
+ let enhancements=fs.readFileSync(path.join(base,'assets/js/app.js'),'utf8').replace(/\r\n/g,'\n');
  enhancements=enhancements.slice(enhancements.indexOf('// Fullscreen HUD controller'),enhancements.indexOf('function startGhostRoute'));
  vm.runInContext(enhancements,context);
  const markGame=game('none');
@@ -90,7 +90,7 @@ if(useBuilt){
  while(!markGame.state.isFinished)markGame.advanceTurn();
  markGame.chkSuspicious.checked=true;change();assert.equal(markGame.state.turnsRecord.at(-1).markedSuspicious,false,'Finished records must not change through an inactive checkbox');
  console.log('PASS suspicion marks attach to the latest observation and persist independently');
- const allEngine=fs.readFileSync(path.join(base,'js/engine.js'),'utf8').replace(/\r\n/g,'\n');
+ const allEngine=fs.readFileSync(path.join(base,'assets/js/engine.js'),'utf8').replace(/\r\n/g,'\n');
  vm.runInContext(allEngine.slice(allEngine.indexOf('class TacticalMapRenderer'))+'\nthis.Renderer=TacticalMapRenderer;',context);
  const chart=Object.create(context.Renderer.prototype);
  chart.ctx=new Proxy({}, {get:(obj,key)=>obj[key]||(()=>{})});chart.worldToScreen=(x,y)=>({sx:x,sy:y});chart.scale=1;
@@ -164,4 +164,6 @@ if(useBuilt){
  context.originalReplay.call(rescue);
  assert.equal(replayNodes['val-rep-score'].textContent,'3 / 3');assert.equal(replayNodes['outcome-banner'].textContent,'Perfect rescue');
  console.log(`PASS mission is winnable: no grounding, 3 attacks detected, perfect rescue at ${rescueDistance.toFixed(3)} km`);
+ if(process.argv.includes('--write-example'))fs.writeFileSync(path.resolve(__dirname,'../examples/session-seed-20261011.json'),JSON.stringify(captureExport(rescue),null,2)+'\n');
 }
+

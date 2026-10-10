@@ -1,4 +1,4 @@
-class RotaFantasmaApp {
+class GhostRouteApp {
   constructor() {
     this.renderer = new TacticalMapRenderer('map-canvas');
     this.avatarCtx = document.getElementById('avatar-canvas').getContext('2d');
@@ -145,7 +145,7 @@ class RotaFantasmaApp {
     this.updateNarrative();
 
     this.renderMap();
-    this.announce("Nova missão iniciada no Porto de partida [10, 15].");
+    this.announce(TEXTOS[this.currentLang].missionStarted);
   }
 
   worldToScreenCoords(wx, wy) {
@@ -487,40 +487,6 @@ class RotaFantasmaApp {
     this.renderScrubberTurn(this.state.turnsRecord.length);
   }
 
-  renderScrubberTurn(turnIndex) {
-    if (!this.state.turnsRecord || this.state.turnsRecord.length === 0) return;
-    const rec = this.state.turnsRecord[turnIndex - 1];
-    if (!rec) return;
-
-    const info = document.getElementById('turn-event-info');
-    info.textContent = `Turno ${rec.turn} | Rumo: ${formatHeading(rec.heading)} | GPS: [${rec.gpsReported[0].toFixed(1)}, ${rec.gpsReported[1].toFixed(1)}] | Real: [${rec.realAfter[0].toFixed(1)}, ${rec.realAfter[1].toFixed(1)}] | Suspeito: ${rec.markedSuspicious ? 'SIM' : 'NÃO'}`;
-
-    const measBox = document.getElementById('replay-measurement-box');
-    const measDetails = document.getElementById('meas-details');
-    const t = TEXTOS[this.currentLang];
-
-    if (rec.shots > 0) {
-      measBox.style.display = 'block';
-      document.getElementById('lbl-meas-title').textContent = t.measTitle.replace('{turn}', rec.turn);
-      measDetails.innerHTML = `
-        Modo: ${rec.sensorMode.toUpperCase()} | Total Shots: ${rec.shots}<br>
-        Quad X: kX = ${rec.kX} / ${rec.NX} (${((rec.kX/rec.NX)*100).toFixed(1)}%) | Quad Y: kY = ${rec.kY} / ${rec.NY} (${((rec.kY/rec.NY)*100).toFixed(1)}%)<br>
-        Candidatos de Fase: [${rec.phaseCandidates.map(c => c.toFixed(3) + ' rad').join(', ')}]
-      `;
-    } else {
-      measBox.style.display = 'none';
-    }
-
-    // Render map for scrubber state
-    this.renderer.render({
-      ...this.state,
-      currentTurn: rec.turn,
-      realPosition: rec.realAfter,
-      currentHeading: rec.heading,
-      gpsHistory: this.state.gpsHistory.slice(0, rec.turn + 1),
-      realHistory: this.state.realHistory.slice(0, rec.turn + 1)
-    }, this.estimator, true, true);
-  }
 
   exportDecisionsJSON() {
     const exportData = {
@@ -576,7 +542,7 @@ class RotaFantasmaApp {
     document.getElementById('legend-heat').textContent = t.legendHeat;
     document.getElementById('legend-reef').textContent = t.legendReef;
 
-    document.getElementById('txt-radio-title').textContent = t.radioTitle || "Transmissão de Rádio & Quoora";
+    document.getElementById('txt-radio-title').textContent = t.radioTitle;
     document.getElementById('txt-telemetry-title').textContent = t.telemetryTitle;
     document.getElementById('lbl-turn').textContent = t.lblTurn;
     document.getElementById('lbl-time').textContent = t.lblTime;
@@ -623,16 +589,17 @@ class RotaFantasmaApp {
 
 // Fullscreen HUD controller. Sensor sampling stays offline; no Qiskit claim.
 const fillText = (template, values) => String(template || '').replace(/\{(\w+)\}/g, (_, key) => values[key] ?? '');
-const coordText = p => `[${p.map(v => Number(v).toFixed(1)).join(', ')}]`;
+const numberText = (value, lang, digits=1) => new Intl.NumberFormat(lang, {minimumFractionDigits:digits, maximumFractionDigits:digits}).format(value);
+const coordText = (p, lang) => `[${p.map(v => numberText(v, lang)).join(lang==='en'?', ':'; ')}]`;
 const lastRecord = app => app.state.turnsRecord.at(-1);
-const baseLocalization = RotaFantasmaApp.prototype.updateLocalization;
-const baseTelemetry = RotaFantasmaApp.prototype.updateTelemetryUI;
-const baseNarrative = RotaFantasmaApp.prototype.updateNarrative;
-const baseStart = RotaFantasmaApp.prototype.startNewGame;
-const baseReplay = RotaFantasmaApp.prototype.openReplayModal;
-const baseBind = RotaFantasmaApp.prototype.bindEvents;
+const baseLocalization = GhostRouteApp.prototype.updateLocalization;
+const baseTelemetry = GhostRouteApp.prototype.updateTelemetryUI;
+const baseNarrative = GhostRouteApp.prototype.updateNarrative;
+const baseStart = GhostRouteApp.prototype.startNewGame;
+const baseReplay = GhostRouteApp.prototype.openReplayModal;
+const baseBind = GhostRouteApp.prototype.bindEvents;
 
-RotaFantasmaApp.prototype.updateLocalization = function () {
+GhostRouteApp.prototype.updateLocalization = function () {
   document.documentElement.lang = this.currentLang;
   document.title = 'Ghost Route — QuantGirls';
   const t = TEXTOS[this.currentLang];
@@ -641,7 +608,10 @@ RotaFantasmaApp.prototype.updateLocalization = function () {
   document.querySelector('.navigation-dock').setAttribute('aria-label', t.navigationControls);
   this.headingSlider.setAttribute('aria-label', t.headingHelp);
   this.debugBadge.textContent = t.debugLabel;
-  document.getElementById('btn-radio-toggle').setAttribute('aria-label',t.radioTitle);
+  this.updateRadioLabel();
+  const credit = document.getElementById('translated-credit');
+  credit.textContent = t.attributionTranslated;
+  credit.hidden = this.currentLang === 'en';
   this.liveAnnouncer.textContent = '';
   this.dirButtons.forEach(btn => {
     const west = this.currentLang === 'en' ? 'W' : 'O';
@@ -650,16 +620,28 @@ RotaFantasmaApp.prototype.updateLocalization = function () {
   });
   baseLocalization.call(this);
   this.updateFullscreenLabel();
-  if (this.replayModal.style.display === 'flex') baseReplay.call(this);
+  if (this.state.isFinished) {
+    const display = this.replayModal.style.display;
+    const turn = Number(this.scrubberRange.value);
+    baseReplay.call(this);
+    this.replayModal.style.display = display;
+    this.scrubberRange.value = turn;
+    this.renderScrubberTurn(turn);
+    this.updateNarrative();
+    if (display !== 'flex') this.renderMap();
+  }
 };
 
-RotaFantasmaApp.prototype.updateTelemetryUI = function () {
+GhostRouteApp.prototype.updateTelemetryUI = function () {
   baseTelemetry.call(this);
   const t = TEXTOS[this.currentLang], rec = lastRecord(this);
   const direction = getDirectionName(this.state.currentHeading).replace('W',this.currentLang==='en'?'W':'O');
   const headingText = `${formatHeading(this.state.currentHeading)} (${direction})`;
   this.sliderValDisplay.textContent = headingText;
   document.getElementById('val-heading').textContent = headingText;
+  document.getElementById('val-pos').textContent = coordText(this.state.gpsPosition, this.currentLang);
+  document.getElementById('val-dist').textContent = `${numberText(this.state.totalDistanceKm, this.currentLang)} km`;
+  document.getElementById('val-budget').textContent = `${numberText(this.state.remainingShots, this.currentLang,0)} / ${numberText(MISSAO.sensor.shots_total, this.currentLang,0)}`;
   const completed = this.state.turnsRecord.length;
   document.getElementById('val-time').textContent = `${String(Math.floor(completed * MISSAO.minutos_por_turno / 60)).padStart(2,'0')}:${String(completed * MISSAO.minutos_por_turno % 60).padStart(2,'0')}`;
   const aligned = rec?.gpsInsideHPD;
@@ -671,17 +653,22 @@ RotaFantasmaApp.prototype.updateTelemetryUI = function () {
   gpsMeter.style.background = aligned ? '#7ddcab' : '#dd697e';
   document.getElementById('hull-status').textContent = this.state.isAground ? t.hullGrounded : t.hullIntact;
   document.getElementById('hull-status').style.color = this.state.isAground ? '#ff9da6' : '#9febc0';
-  document.getElementById('last-reading').textContent = rec?.shots ? fillText(t.readingSummary, {shots:rec.shots, mode:rec.sensorMode==='ghz'?t.modeGhz:t.modeSimple}) : t.readingNone;
+  const reading = rec?.shots ? fillText(t.observedReading, {turn:rec.turn, shots:numberText(rec.shots,this.currentLang,0), mode:rec.sensorMode==='ghz'?t.modeGhz:t.modeSimple}) : rec ? t.sensorOffReading : t.readingNone;
+  const exhausted = this.state.remainingShots < 100;
+  document.getElementById('last-reading').textContent = reading + (exhausted && !this.state.isFinished ? ' ' + t.budgetExhausted : '');
+  document.getElementById('lbl-suspicious').textContent = rec ? fillText(t.observedMark,{turn:rec.turn}) : t.lblSuspicious;
   this.chkSuspicious.disabled = !rec || this.state.isFinished;
   this.chkSuspicious.checked = Boolean(rec?.markedSuspicious);
   document.getElementById('txt-advance').textContent = this.state.isFinished ? t.btnViewReplay : t.advanceTurn;
   const map = this.estimator.getMAP();
   const target = completed >= 8 ? MISSAO.capsula.pouso_real : MISSAO.capsula.elipse_prevista.centro;
   document.getElementById('map-description').textContent = fillText(t.mapDescription, {
-    x:map[0].toFixed(1), y:map[1].toFixed(1), distance:Math.hypot(map[0]-target[0],map[1]-target[1]).toFixed(1),
+    x:numberText(map[0],this.currentLang), y:numberText(map[1],this.currentLang), distance:numberText(Math.hypot(map[0]-target[0],map[1]-target[1]),this.currentLang),
     turn:completed, alerts:(!rec?t.gpsPending:aligned?t.gpsAligned:t.gpsMismatch)
   });
-  this.sensorShotsSelect.disabled = this.sensorModeSelect.value === 'none' || this.state.isFinished;
+  Array.from(this.sensorModeSelect.options).forEach(opt => opt.disabled = opt.value !== 'none' && exhausted);
+  if (exhausted) this.sensorModeSelect.value = 'none';
+  this.sensorShotsSelect.disabled = this.sensorModeSelect.value === 'none' || exhausted || this.state.isFinished;
   this.sensorModeSelect.disabled = this.state.isFinished;
   this.headingSlider.disabled = this.state.isFinished;
   this.dirButtons.forEach(btn => btn.disabled = this.state.isFinished);
@@ -689,16 +676,19 @@ RotaFantasmaApp.prototype.updateTelemetryUI = function () {
   if (this.sensorShotsSelect.selectedOptions[0]?.disabled && usable.length) this.sensorShotsSelect.value = usable.at(-1).value;
 };
 
-RotaFantasmaApp.prototype.updateNarrative = function () {
+GhostRouteApp.prototype.updateNarrative = function () {
   const nextTurn = this.state.currentTurn;
   this.state.currentTurn = Math.max(1, this.state.turnsRecord.length);
   baseNarrative.call(this);
   this.state.currentTurn = nextTurn;
   if (this.state.turnsRecord.length || this.dialogueStep) this.dialogueNav.style.display = 'none';
+  if (!this.state.turnsRecord.length) document.getElementById('dialogue-box').textContent += ' ' + TEXTOS[this.currentLang].missionObjective;
   if (this.state.isFinished) document.getElementById('dialogue-box').textContent = document.getElementById('outcome-banner').textContent;
 };
 
-RotaFantasmaApp.prototype.startNewGame = function (seed) {
+GhostRouteApp.prototype.startNewGame = function (seed) {
+  this.sensorModeSelect.value = 'simple';
+  this.sensorShotsSelect.value = '500';
   this.replayModal.style.display = 'none';
   this.renderer.displayWorld = null;
   this.renderer.target = null;
@@ -708,11 +698,33 @@ RotaFantasmaApp.prototype.startNewGame = function (seed) {
   this.announce(TEXTOS[this.currentLang].missionStarted);
 };
 
-RotaFantasmaApp.prototype.updateFullscreenLabel = function () {
+GhostRouteApp.prototype.updateRadioLabel = function () {
+  const button = document.getElementById('btn-radio-toggle');
+  const open = document.querySelector('.radio-widget').classList.contains('radio-open');
+  button.setAttribute('aria-label', TEXTOS[this.currentLang][open ? 'collapseRadio' : 'expandRadio']);
+};
+
+GhostRouteApp.prototype.updateMapLegend = function (replay=false) {
+  const t = TEXTOS[this.currentLang], actual = replay || this.debugMode;
+  document.getElementById('legend-ship').textContent = actual ? t.replayLegendShip : t.legendShip;
+  document.getElementById('legend-true').textContent = t.replayLegendTrue;
+  document.getElementById('legend-true').hidden = !actual;
+  document.getElementById('legend-inertial').textContent = t.replayLegendInertial;
+  document.getElementById('legend-inertial').hidden = !replay;
+  document.getElementById('legend-heat').hidden = replay;
+};
+
+GhostRouteApp.prototype.renderMap = function () {
+  this.updateMapLegend(this.state.isFinished);
+  this.renderer.resize();
+  this.renderer.render(this.state, this.estimator, this.state.isFinished, this.debugMode);
+};
+
+GhostRouteApp.prototype.updateFullscreenLabel = function () {
   document.getElementById('btn-fullscreen').textContent = TEXTOS[this.currentLang][document.fullscreenElement ? 'exitFullscreen' : 'fullscreen'];
 };
 
-RotaFantasmaApp.prototype.bindEvents = function () {
+GhostRouteApp.prototype.bindEvents = function () {
   baseBind.call(this);
   this.renderer.canvas.setAttribute('tabindex', '0');
   this.chkSuspicious.addEventListener('change', () => {
@@ -728,6 +740,7 @@ RotaFantasmaApp.prototype.bindEvents = function () {
     const open = document.querySelector('.radio-widget').classList.toggle('radio-open');
     e.currentTarget.setAttribute('aria-expanded',String(open));
     e.currentTarget.textContent = open ? '▲' : '▼';
+    this.updateRadioLabel();
   });
   document.getElementById('btn-fullscreen').addEventListener('click', async () => {
     try {
@@ -748,22 +761,28 @@ RotaFantasmaApp.prototype.bindEvents = function () {
   });
 };
 
-RotaFantasmaApp.prototype.openReplayModal = function () {
+GhostRouteApp.prototype.openReplayModal = function () {
   baseReplay.call(this);
   this.updateTelemetryUI();
+  this.updateNarrative();
   this.btnCloseReplay.focus();
 };
 
-RotaFantasmaApp.prototype.renderScrubberTurn = function (turnIndex) {
+GhostRouteApp.prototype.renderScrubberTurn = function (turnIndex) {
   const rec = this.state.turnsRecord[turnIndex - 1];
   if (!rec) return;
   const t = TEXTOS[this.currentLang];
+  const focusedTurn = document.activeElement?.dataset?.turn;
+  const finalDist = Math.hypot(this.state.realPosition[0]-MISSAO.capsula.pouso_real[0],this.state.realPosition[1]-MISSAO.capsula.pouso_real[1]);
+  document.getElementById('val-rep-dist').textContent = `${numberText(finalDist,this.currentLang)} km`;
+  document.getElementById('val-rep-shots').textContent = numberText(this.state.remainingShots,this.currentLang,0);
+  this.updateMapLegend(true);
   document.getElementById('turn-event-info').textContent = fillText(t.replayTurnSummary, {
-    turn:rec.turn, heading:formatHeading(rec.heading), gps:coordText(rec.gpsReported), real:coordText(rec.realAfter), marked:rec.markedSuspicious?t.yes:t.no
+    turn:rec.turn, heading:formatHeading(rec.heading), gps:coordText(rec.gpsReported,this.currentLang), real:coordText(rec.realAfter,this.currentLang), marked:rec.markedSuspicious?t.yes:t.no
   });
   document.getElementById('lbl-meas-title').textContent = fillText(t.measTitle,{turn:rec.turn});
   const details = document.getElementById('meas-details');
-  details.textContent = rec.shots ? `${rec.sensorMode==='ghz'?t.modeGhz:t.modeSimple} · ${t.shotsTotal}: ${rec.shots}. X: ${rec.kX}/${rec.NX} · Y: ${rec.kY}/${rec.NY}. ${t.phaseCandidates}: ${rec.phaseCandidates.map(c=>c.toFixed(3)+' rad').join(', ')}.` : t.measurementNone;
+  details.textContent = rec.shots ? `${rec.sensorMode==='ghz'?t.modeGhz:t.modeSimple} · ${t.shotsTotal}: ${rec.shots}. X: ${rec.kX}/${rec.NX} · Y: ${rec.kY}/${rec.NY}. ${t.phaseCandidates}: ${rec.phaseCandidates.map(c=>numberText(c,this.currentLang,3)+' rad').join('; ')}.` : t.measurementNone;
   const cv = document.getElementById('histogram-canvas'), ctx = cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
   cv.style.display = rec.shots ? 'block' : 'none';
@@ -780,16 +799,20 @@ RotaFantasmaApp.prototype.renderScrubberTurn = function (turnIndex) {
   const timeline=document.getElementById('attack-timeline'); timeline.replaceChildren(); timeline.setAttribute('aria-label',t.timelineLabel);
   for (const r of this.state.turnsRecord) {
     const names=[], symbols=[];
-    if(r.turn===4){names.push(t.attackJump);symbols.push('J');}
-    if(r.turn>=6&&r.turn<=10){names.push(t.attackDrift);symbols.push('D');}
-    if(r.turn===9||r.turn===10){names.push(t.attackFreeze);symbols.push('F');}
+    if(r.turn===4){names.push(t.attackJump);symbols.push(t.jumpCode);}
+    if(r.turn>=6&&r.turn<=10){names.push(t.attackDrift);symbols.push(t.driftCode);}
+    if(r.turn===9||r.turn===10){names.push(t.attackFreeze);symbols.push(t.freezeCode);}
     const btn=document.createElement('button');btn.type='button';btn.className='timeline-cell'+(names.length?' attack':'')+(r.markedSuspicious?' marked':'')+(r.turn===rec.turn?' current':'');
-    btn.textContent=`${r.turn}${symbols.length?' '+symbols.join(''):''}`;
+    btn.dataset.turn = String(r.turn);
+    btn.textContent=`${r.turn}${symbols.length?' '+symbols.join(''):''}${r.markedSuspicious?' !':''}`;
     btn.title=`${t.lblTurn} ${r.turn}: ${names.join(' + ')||t.attackNone}. ${t.markedLabel}: ${r.markedSuspicious?t.yes:t.no}`;
     btn.setAttribute('aria-label',btn.title);btn.setAttribute('aria-pressed',String(r.turn===rec.turn));
     btn.addEventListener('click',()=>{this.scrubberRange.value=r.turn;this.renderScrubberTurn(r.turn);});timeline.appendChild(btn);
   }
   timeline.title=t.timelineHint;
+  document.getElementById('timeline-legend').textContent=t.timelineExplanation;
+  if (focusedTurn) timeline.querySelector(`[data-turn="${focusedTurn}"]`)?.focus();
+  this.renderer.resize();
   this.renderer.render({
     ...this.state,currentTurn:rec.turn,currentHeading:rec.heading,realPosition:rec.realAfter,gpsPosition:rec.gpsReported,inertialPosition:rec.inertial,
     inertialRadiusKm:MISSAO.inercial.erro_inicial_km+MISSAO.inercial.crescimento_km_turno*rec.turn,
@@ -800,7 +823,8 @@ RotaFantasmaApp.prototype.renderScrubberTurn = function (turnIndex) {
   },this.estimator,true,true);
 };
 
-function startGhostRoute(){ drawTitle(); window.gameApp = new RotaFantasmaApp(); }
+function startGhostRoute(){ drawTitle(); window.gameApp = new GhostRouteApp(); }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startGhostRoute,{once:true});
 else startGhostRoute();
+
 

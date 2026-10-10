@@ -8,6 +8,12 @@ a mesma probabilidade aparece em 3x mais fases (ambiguidade de franja).
 """
 
 import math
+from pathlib import Path
+import argparse
+import sys
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
 
 import matplotlib
 matplotlib.use("Agg")
@@ -27,7 +33,9 @@ SHOTS = 500
 
 
 def medir_curva(n, fases):
-    por_job = max(1, 20 // n)
+    # O simulador local cresce como 2**qubits; lotes de ate 9 qubits
+    # preservam as leituras independentes sem uma matriz de 20 qubits.
+    por_job = max(1, 9 // n)
     uns = []
     for i in range(0, len(fases), por_job):
         lote = [Leitura(float(p), n, "X") for p in fases[i:i + por_job]]
@@ -35,7 +43,9 @@ def medir_curva(n, fases):
     return np.array(uns) / SHOTS
 
 
-def main(saida="franjas.png"):
+def main(saida=None):
+    saida = Path(saida) if saida is not None else PROJECT_ROOT / "docs" / "assets" / "ramsey-fringes.png"
+    saida.parent.mkdir(parents=True, exist_ok=True)
     phi_fino = np.linspace(0, 2 * math.pi, 400)
     phi_med = np.linspace(0, 2 * math.pi, 25)
 
@@ -78,9 +88,12 @@ def main(saida="franjas.png"):
     leg = ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.17), ncol=2,
                     frameon=False, fontsize=8.5, labelcolor=TEXT_2)
     fig.tight_layout()
-    fig.savefig(saida, facecolor=SURFACE)
-    print("salvo:", saida)
+    fig.savefig(saida, facecolor=SURFACE, bbox_inches="tight")
+    plt.close(fig)
+    print("Ghost Route — gráfico salvo:", saida.resolve())
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Generate Ghost Route's Ramsey interference-fringe figure.")
+    parser.add_argument("--output", type=Path, help="Output PNG path (default: docs/assets/ramsey-fringes.png)")
+    main(parser.parse_args().output)
