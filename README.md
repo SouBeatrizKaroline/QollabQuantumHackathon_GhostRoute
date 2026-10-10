@@ -1,59 +1,150 @@
-# Rota Fantasma
+# Rota Fantasma (Ghost Route)
 
-> A navigation game where your GPS is lying to you, and the only honest instrument is a quantum sensor.
+> **Quantum Hackathon Project — Qollab × IonQ 2026**  
+> **Team:** QuantGirls  
+> **Theme:** Quantum Playground  
+> **Attribution:** *This effort is supported by Qollab & IonQ*  
+> **License:** MIT License  
 
-**Team:** QuantGirls · **Event:** Qollab x IonQ Quantum Hackathon (Oct 9–11, 2026) · **Theme:** Quantum Playground
+---
 
-A ship crosses a zone where its GPS is being spoofed. The player can't see the truth directly: the only reliable source is a quantum magnetometer, implemented as a real Ramsey interferometer in Qiskit. The Earth's magnetic field at the ship's true position becomes a phase on the qubit, and only measurement statistics reveal it. At the end, a replay shows the real route, the route the lying GPS showed, and every quantum reading.
+## 🌊 1. Project Overview & Background
 
-## Status
+**Rota Fantasma** is an interactive, 16-bit retro naval navigation tactical game that bridges quantum metrology with maritime security. Set in the South Atlantic in 2031, the player navigates the rescue cutter **SPOOFED**, dispatched ~300 km off the northeastern coast of Brazil to retrieve three astronauts aboard the **Aurora-1** space capsule after orbital atmospheric reentry.
 
-| Stage | What it delivers | Status |
-| --- | --- | --- |
-| Demo 1 | Quantum sensor: single-qubit and GHZ circuits, X/Y quadratures, phase estimation | ✅ Done |
-| Demo 2 | Game world: magnetic map, ship, inertial estimate, 3 spoofing attacks | In progress |
-| Alpha | Estimator: position heatmap and spoofing alert | Planned |
-| Beta | Final replay, missions (incl. splashdown rescue), scoring | Planned |
-| Omega | Qollab page, accessibility pass, demo video | Planned |
+In this maritime sector, an invisible adversary—**The Ghost**—actively spoofs satellite GPS signals. The vessel's conventional receivers report plausible yet falsified positioning data designed to lure the rescue cutter into treacherous seabed reefs.
 
-## How the quantum sensor works
+The only trustworthy instrument aboard is **QUOORA**, a cybernetic quantum navigation assistant equipped with an onboard quantum magnetometer that measures the Earth's crustal magnetic fingerprint via simulated **Ramsey interferometry** and **Greenberger-Horne-Zeilinger (GHZ) entangled states**.
 
-1. **Field becomes phase.** The magnetic field at the ship's true position rotates the qubit's phase by φ.
-2. **Ramsey interferometer.** `H → Rz(φ) → H → measure`. The probability of measuring 1 is sin²(φ/2).
-3. **Two quadratures (X and Y)** recover the full phase via `atan2`, not just its cosine.
-4. **GHZ mode (n entangled qubits)** accumulates n·φ: n times more sensitive, but with n candidate phases (fringe ambiguity). This is the real trade-off of entanglement-enhanced sensing, and it becomes a tactical decision in the game.
-5. **IonQ constraint:** one job per run, so all readings of a turn are packed into a single circuit, each with its own qubits and classical register.
+> *"The GPS always seems right. That is exactly why it is dangerous."*
 
-![Interference fringes](franjas.png)
+---
 
-## Run it
+## 🎮 2. Features & 16-Bit Retro Art Direction
 
-```bash
-pip install -r requirements.txt
-python sensor.py          # candidate phases + circuit diagram
-python -m pytest          # 14 tests
-python grafico_franjas.py # generates franjas.png
+- **16-Bit CRT Tactical Aesthetic:** Modeled after vintage naval tactical consoles and 16-bit arcade monitors with scanline simulation, deep navy (`#050c18`) and cobalt ocean tones (`#061325`), cyan radar glowing telemetry (`#00f0ff`), and an authentic radar compass rose.
+- **Procedural Naval Cutter Sprite:** 16-bit pixel-art cutter *SPOOFED* complete with hull shading, naval bridge cabin, navigational bow light, rotating radar mast, and dynamic water wake.
+- **Expressive Robot Avatar:** QUOORA features five 16-bit pixel-art emotional states:
+  - `neutral`: Steady cyan visor for regular navigation.
+  - `happy`: Uplifted brow and cheerful visor when calibrated or nearing rescue.
+  - `thoughtful`: Single raised brow and amber data-processing sensor.
+  - `worried`: Drooped brows and amber alert when GPS discrepancies grow.
+  - `alert`: Red flashing warning eyes and open alarm beacon during reef proximity or major GPS jumps.
+- **Modular Asset Architecture (`AssetRegistry`):** Sprite renderers are decoupled from physics logic, allowing procedural drawings to be replaced with custom PNG or Aseprite sprites by simply injecting image objects into `AssetRegistry.shipSpriteConfig.customImage`.
+
+---
+
+## 🔬 3. Quantum Physics & Metrology
+
+### Ramsey Interferometry
+The seabed magnetic scalar field $B(x, y)$ is modeled across a 100 × 100 km grid with four Gaussian magnetic anomalies:
+$$B(x, y) = B_{\text{base}} + \sum_{i=1}^4 A_i \exp\left(-\frac{(x - x_i)^2 + (y - y_i)^2}{2 r_i^2}\right)$$
+The accumulated quantum phase shift is $\phi(x, y) = \kappa \cdot B(x, y)$ (with $\kappa = 1.0$, $B_{\text{base}} = 2.0$).
+
+### Sensor Modes
+1. **Simple Mode ($n = 1$):** Single-qubit Ramsey cycle.
+   $$P_X(\phi) = \sin^2\left(\frac{\phi}{2}\right), \quad P_Y(\phi) = \frac{1 - \sin(\phi)}{2}$$
+2. **GHZ Entangled Mode ($n = 3$):** 3-qubit maximally entangled Greenberger-Horne-Zeilinger state $|GHZ\rangle = \frac{|000\rangle + |111\rangle}{\sqrt{2}}$. Reaches the **Heisenberg Limit** ($\Delta \phi \sim 1/N$):
+   $$P_X(\phi) = \sin^2\left(\frac{3\phi}{2}\right), \quad P_Y(\phi) = \frac{1 - \sin(3\phi)}{2}$$
+
+### Scientific Honesty & 3-Fold Phase Ambiguity
+- While GHZ state measurement yields $3\times$ higher phase sensitivity, the periodic trigonometric response wraps every $2\pi/3$, creating three candidate phases:
+  $$\phi_k = \frac{\text{atan2}(\sin, \cos) \pmod{2\pi} + 2\pi k}{3}, \quad k \in \{0, 1, 2\}$$
+- A single scalar field reading identifies an **isomagnetic contour line**, not a unique geographic coordinate.
+- The onboard **2D Bayesian Grid Estimator** (100 × 100 cells, 1 km resolution) updates the posterior distribution in log space using the binomial measurement likelihoods of both quadratures ($X$ and $Y$), filtering out false candidates over successive turns.
+
+---
+
+## ⚓ 4. Tactical Gameplay & Mission Parameters
+
+- **Turn System:** 12 discrete turns (20 minutes per turn). Ship speed: $7.5\text{ km/turn}$.
+- **Ocean Current Noise:** Gaussian current drift with $\sigma = 0.3\text{ km}$ per axis applied to true ship movement.
+- **Inertial Dead Reckoning:** Kinematic dead reckoning without noise, with an uncertainty radius expanding as $r = 0.2 + 0.6 \times \text{turn}$ km.
+- **Energy Budget:** 6,000 total measurement shots. Players select between 100, 250, 500, or 1,000 shots per reading.
+- **Deceptive GPS Spoofing Attacks:**
+  - **Turn 4 (Jump):** GPS abruptly jumps $6\text{ km}$ West.
+  - **Turns 6–10 (Drift):** Sneak attack accumulating $+0.28\text{ km East}$ and $-0.28\text{ km South}$ per active turn.
+  - **Turns 9–10 (Freeze):** GPS coordinates freeze at the Turn 8 position during thick fog while underlying drift continues.
+  - **Turns 1–3 and 11–12:** Honest GPS signals.
+- **Hazardous Reef Collision:** The reef polygon `[[38, 50], [48, 50], [48, 56], [38, 56]]` is checked using continuous line-segment intersection. Any segment crossing causes immediate grounding.
+
+---
+
+## 🏆 5. Mission Endings & Interactive Replay
+
+1. **PERFECT RESCUE:** Reached the capsule within $2.0\text{ km}$ at Turn 12, with all 3 spoofing attacks flagged and zero false alarms.
+2. **RESCUE:** Capsule recovered within $2.0\text{ km}$, but at least one spoofing attack went undetected.
+3. **DECEIVED:** Arrived at spoofed coordinates $> 2.0\text{ km}$ away from the real capsule.
+4. **AGROUND:** Vessel grounded on the hazardous reef polygon.
+
+### Interactive Replay Scrubber
+- Scrub turn-by-turn through all 12 turns.
+- Displays all three routes: True path (solid green), Spoofed GPS path (dashed amber), and Inertial path (dotted blue).
+- Clickable measurement nodes showing binomial histograms ($k_X/N_X$ and $k_Y/N_Y$) and recovered phase candidates.
+- Export all session data to standardized JSON format.
+
+---
+
+## 🌐 6. Trilingual Localization
+
+The game features on-the-fly language switching via an integrated dictionary `TEXTOS`:
+- **English (`en`):** Full English localization.
+- **Brazilian Portuguese (`pt-BR`):** Original Portuguese briefing and dialogue preserved verbatim.
+- **Spanish (`es`):** Complete Spanish localization.
+
+Language selection preserves all active game variables, seeds, and replay timelines.
+
+---
+
+## ♿ 7. Accessibility (WCAG AA/AAA)
+
+- High-contrast tactical palette ($> 4.5:1$ ratio on all text elements).
+- Minimum typography floor of $14\text{ px}$.
+- Full keyboard support: `Enter`/`Space` (advance), `Left`/`Right` Arrows (steer ±5°), `D` (toggle debug), `R` (restart).
+- Screen reader `aria-live="polite"` telemetry announcer.
+- Respects `prefers-reduced-motion` settings.
+
+---
+
+## 📁 8. Project Structure & Deliverables
+
+```
+├── index.html                   # Complete standalone 16-bit offline browser game
+├── sensor.py                    # Quantum Ramsey interferometry Qiskit/Python sensor
+├── test_sensor.py               # Unit test suite verifying Born-rule statistics
+├── grafico_franjas.py           # Script plotting Ramsey interference fringes
+├── requirements.txt             # Python dependencies (qiskit, numpy, matplotlib)
+├── example_session_seed_20261011.json # Reproducible export sample
+├── qollab_package/              # Qollab iframe sandbox distribution
+│   ├── index.html               # Clean HTML loader without inline scripts
+│   ├── main.js                  # Modular client-side game engine
+│   ├── main.css                 # 16-bit retro tactical CRT styles
+│   ├── sensor.py                # Companion Python quantum backend
+│   └── requirements.txt         # Runner requirements
+├── HACKATHON_RESEARCH.md        # Official rules, deadline, and source links
+├── GIT_INSTRUCTIONS.md          # Guide for syncing with GitHub
+├── PROJECT_PAGE.md              # English project page text for Qollab
+├── DEMO_SCRIPT.md               # 2-3 minute video demonstration script
+├── SUBMISSION_CHECKLIST.md      # Hackathon verification matrix
+└── LICENSE                      # MIT Open Source License
 ```
 
-On Windows you can just double-click `instalar_e_testar.bat`.
+---
 
-To run on IonQ's simulator inside Qollab, pass that backend's sampler to `rodar(..., sampler=...)` in `sensor.py`.
+## 🚀 9. How to Run
 
-## Files
+### Standalone Offline Version
+Double-click `index.html` in any web browser. Zero server setup or internet connection required.
 
-| File | Purpose |
-| --- | --- |
-| `sensor.py` | Ramsey/GHZ circuits, single-job packing, phase estimation |
-| `test_sensor.py` | Measurements match theory; estimation recovers the phase |
-| `grafico_franjas.py` | Interference-fringe chart (theory vs. measured) |
-| `instalar_e_testar.bat` | Windows one-click setup and test |
+### Python Quantum Tests
+```bash
+python test_sensor.py
+python grafico_franjas.py
+```
 
-## Tools and credits
+---
 
-AI assistance (Claude) was used for brainstorming, code drafting and documentation; all code was reviewed and tested by the team. Libraries: Qiskit, NumPy, Matplotlib, pytest.
+## 📜 10. License & Attribution
 
-This effort is supported by Qollab & IonQ.
-
-## License
-
-MIT, see [LICENSE](LICENSE).
+MIT License — Copyright (c) 2026 QuantGirls Team.  
+*This effort is supported by Qollab & IonQ.*
