@@ -758,7 +758,7 @@ button:active{transform:translateY(2px);box-shadow:inset 0 2px 0 #ffffff1f,0 1px
 .radio-widget.radio-floating:not(.radio-open) h2,.radio-widget.radio-floating:not(.radio-open) .radio-led{display:none}
 .radio-widget.radio-floating:not(.radio-open) .radio-toggle{position:absolute;inset:0;width:100%;height:100%;min-width:0;min-height:0;padding:0;border:0;border-radius:10px;font-size:0;color:transparent;background:#0b0a24 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Crect x='10' y='0' width='2' height='5' fill='%23dfe5ee'/%3E%3Crect x='13' y='1' width='1' height='3' fill='%23ffd166'/%3E%3Crect x='14' y='0' width='1' height='5' fill='%23ffd16699'/%3E%3Crect x='4' y='4' width='9' height='12' fill='%23ff8a3d'/%3E%3Crect x='4' y='4' width='9' height='1' fill='%23ffc489'/%3E%3Crect x='5' y='6' width='7' height='4' fill='%23170f2e'/%3E%3Crect x='6' y='7' width='5' height='2' fill='%23b69cff'/%3E%3Crect x='5' y='11' width='7' height='1' fill='%237a2a12'/%3E%3Crect x='5' y='13' width='7' height='1' fill='%237a2a12'/%3E%3Crect x='3' y='6' width='1' height='6' fill='%23fff1de'/%3E%3C/svg%3E") center/30px 30px no-repeat;box-shadow:inset 0 0 10px #000a}
 .radio-widget.radio-floating.radio-open{width:calc(100% - 24px)!important;max-height:min(260px,45dvh)!important;overflow:auto;box-shadow:0 0 0 1px #f4f7fb,0 0 0 4px #8e97a8,0 0 0 6px #2a2f3a,0 12px 30px #05020fcc}
-@keyframes gr-radio-pulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 #ff8a3d00)}50%{transform:scale(1.08);filter:drop-shadow(0 0 10px #ff8a3dcc)}}
+@keyframes gr-radio-pulse{0%,100%{filter:drop-shadow(0 0 0 #ff8a3d00)}50%{filter:drop-shadow(0 0 10px #ff8a3dcc)}}
 .radio-widget.radio-unread:not(.radio-open){animation:gr-radio-pulse 1.1s ease-in-out infinite}
 .radio-widget.radio-unread:not(.radio-open):after{content:'!';position:absolute;top:-11px;right:-11px;z-index:3;width:22px;height:22px;border-radius:50%;background:#ff8a3d;border:2px solid #fff1de;box-shadow:0 0 0 2px #2a1206,0 3px 0 2px #0b0717;color:#2b1206;font:900 15px/19px var(--font);text-align:center}
 @media(prefers-reduced-motion:reduce){.radio-widget.radio-unread:not(.radio-open){animation:none!important}}
@@ -842,3 +842,13 @@ select option:checked,select option:hover{background:#ff8a3d!important;color:#1a
 .feature-card button { min-height:44px; padding:10px 20px; border:2px solid #ffe3ae; background:#ffd166; color:#211735; font-weight:bold; cursor:pointer; }
 .feature-card button:focus-visible { outline:3px solid #baf9ed; outline-offset:5px; }
 .menu-settings-row { flex-wrap:wrap; }
+/* A collapsed walkie-talkie on every screen; messages open away from the helm. */
+.radio-widget.radio-floating { min-width:0!important; z-index:11; }
+.radio-widget.radio-floating .radio-toggle { display:block!important; }
+.radio-widget.radio-floating:not(.radio-open) :is(.radio-body,#dialogue-box,#dialogue-nav) { display:none!important; }
+.radio-widget.radio-floating.radio-open { width:min(340px,calc(100% - 24px))!important; max-height:min(260px,45dvh,var(--radio-space,260px))!important; }
+.radio-widget.radio-floating.radio-open #dialogue-box { display:block; }
+@media(max-height:520px) and (min-width:621px){
+ .radio-widget.radio-floating.radio-open { width:min(340px,calc(50% - 24px))!important; max-height:var(--radio-space,200px)!important; }
+ .radio-widget.radio-floating.radio-open~.navigation-dock { top:132px; }
+}

@@ -1,40 +1,37 @@
-# Git workflow
+# Contribution workflow
 
-The repository is [SouBeatrizKaroline/QollabQuantumHackathon_GhostRoute](https://github.com/SouBeatrizKaroline/QollabQuantumHackathon_GhostRoute).
+**English** · [Português (Brasil)](pt-BR/git-guide.md) · [Português (Portugal)](pt-PT/git-guide.md) · [Español](es/git-guide.md)
 
-## Get the current project
+Make changes reviewable and keep generated files separate.
 
-```sh
+## Get a clean starting point
+
+~~~sh
 git clone https://github.com/SouBeatrizKaroline/QollabQuantumHackathon_GhostRoute.git
 cd QollabQuantumHackathon_GhostRoute
 git status
-```
+git switch -c improve/your-change
+~~~
 
-For an existing checkout, inspect your local changes before pulling. Keep changes you need by committing or stashing them.
+For an existing checkout, inspect and preserve local work before pulling. Use a branch name describing the change; the example is not a record of an existing branch.
 
-## Review and publish changes
+## Review, verify and propose
 
-```sh
-git switch -c fix/game-qa
+Run the relevant checks in the technical guide. Keep all four documentation languages aligned when changing behavior. Replace <code>&lt;changed-files&gt;</code> with explicit paths. Review the staged diff and open a pull request into main with validation evidence.
+
+~~~sh
 git diff
 git status
-```
-
-Run the checks described in [../README.md](../README.md). Stage the files you intend to publish, review the staged diff, commit, and push the branch:
-
-```sh
-git add public main.py sensor.py scripts tests docs README.md requirements.txt vercel.json .gitignore examples
+git add <changed-files>
 git diff --cached
-git commit -m "fix: improve game QA and localization"
-git push -u origin fix/game-qa
-```
+git commit -m "Describe the resulting behavior"
+git push -u origin improve/your-change
+~~~
 
-Open a pull request into `main` for review. The commands above are a suggested workflow, not a record that a branch or commit has already been published.
+## Source and generated files
 
-## Generated and local files
+The web source is public/. Quantum sources are root main.py and sensor.py. Translated READMEs live at the root; guides live in docs/pt-BR/, docs/pt-PT/ and docs/es/. English guides stay directly in docs/. Keep .venv/, caches, credentials and generated dist/ out of commits.
 
-Keep `.venv/`, Python caches and `dist/` out of Git. Qollab distributions are generated with `python scripts/package_qollab.py`; the maintained web source lives in `public/`, the Qollab entrypoint is root `main.py`, and `sensor.py` contains the reusable quantum sensor.
-
-There is no required Git bundle or legacy archive in this project.
+[Technical guide](technical-guide.md) · [Documentation hub](README.md)
 
 This effort is supported by Qollab & IonQ

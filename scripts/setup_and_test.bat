@@ -56,7 +56,7 @@ if errorlevel 1 (
     echo Instale Node.js e execute os arquivos .cjs em tests para valida-los.
 ) else (
     echo Executando os testes do jogo web...
-    for %%T in (game-core.cjs estimator.cjs localization.cjs ui-state.cjs campaign.cjs ship-rendering.cjs map-layout.cjs experience.cjs) do (
+    for %%T in (game-core.cjs estimator.cjs localization.cjs ui-state.cjs campaign.cjs ship-rendering.cjs map-layout.cjs experience.cjs progression.cjs) do (
         node "tests\%%T"
         if errorlevel 1 goto :failed
     )

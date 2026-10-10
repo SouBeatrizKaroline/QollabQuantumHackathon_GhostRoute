@@ -691,6 +691,7 @@ GhostRouteApp.prototype.startNewGame = function (seed) {
   this.renderer.target = null;
   this.renderer.visualHeading = null;
   this.renderer.headingTarget = null;
+  this.renderer.headingTick = null;
   this.alertGps.style.display = 'none';
   this.alertReef.style.display = 'none';
   baseStart.call(this, seed);
@@ -858,7 +859,7 @@ GhostRouteApp.prototype.updateCampaignMenu = function(){
   document.getElementById('mission-badge').textContent=`${fillText(t.levelName,{level:String(this.levelNumber).padStart(2,'0')})} · ${campaignLevelName(this.levelNumber,this.currentLang)}`;
   document.getElementById('menu-primary-label').textContent=this.state?.isFinished?t.btnViewReplay:this.state?.turnsRecord.length?t.menuContinue:t.menuStart;
   const m=createCampaignMission(selected);
-  document.getElementById('level-difficulty').textContent=t[this.levelBand(selected)];
+  document.getElementById('level-difficulty').textContent=`${t[this.levelBand(selected)]} · ${m.dificuldade}/100`;
   document.getElementById('level-description').textContent=fillText(t.levelBrief,{turns:m.turnos,budget:numberText(m.sensor.shots_total,this.currentLang,0),radius:numberText(m.vitoria.raio_resgate_km,this.currentLang)});
   const next=document.getElementById('btn-next-level');
   next.hidden=!(this.state?.isFinished&&!this.state.isAground&&Math.hypot(this.state.realPosition[0]-MISSAO.capsula.pouso_real[0],this.state.realPosition[1]-MISSAO.capsula.pouso_real[1])<=MISSAO.vitoria.raio_resgate_km&&this.levelNumber<99);
@@ -964,7 +965,7 @@ else startGhostRoute();
   proto.refreshRadio=function(){
     const widget=document.querySelector('.radio-widget'),toggle=document.getElementById('btn-radio-toggle');
     if(!widget||!widget.classList||!toggle)return;
-    const floating=matches('(max-width:850px) and (min-height:521px), (max-width:620px)');
+    const floating=true; // Walkie-talkie interaction applies at every viewport size.
     widget.classList.toggle('radio-floating',floating);
     const open=widget.classList.contains('radio-open'),collapsed=!open&&visible(toggle);
     // A message is identified by the mission moment, not its wording, so switching language is not "new".
@@ -975,7 +976,17 @@ else startGhostRoute();
       const dock=document.querySelector('.navigation-dock'),shell=document.getElementById('game-shell');
       if(floating&&dock?.getBoundingClientRect&&shell?.getBoundingClientRect){
         const d=dock.getBoundingClientRect(),s=shell.getBoundingClientRect();
-        widget.style.top='auto';widget.style.bottom=Math.round(s.bottom-d.top+10)+'px';
+        const landscape=matches('(max-height:520px) and (min-width:621px)');
+        if(landscape){
+          const telemetry=document.querySelector('.telemetry-strip')?.getBoundingClientRect();
+          const top=Math.max(128,(telemetry?.bottom||128)-s.top+14);
+          widget.style.top=Math.round(top)+'px';widget.style.bottom='auto';
+          widget.style.setProperty('--radio-space',Math.max(72,s.height-top-58)+'px');
+        }else{
+          widget.style.top='auto';widget.style.bottom=Math.round(s.bottom-d.top+18)+'px';
+          const hud=document.querySelector('.hud-top')?.getBoundingClientRect();
+          widget.style.setProperty('--radio-space',Math.max(72,d.top-(hud?.bottom||100)-36)+'px');
+        }
       }else{widget.style.top='';widget.style.bottom='';}
     }
     this.updateRadioLabel();
