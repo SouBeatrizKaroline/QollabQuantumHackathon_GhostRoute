@@ -13,7 +13,7 @@ import zipfile
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-ROOT_FILES = ("main.py", "sensor.py", "requirements.txt", "README.md", "LICENSE", "vercel.json")
+ROOT_FILES = ("main.py", "sensor.py", "requirements.txt", "README.md", "README.pt-BR.md", "README.pt-PT.md", "README.es.md", "LICENSE", "vercel.json")
 SOURCE_DIRECTORIES = ("public", "scripts", "examples", "docs", "tests")
 EXCLUDED_PARTS = {"__pycache__", ".pytest_cache", ".ruff_cache", ".git", ".venv"}
 REQUIRED_FILES = (

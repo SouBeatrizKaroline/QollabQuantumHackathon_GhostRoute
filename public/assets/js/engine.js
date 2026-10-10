@@ -57,19 +57,20 @@ function createCampaignMission(level) {
   if (!Number.isInteger(level) || level < 0 || level > 99) throw new RangeError('Campaign level must be 0..99');
   const m = JSON.parse(JSON.stringify(ORIGINAL_MISSION)), difficulty = level / 99;
   m.nivel = level;
-  // From level 1 the capsule lands on the far side of the chart, so the ship is
-  // faster and the voyage uses the full twelve turns.
+  const curve=difficulty*difficulty*(3-2*difficulty);
+  m.dificuldade = Math.round(difficulty*100);
+  // The voyage grows from sheltered training water to the far side of the chart.
   m.turnos = Math.min(12, 4 + level);
   m.navio.velocidade_km_turno = level === 0 ? Math.SQRT2 * 4 : 10.5 + difficulty * 1.5;
-  m.navio.ruido_corrente_km = level === 0 ? 0 : .04 + difficulty * .46;
+  m.navio.ruido_corrente_km = level === 0 ? 0 : .04 + curve * .46;
   m.inercial.crescimento_km_turno = .12 + difficulty * .88;
-  m.sensor.shots_total = 8000 - Math.round(difficulty * 5000 / 100) * 100;
-  m.vitoria.raio_resgate_km = 4 - difficulty * 2.4;
-  const rng = mulberry32(7717 + level * 104729), round = v => Math.round(v * 10) / 10;
+  m.sensor.shots_total = 8000 - Math.round(curve * 5000 / 100) * 100;
+  m.vitoria.raio_resgate_km = 4 - curve * 2.4;
+  const rng = mulberry32(7717), round = v => Math.round(v * 10) / 10;
   const target = level === 0 ? [26, 31] : level < 10
     ? [round(26 + level * 5.5), round(31 + level * 5)]
-    : [round(79 + rng() * 8), round(79 + rng() * 9)];
-  if (level > 0 && level < 10) m.navio.velocidade_km_turno = Math.hypot(target[0]-m.porto[0],target[1]-m.porto[1]) / m.turnos * 1.06;
+    : [round(79 + difficulty * 7), round(79 + difficulty * 8)];
+  if (level > 0) m.navio.velocidade_km_turno = Math.hypot(target[0]-m.porto[0],target[1]-m.porto[1]) / m.turnos * (1.06 + .10 * Math.min(1,level/30));
   m.mecanicas = ['navigation', 'sensor', 'rescue'];
   if (level >= 1) m.mecanicas.push('rocks', 'current');
   if (level >= 3) m.mecanicas.push('jump');
@@ -88,30 +89,26 @@ function createCampaignMission(level) {
   const middle = at(.5, 0), reefH = 3 + difficulty * 2;
   m.recife = level < 10 ? [[78,22],[84,22],[84,28],[78,28]] :
     [[round(middle[0]-4),round(middle[1]-1)],[round(middle[0]+4),round(middle[1]-1)],[round(middle[0]+4),round(middle[1]-1+reefH)],[round(middle[0]-4),round(middle[1]-1+reefH)]];
-  // Rocks scattered along the route force the navigator to steer around them.
+  // Stable formations avoid a fresh random difficulty spike at every level.
+  // Existing rocks grow gradually; newly introduced ones start small.
   m.pedras = [];
   const rockCount = level === 0 ? 0 : 2 + Math.floor(difficulty * 6);
-  const reefBox = {x0:Math.min(...m.recife.map(p=>p[0])),x1:Math.max(...m.recife.map(p=>p[0])),y0:Math.min(...m.recife.map(p=>p[1])),y1:Math.max(...m.recife.map(p=>p[1]))};
-  const centers = [];
-  for (let tries = 0; m.pedras.length < rockCount && tries < 400; tries++) {
-    const r = 1.6 + rng() * 1.6, c = level < 3
-      ? at(.35 + (m.pedras.length % 2) * .3, (m.pedras.length === 0 ? 1 : -1) * (10 + rng() * 3))
-      : at(.18 + rng() * .66, (rng() - .5) * 26);
-    if (c.some(v => v < 4 || v > 96)) continue;
-    if (Math.hypot(c[0]-port[0], c[1]-port[1]) < 12 || Math.hypot(c[0]-target[0], c[1]-target[1]) < 10) continue;
-    if (centers.some(o => Math.hypot(c[0]-o.c[0], c[1]-o.c[1]) < r + o.r + 8)) continue;
-    if (c[0] > reefBox.x0-r-6 && c[0] < reefBox.x1+r+6 && c[1] > reefBox.y0-r-6 && c[1] < reefBox.y1+r+6) continue;
-    centers.push({c, r});
-    const sides = 5 + Math.floor(rng() * 2), turn = rng() * Math.PI;
-    m.pedras.push(Array.from({length:sides}, (_, i) => {
-      const a = turn + i / sides * Math.PI * 2, k = r * (.75 + rng() * .25);
-      return [round(c[0] + Math.cos(a) * k), round(c[1] + Math.sin(a) * k)];
+  const slots = [[.22,12-8*curve],[.32,-12+8*curve],[.40,10],[.58,-10],[.65,13],[.75,-11],[.82,9],[.48,-16]];
+  for(let index=0;index<rockCount;index++){
+    const introduced=index<2?1:Math.ceil((index-1)*99/6);
+    const growth=Math.min(1,Math.max(0,(level-introduced)/14));
+    const radius=index<2?1.1+curve*1.5:.65+growth*(1.5+rng()*.5);
+    const center=at(...slots[index]),sides=6,angle=rng()*Math.PI;
+    const shape=Array.from({length:sides},()=>.8+rng()*.2);
+    m.pedras.push(shape.map((factor,i)=>{
+      const a=angle+i/sides*Math.PI*2;
+      return [round(center[0]+Math.cos(a)*radius*factor),round(center[1]+Math.sin(a)*radius*factor)];
     }));
   }
   m.ataques = [];
   if (level >= 3) m.ataques.push({tipo:'salto',inicio:3,fim:3,deslocamento_km:[-(.8+difficulty*7),difficulty*2]});
   if (level >= 10) m.ataques.push({tipo:'deriva',inicio:Math.max(3,Math.floor(m.turnos*.4)),fim:m.turnos-2,km_por_turno:[.1+difficulty*.5,-(.1+difficulty*.5)]});
-  if (level >= 30) m.ataques.push({tipo:'congelamento',inicio:m.turnos-3,fim:m.turnos-2});
+  if (level >= 30) m.ataques.push({tipo:'congelamento',inicio:level<60?m.turnos-2:m.turnos-3,fim:m.turnos-2});
   return m;
 }
 function useCampaignMission(level) {
@@ -614,10 +611,19 @@ const AssetRegistry = {
 class PixelShipAtlas {
   // k = pixels per hull unit. k=1 is the original 88 px sprite; the map draws a
   // larger "32-bit" atlas (k≈2) on its own full-resolution layer.
-  constructor(k=1) { this.k=k;this.frames=Array.from({length:32},(_,i)=>this.paint(i*11.25)); }
+  constructor(k=1) { this.k=k;this.frames=Array.from({length:64},(_,i)=>this.paint(i*5.625)); }
   static normalize(heading) { return ((heading%360)+360)%360; }
   static turnDelta(from,to) { return (((to-from+180)%360)+360)%360-180; }
-  static frameIndex(heading) { return Math.round(PixelShipAtlas.normalize(heading)/11.25)%32; }
+  static frameIndex(heading) { return Math.round(PixelShipAtlas.normalize(heading)/5.625)%64; }
+  static approachHeading(current,target,elapsedMs,snap=false) {
+    target=PixelShipAtlas.normalize(target);
+    if(snap||!Number.isFinite(current))return target;
+    const delta=PixelShipAtlas.turnDelta(current,target);
+    if(Math.abs(delta)<.08)return target;
+    // Retargeting changes only the destination; it never restarts the animation clock.
+    const amount=1-Math.exp(-Math.max(0,Math.min(250,elapsedMs))/65);
+    return PixelShipAtlas.normalize(current+delta*amount);
+  }
   paint(heading) {
     const k=this.k,size=Math.round(88*k),hi=k>=1.4;
     const canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;
@@ -706,7 +712,7 @@ class TacticalMapRenderer {
     this.shipLayer=document.createElement('canvas');this.shipLayer.className='ship-layer';this.shipLayer.setAttribute('aria-hidden','true');this.canvas.after(this.shipLayer);this.shipCtx=this.shipLayer.getContext('2d');
     this.resize();
     window.addEventListener('resize',()=>{this.resize();if(this.current)this.drawScene(performance.now());});
-    this.loop=(now)=>{if(this.current&&now-this.lastFrame>48){this.lastFrame=now;this.drawScene(now);}requestAnimationFrame(this.loop);};requestAnimationFrame(this.loop);
+    this.loop=(now)=>{if(this.current&&now-this.lastFrame>32){this.lastFrame=now;this.drawScene(now);}requestAnimationFrame(this.loop);};requestAnimationFrame(this.loop);
   }
   resize(){
     const r=this.canvas.getBoundingClientRect();this.canvas.width=Math.max(1,Math.round(r.width));this.canvas.height=Math.max(1,Math.round(r.height));this.ctx.setTransform?.(2,0,0,2,0,0);this.ctx.imageSmoothingEnabled=false;
@@ -780,7 +786,7 @@ class TacticalMapRenderer {
   render(state,estimator,isReplay=false,debug=false){
     this.current={state,estimator,isReplay,debug};this.noteReadings(state);const target=(debug||isReplay)?state.realPosition:estimator.getMAP();
     const now=performance.now(),heading=PixelShipAtlas.normalize(state.currentHeading);
-    if(this.headingTarget!==heading){this.headingFrom=this.visualHeading??heading;this.headingTarget=heading;this.headingStart=now;}
+    this.headingTarget=heading;
     if(this.reduced||isReplay)this.visualHeading=heading;
     if(!this.target||Math.hypot(this.target[0]-target[0],this.target[1]-target[1])>.01){this.animFrom=this.displayWorld?[...this.displayWorld]:[...target];this.target=[...target];this.animStart=performance.now();}
     if(this.reduced||isReplay)this.displayWorld=[...target];this.drawScene(performance.now());
@@ -908,8 +914,8 @@ class TacticalMapRenderer {
   }
   drawShip(x,y,heading,now){
     const c=this.ctx,snap=this.reduced||this.current?.isReplay;
-    const progress=snap?1:Math.min(1,Math.max(0,(now-(this.headingStart??now))/240)),ease=progress*progress*(3-2*progress);
-    this.visualHeading=snap?heading:(this.headingFrom??heading)+PixelShipAtlas.turnDelta(this.headingFrom??heading,this.headingTarget??heading)*ease;
+    this.visualHeading=PixelShipAtlas.approachHeading(this.visualHeading,this.headingTarget??heading,now-(this.headingTick??now),snap);
+    this.headingTick=now;
     const bearing=this.visualHeading*Math.PI/180,fx=Math.sin(bearing),fy=-Math.cos(bearing),rx=Math.cos(bearing),ry=Math.sin(bearing);
     // Cache distinct views instead of rotating a flat sprite (which tilted the mast).
     const scale=Math.min(1,Math.max(.42,this.scale/2))*(this.shipLayer?TacticalMapRenderer.SHIP_ZOOM:1),phase=this.reduced?0:now/320;
