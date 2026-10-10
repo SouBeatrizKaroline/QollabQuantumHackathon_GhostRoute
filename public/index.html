@@ -33,7 +33,7 @@ This effort is supported by Qollab & IonQ
   <meta name="description" content="Ghost Route — a 16-bit quantum navigation adventure by QuantGirls.">
   <title>Ghost Route — QuantGirls</title>
   <link rel="icon" type="image/svg+xml" href="assets/img/ghost-route-mark.svg">
-  <link rel="stylesheet" href="assets/css/game.css?v=1.15">
+  <link rel="stylesheet" href="assets/css/game.css?v=2">
 </head>
 <body>
 <div id="game-shell">
@@ -62,9 +62,10 @@ This effort is supported by Qollab & IonQ
   <nav class="utility" aria-label="Mission controls">
     <label for="lang-select" id="lbl-language" class="sr-only"></label>
     <select id="lang-select">
-      <option value="pt-BR" label="PT" selected>PT · Português</option>
+      <option value="pt-BR" label="BR" selected>BR · Português (Brasil)</option>
+      <option value="pt-PT" label="PT">PT · Português (Portugal)</option>
       <option value="es" label="ES">ES · Español</option>
-      <option value="en" label="EN">IN · English</option>
+      <option value="en" label="IN">IN · English</option>
     </select>
     <button id="btn-fullscreen" type="button" data-i18n="fullscreen"></button>
     <button id="btn-restart" type="button"><span id="txt-restart"></span></button>
@@ -158,7 +159,7 @@ This effort is supported by Qollab & IonQ
         </section>
         <section class="menu-settings" aria-labelledby="menu-settings-title">
           <h3 id="menu-settings-title" class="menu-section-label" data-i18n="menuSettings"></h3>
-          <div class="menu-settings-row"><div><label for="menu-lang-select" data-i18n="menuLanguage"></label><select id="menu-lang-select"><option value="pt-BR" selected>PT · Português</option><option value="es">ES · Español</option><option value="en">IN · English</option></select></div><button id="btn-menu-fullscreen" type="button" data-i18n="menuFullscreen"></button></div>
+          <div class="menu-settings-row"><div><label for="menu-lang-select" data-i18n="menuLanguage"></label><select id="menu-lang-select"><option value="pt-BR" selected>BR · Português (Brasil)</option><option value="pt-PT">PT · Português (Portugal)</option><option value="es">ES · Español</option><option value="en">IN · English</option></select></div><button id="btn-sound" type="button" aria-pressed="false" data-i18n="soundOff"></button><button id="btn-menu-fullscreen" type="button" data-i18n="menuFullscreen"></button></div>
         </section>
         <details class="menu-guide">
           <summary data-i18n="menuGuide"></summary>
@@ -182,6 +183,9 @@ This effort is supported by Qollab & IonQ
     <div class="replay-controls"><button id="btn-next-level" class="menu-level-action" type="button" data-i18n="nextLevel" hidden></button><button id="btn-replay-same" type="button"><span id="txt-btn-same"></span></button><button id="btn-replay-new" type="button"><span id="txt-btn-new"></span></button><button id="btn-export-json" type="button"><span id="txt-btn-export"></span></button></div>
   </section>
 </div>
-<script src="assets/js/i18n.js?v=1.15"></script><script src="assets/js/engine.js?v=1.15"></script><script src="assets/js/app.js?v=1.15"></script><script src="assets/js/console-decor.js?v=1.15"></script>
+<div id="feature-intro" class="feature-intro" role="dialog" aria-modal="true" aria-labelledby="feature-title" aria-describedby="feature-body" hidden>
+  <section class="feature-card"><span id="feature-step"></span><h2 id="feature-title"></h2><p id="feature-body"></p><button id="btn-feature-ok" type="button" data-i18n="acknowledge"></button></section>
+</div>
+<script src="assets/js/i18n.js?v=2"></script><script src="assets/js/engine.js?v=2"></script><script src="assets/js/audio.js?v=2"></script><script src="assets/js/onboarding.js?v=2"></script><script src="assets/js/app.js?v=2"></script><script src="assets/js/console-decor.js?v=2"></script>
 </body>
 </html>

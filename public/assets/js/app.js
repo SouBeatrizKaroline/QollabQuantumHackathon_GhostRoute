@@ -850,12 +850,12 @@ GhostRouteApp.prototype.updateCampaignMenu = function(){
   select.replaceChildren();
   for(let level=0;level<100;level++){
     const option=document.createElement('option');option.value=String(level);
-    option.textContent=`${String(level).padStart(2,'0')} · ${t[this.levelBand(level)]}${this.completedLevels?.has(level)?' ✓':''}`;select.appendChild(option);
+    option.textContent=`${String(level).padStart(2,'0')} · ${campaignLevelName(level,this.currentLang)}${this.completedLevels?.has(level)?' ✓':''}`;select.appendChild(option);
   }
   select.value=String(selected);
   document.getElementById('current-level').textContent=fillText(t.levelName,{level:String(this.levelNumber).padStart(2,'0')});
   document.getElementById('level-progress').textContent=fillText(t.progressLabel,{completed:this.completedLevels?.size||0});
-  document.getElementById('mission-badge').textContent=`${fillText(t.levelName,{level:String(this.levelNumber).padStart(2,'0')})} · ${t[this.levelBand(this.levelNumber)]}`;
+  document.getElementById('mission-badge').textContent=`${fillText(t.levelName,{level:String(this.levelNumber).padStart(2,'0')})} · ${campaignLevelName(this.levelNumber,this.currentLang)}`;
   document.getElementById('menu-primary-label').textContent=this.state?.isFinished?t.btnViewReplay:this.state?.turnsRecord.length?t.menuContinue:t.menuStart;
   const m=createCampaignMission(selected);
   document.getElementById('level-difficulty').textContent=t[this.levelBand(selected)];
@@ -898,7 +898,7 @@ GhostRouteApp.prototype.updateNarrative=function(){
   if(this.levelNumber===undefined||this.state.isFinished)return;
   const t=TEXTOS[this.currentLang],turn=this.state.turnsRecord.length;
   const tutorial=['tutorialHeading','tutorialSensor','tutorialGps','tutorialRescue'];
-  document.getElementById('dialogue-box').textContent=this.levelNumber===0?t[tutorial[Math.min(turn,3)]]:
+  document.getElementById('dialogue-box').textContent=this.levelNumber===0?fillText(t[tutorial[Math.min(turn,3)]],{radius:numberText(MISSAO.vitoria.raio_resgate_km,this.currentLang)}):
     fillText(t.levelIntro,{turns:MISSAO.turnos,radius:numberText(MISSAO.vitoria.raio_resgate_km,this.currentLang)});
   document.getElementById('speaker-name').textContent=t.speakerQuoora;
   document.getElementById('speaker-role').textContent=this.levelNumber===0?t.trainingMode:t.roleQuoora;
@@ -946,7 +946,7 @@ GhostRouteApp.prototype.bindEvents=function(){
   });
 };
 
-function startGhostRoute(){ drawTitle(); window.gameApp = new GhostRouteApp(); }
+function startGhostRoute(){ installMissionExperience(GhostRouteApp); drawTitle(); window.gameApp = new GhostRouteApp(); }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startGhostRoute,{once:true});
 else startGhostRoute();
 
@@ -1029,13 +1029,13 @@ else startGhostRoute();
       if(!box.contains(e.target)){e.preventDefault();e.stopImmediatePropagation();document.getElementById('btn-sensor-intro-ok').focus();}
     },true);
     for(const id of['sensor-mode-select','sensor-shots-select'])
-      document.getElementById(id).addEventListener('pointerdown',e=>{if(!seen()){e.preventDefault();this.openSensorIntro();}});
+      document.getElementById(id).addEventListener('pointerdown',e=>{if(this.levelNumber!==0&&!seen()){e.preventDefault();this.openSensorIntro();}});
   };
   const render=proto.renderMap;
   proto.renderMap=function(){
     const out=render.apply(this,arguments);
     const rec=this.state?.turnsRecord?.at?.(-1);
-    if(rec?.shots>0&&!this.state.isFinished&&!seen())this.openSensorIntro();
+    if(this.levelNumber!==0&&rec?.shots>0&&!this.state.isFinished&&!seen())this.openSensorIntro();
     return out;
   };
 })();

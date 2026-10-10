@@ -59,14 +59,24 @@ function createCampaignMission(level) {
   m.nivel = level;
   // From level 1 the capsule lands on the far side of the chart, so the ship is
   // faster and the voyage uses the full twelve turns.
-  m.turnos = level === 0 ? 4 : 12;
+  m.turnos = Math.min(12, 4 + level);
   m.navio.velocidade_km_turno = level === 0 ? Math.SQRT2 * 4 : 10.5 + difficulty * 1.5;
   m.navio.ruido_corrente_km = level === 0 ? 0 : .04 + difficulty * .46;
   m.inercial.crescimento_km_turno = .12 + difficulty * .88;
   m.sensor.shots_total = 8000 - Math.round(difficulty * 5000 / 100) * 100;
   m.vitoria.raio_resgate_km = 4 - difficulty * 2.4;
   const rng = mulberry32(7717 + level * 104729), round = v => Math.round(v * 10) / 10;
-  const target = level === 0 ? [26, 31] : [round(79 + rng() * 8), round(79 + rng() * 9)];
+  const target = level === 0 ? [26, 31] : level < 10
+    ? [round(26 + level * 5.5), round(31 + level * 5)]
+    : [round(79 + rng() * 8), round(79 + rng() * 9)];
+  if (level > 0 && level < 10) m.navio.velocidade_km_turno = Math.hypot(target[0]-m.porto[0],target[1]-m.porto[1]) / m.turnos * 1.06;
+  m.mecanicas = ['navigation', 'sensor', 'rescue'];
+  if (level >= 1) m.mecanicas.push('rocks', 'current');
+  if (level >= 3) m.mecanicas.push('jump');
+  if (level >= 6) m.mecanicas.push('ghz');
+  if (level >= 10) m.mecanicas.push('reef', 'blackout', 'drift');
+  if (level >= 30) m.mecanicas.push('freeze');
+  if (level >= 60) m.mecanicas.push('budget');
   m.capsula.pouso_real = target;
   m.capsula.elipse_prevista = {centro:[target[0],round(target[1]-difficulty*3)],semi_eixo_x:2+difficulty*6,semi_eixo_y:2+difficulty*3};
   m.capsula.turno_blackout_inicio = level < 10 ? 0 : 2;
@@ -84,7 +94,9 @@ function createCampaignMission(level) {
   const reefBox = {x0:Math.min(...m.recife.map(p=>p[0])),x1:Math.max(...m.recife.map(p=>p[0])),y0:Math.min(...m.recife.map(p=>p[1])),y1:Math.max(...m.recife.map(p=>p[1]))};
   const centers = [];
   for (let tries = 0; m.pedras.length < rockCount && tries < 400; tries++) {
-    const r = 1.6 + rng() * 1.6, c = at(.18 + rng() * .66, (rng() - .5) * 26);
+    const r = 1.6 + rng() * 1.6, c = level < 3
+      ? at(.35 + (m.pedras.length % 2) * .3, (m.pedras.length === 0 ? 1 : -1) * (10 + rng() * 3))
+      : at(.18 + rng() * .66, (rng() - .5) * 26);
     if (c.some(v => v < 4 || v > 96)) continue;
     if (Math.hypot(c[0]-port[0], c[1]-port[1]) < 12 || Math.hypot(c[0]-target[0], c[1]-target[1]) < 10) continue;
     if (centers.some(o => Math.hypot(c[0]-o.c[0], c[1]-o.c[1]) < r + o.r + 8)) continue;
@@ -97,7 +109,7 @@ function createCampaignMission(level) {
     }));
   }
   m.ataques = [];
-  if (level > 0) m.ataques.push({tipo:'salto',inicio:3,fim:3,deslocamento_km:[-(.8+difficulty*7),difficulty*2]});
+  if (level >= 3) m.ataques.push({tipo:'salto',inicio:3,fim:3,deslocamento_km:[-(.8+difficulty*7),difficulty*2]});
   if (level >= 10) m.ataques.push({tipo:'deriva',inicio:Math.max(3,Math.floor(m.turnos*.4)),fim:m.turnos-2,km_por_turno:[.1+difficulty*.5,-(.1+difficulty*.5)]});
   if (level >= 30) m.ataques.push({tipo:'congelamento',inicio:m.turnos-3,fim:m.turnos-2});
   return m;
@@ -544,6 +556,18 @@ const AssetRegistry = {
     ctx.fillStyle = "#0d0820";
     ctx.fillRect(8, 8, 32, 32);
 
+    // Bevelled casing, tiny screws and screen reflections complete the bridge portrait.
+    ctx.fillStyle = "#e8ddff"; ctx.fillRect(6, 5, 35, 1);
+    ctx.fillStyle = "#4a365e"; ctx.fillRect(42, 6, 1, 36); ctx.fillRect(6, 42, 36, 1);
+    for (const x of [6, 40]) for (const y of [6, 40]) {
+      ctx.fillStyle = "#ccb9df"; ctx.fillRect(x, y, 2, 2);
+      ctx.fillStyle = "#5b436f"; ctx.fillRect(x, y + 1, 2, 1);
+    }
+    ctx.fillStyle = "#262243"; ctx.fillRect(9, 9, 29, 1); ctx.fillRect(9, 10, 1, 27);
+    ctx.fillStyle = "#baf9ed"; ctx.fillRect(12, 36, 2, 1);
+    ctx.fillStyle = "#ffd166"; ctx.fillRect(16, 36, 2, 1);
+    ctx.fillStyle = "#574368"; ctx.fillRect(20, 36, 16, 1);
+
     if (expression === 'happy') {
       ctx.fillStyle = "#ffd166";
       ctx.fillRect(12, 18, 8, 3);
@@ -685,8 +709,8 @@ class TacticalMapRenderer {
     this.loop=(now)=>{if(this.current&&now-this.lastFrame>48){this.lastFrame=now;this.drawScene(now);}requestAnimationFrame(this.loop);};requestAnimationFrame(this.loop);
   }
   resize(){
-    const r=this.canvas.getBoundingClientRect();this.canvas.width=Math.max(1,Math.round(r.width/2));this.canvas.height=Math.max(1,Math.round(r.height/2));this.ctx.imageSmoothingEnabled=false;
-    const w=this.canvas.width,h=this.canvas.height,ratioX=w/r.width,ratioY=h/r.height;
+    const r=this.canvas.getBoundingClientRect();this.canvas.width=Math.max(1,Math.round(r.width));this.canvas.height=Math.max(1,Math.round(r.height));this.ctx.setTransform?.(2,0,0,2,0,0);this.ctx.imageSmoothingEnabled=false;
+    const w=this.canvas.width/2,h=this.canvas.height/2,ratioX=w/r.width,ratioY=h/r.height;
     const bounds=selector=>{const el=document.querySelector(selector);return el&&getComputedStyle(el).display!=='none'?el.getBoundingClientRect():null;};
     const hud=bounds('.hud-top'),dock=bounds('.navigation-dock'),telemetry=bounds('.telemetry-strip'),radio=bounds('.radio-widget');
     const portrait=r.width<=850&&r.height>520||r.width<=620;
@@ -715,11 +739,11 @@ class TacticalMapRenderer {
   worldToScreen(x,y){return{sx:this.ox+x*this.scale,sy:this.oy+(100-y)*this.scale};}
   screenToWorld(x,y){return[(x-this.ox)/this.scale,100-(y-this.oy)/this.scale];}
   makeOcean(){
-    // Two pre-rendered frames: the sea alternates between them for a 16-bit wave shimmer.
+    // Full-resolution chart with half-pixel facets and two cached ocean frames.
     this.oceanFrames=[0,1].map(frame=>this.paintOcean(frame));this.ocean=this.oceanFrames[0];
   }
   paintOcean(frame){
-    const c=document.createElement('canvas');c.width=this.canvas.width;c.height=this.canvas.height;const g=c.getContext('2d'),W=c.width,H=c.height;
+    const c=document.createElement('canvas');c.width=this.canvas.width;c.height=this.canvas.height;const g=c.getContext('2d'),W=c.width/2,H=c.height/2;g.scale(2,2);
     // Sunset sky reflected on the sea: stepped bands, warm violet at the top to deep navy at the bottom.
     const bands=['#4a2358','#43245e','#3b2765','#322a68','#292c69','#212d66','#1b2c60','#162a58','#12264f','#0f2247','#0d1e40'];
     const bh=Math.ceil(H/bands.length);
@@ -748,7 +772,7 @@ class TacticalMapRenderer {
     for(let i=0;i<W*H/150;i++){
       const x=Math.floor(waveRng()*W),y=Math.floor(waveRng()*H),pick=Math.floor(waveRng()*3),len=Math.ceil(waveRng()*5)+2,curl=waveRng()>.6;
       const t=y/H,palette=t<.3?['#6a3f7a','#5e3a86','#7a4a8a']:t<.65?['#3e4a8a','#45508f','#36437f']:['#2a4a78','#1f3f6c','#305584'];
-      const dx=frame?2:0;g.fillStyle=palette[pick];g.fillRect(x+dx,y,len,1);if(curl){g.fillRect(x+dx+2,y-1,2,1);g.fillRect(x+dx+4,y+1,2,1);}
+      const dx=frame?2:0;g.fillStyle=palette[pick];g.fillRect(x+dx,y,len,1);if(curl){g.fillRect(x+dx+2,y-1,2,1);g.fillRect(x+dx+4,y+1,2,1);}g.fillStyle='#c6a2e144';g.fillRect(x+dx+.5,y-.5,Math.max(1,len-2),.5);
     }
     for(let y=0;y<H;y+=3){g.fillStyle='#0b061920';g.fillRect(0,y,W,1);}
     return c;
@@ -783,7 +807,7 @@ class TacticalMapRenderer {
   }
   line(points,color,width,dash=[]){if(!points?.length)return;const c=this.ctx;c.strokeStyle=color;c.lineWidth=width;c.setLineDash(dash);c.beginPath();points.forEach((p,i)=>{const s=this.worldToScreen(...p);i?c.lineTo(s.sx,s.sy):c.moveTo(s.sx,s.sy);});c.stroke();c.setLineDash([]);}
   drawScene(now){
-    const{state:s,estimator:e,isReplay:replay,debug}=this.current;this.frameNow=now;if(this.shipCtx)this.shipCtx.clearRect(0,0,this.shipLayer.width,this.shipLayer.height);const c=this.ctx,w=this.canvas.width,h=this.canvas.height;const t=TEXTOS[window.gameApp?.currentLang||'pt-BR'];c.imageSmoothingEnabled=false;c.drawImage(this.oceanFrames?.[this.reduced?0:Math.floor(now/650)%2]||this.ocean,0,0);
+    const{state:s,estimator:e,isReplay:replay,debug}=this.current;this.frameNow=now;if(this.shipCtx)this.shipCtx.clearRect(0,0,this.shipLayer.width,this.shipLayer.height);const c=this.ctx,w=this.canvas.width/2,h=this.canvas.height/2;const t=TEXTOS[window.gameApp?.currentLang||'pt-BR'];c.imageSmoothingEnabled=false;c.drawImage(this.oceanFrames?.[this.reduced?0:Math.floor(now/650)%2]||this.ocean,0,0,w,h);
     const u=this.reduced||replay?1:Math.min(1,(now-this.animStart)/1500);const f=u*u*(3-2*u);this.displayWorld=this.target.map((v,i)=>this.animFrom[i]+(v-this.animFrom[i])*f);
     const shipAnchor=this.worldToScreen(...this.displayWorld),shipScale=Math.min(1,Math.max(.42,this.scale/2))*(this.shipLayer?TacticalMapRenderer.SHIP_ZOOM:1);
     this.labelBoxes=[{left:shipAnchor.sx-29*shipScale,right:shipAnchor.sx+29*shipScale,top:shipAnchor.sy-26*shipScale,bottom:shipAnchor.sy+22*shipScale}];
@@ -810,7 +834,7 @@ class TacticalMapRenderer {
     this.mapLabels.forEach(label=>this.text(label.label,label.x,label.y,label.color));
     this.drawCompass(s.currentHeading);this.drawRadar(s,e,now);
   }
-  drawReef(t){const c=this.ctx,p=MISSAO.recife.map(p=>this.worldToScreen(...p));c.fillStyle='#7a2b3acc';c.strokeStyle='#ff7b6b';c.lineWidth=1;c.beginPath();p.forEach((q,i)=>i?c.lineTo(q.sx,q.sy):c.moveTo(q.sx,q.sy));c.closePath();c.fill();c.stroke();c.save();c.clip();c.strokeStyle='#ff8f7a80';for(let x=p[0].sx-30;x<p[1].sx+30;x+=4){c.beginPath();c.moveTo(x,p[0].sy+3);c.lineTo(x+20,p[2].sy-3);c.stroke();}c.restore();
+  drawReef(t){const c=this.ctx,p=MISSAO.recife.map(p=>this.worldToScreen(...p));c.fillStyle='#7a2b3acc';c.strokeStyle='#ff7b6b';c.lineWidth=1;c.beginPath();p.forEach((q,i)=>i?c.lineTo(q.sx,q.sy):c.moveTo(q.sx,q.sy));c.closePath();c.fill();c.stroke();c.save();c.clip();c.strokeStyle='#ff8f7a80';for(let x=p[0].sx-30;x<p[1].sx+30;x+=4){c.beginPath();c.moveTo(x,p[0].sy+3);c.lineTo(x+20,p[2].sy-3);c.stroke();}c.fillStyle='#c4766877';for(let x=p[0].sx+1;x<p[1].sx;x+=2){for(let y=p[2].sy+1;y<p[0].sy;y+=2)c.fillRect(x+.5,y+.5,1,.5);}c.restore();
     // Foam breaking on the reef edge: a few white pixels that twinkle.
     const foamTick=this.reduced?0:Math.floor((this.frameNow||0)/400);for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];for(let k=0;k<6;k++){if(((k*7+i*3+foamTick)%5)>1)continue;const f=(k+.5)/6;c.fillStyle=k%2?'#fff6ea':'#ffd3c9';c.fillRect(Math.round(a.sx+(b.sx-a.sx)*f),Math.round(a.sy+(b.sy-a.sy)*f),1,1);}}
     this.labelBoxes.push({left:Math.min(...p.map(q=>q.sx))-2,right:Math.max(...p.map(q=>q.sx))+2,top:Math.min(...p.map(q=>q.sy))-2,bottom:Math.max(...p.map(q=>q.sy))+2});this.mapLabel(t.reefLabel,p[3].sx,p[3].sy-5,'#ffc2b5');}
@@ -826,7 +850,10 @@ class TacticalMapRenderer {
       c.fillStyle='#4a4166';path();c.fill();c.strokeStyle='#1a1230';c.lineWidth=1;c.stroke();
       c.fillStyle='#7a6f96';path(1,-1,.62);c.fill();
       c.fillStyle='#c2b8d8';path(1.5,-1.5,.28);c.fill();
-      c.fillStyle='#ffd16699';c.fillRect(Math.round(cx+1),Math.round(cy-2),1,1);
+      c.save();path();c.clip();
+      // Small angular facets, mineral seams and reflected sunset light.
+      for(let i=0;i<7;i++){const x=cx+(i%3-1)*1.2,y=cy+Math.floor(i/3)-1.5;c.fillStyle=['#9485b0','#635578','#e1cbde','#302c48'][i%4];c.fillRect(Math.round(x*2)/2,Math.round(y*2)/2,1,.5);}
+      c.restore();c.fillStyle='#ffd16699';c.fillRect(Math.round(cx+1),Math.round(cy-2),.5,.5);
       for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];for(let k=0;k<3;k++){if(((k*5+i*3+index+tick)%4)>1)continue;const f=(k+.5)/3,ox=(a.sx+b.sx)/2-cx,oy=(a.sy+b.sy)/2-cy,n=Math.hypot(ox,oy)||1;
         c.fillStyle=k%2?'#fff6ea':'#d7e6ff';c.fillRect(Math.round(a.sx+(b.sx-a.sx)*f+ox/n*1.5),Math.round(a.sy+(b.sy-a.sy)*f+oy/n*1.5),1,1);}}
       this.labelBoxes.push({left:Math.min(...xs)-2,right:Math.max(...xs)+2,top:Math.min(...ys)-2,bottom:Math.max(...ys)+2});

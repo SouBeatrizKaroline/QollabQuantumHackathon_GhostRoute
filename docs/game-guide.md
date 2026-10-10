@@ -4,7 +4,7 @@ Open [../public/index.html](../public/index.html), keeping the assets folder in 
 
 ## Mission and controls
 
-Rescue Aurora-1 while steering SPOOFED around the charted reef. The campaign contains **100 levels, 00–99**. Level 00 is a guided four-turn introduction: keep a northeast heading while Quoora explains the helm, sensor and GPS comparison. From level 01 the capsule splashes down on the far side of the chart, with rocks along the route that you must steer around. Subsequent levels add more rocks, false signals, stronger currents, fewer sensor measurements and a smaller rescue radius.
+Rescue Aurora-1 while steering SPOOFED around the charted reef. The campaign contains **100 levels, 00–99**. Level 00 is a guided four-turn introduction: keep a northeast heading while Quoora explains the helm, sensor and GPS comparison. Early voyages gradually extend across the chart. Rocks and gentle currents start at level 01, GPS jumps at 03, GHZ at 06, the central reef / blackout / GPS drift at 10, and GPS freeze at 30. GHZ is unavailable before level 06. Each mechanic is explained before use, including when jumping to an advanced level. Subsequent levels add more rocks, false signals, stronger currents, fewer sensor measurements and a smaller rescue radius.
 
 Use **Menu** to choose any level. Its briefing shows the mission's turn limit, measurement budget and rescue radius. Missions last 4–12 turns, each representing 20 minutes. Speed and current noise depend on the selected level. To complete a level, finish inside its rescue radius without crossing the reef or a rock; completed levels receive a check mark. A successful rescue offers **Next level**.
 
@@ -77,3 +77,10 @@ Vercel serves the frontend only. See [Vercel's build configuration](https://verc
 QuantGirls; user-provided visual references; original procedural pixel sprites and title; AI development assistance disclosed in the README. MIT license.
 
 This effort is supported by Qollab & IonQ
+
+
+## Sound and languages
+
+The mission menu and bridge language selectors offer BR (Brazilian Portuguese), PT (European Portuguese), IN (English) and ES (Spanish). The selected language applies to introductions, radio, menus and replay. Each of the 100 levels has a distinct name.
+
+Use the menu Sound button to enable or mute original synthesized effects. The browser requires an interaction before audio starts. Audio availability does not affect gameplay. Language, sound, progress and acknowledged introductions are remembered when browser storage is available.

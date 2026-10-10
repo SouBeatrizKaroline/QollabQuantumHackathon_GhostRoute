@@ -832,3 +832,13 @@ select{background-color:#221f4f;color:#fbefe2;color-scheme:dark}
 select option,select optgroup{background:#221f4f!important;background-color:#221f4f!important;color:#fbefe2!important}
 select option:checked,select option:hover{background:#ff8a3d!important;color:#1a0b2e!important}
 .histogram-caption{margin-top:6px;font-size:12px;line-height:1.45;font-weight:400;color:#cbbcd8}
+/* Mechanic introductions stay readable above the bridge on phones and desktop. */
+.feature-intro { position:fixed; inset:0; z-index:200; display:grid; place-items:center; padding:20px; background:#100b21cc; }
+.feature-intro[hidden] { display:none; }
+.feature-card { width:min(100%,520px); max-height:85dvh; overflow:auto; box-sizing:border-box; padding:clamp(20px,4vw,36px); color:#fff1de; background:#211735; border:2px solid #b69cff; box-shadow:6px 6px 0 #09061b, inset 0 0 0 4px #322546; }
+.feature-card h2 { font-size:clamp(20px,4vw,28px); margin:14px 0; line-height:1.2; }
+.feature-card p { font-size:16px; line-height:1.65; margin-bottom:24px; }
+.feature-card > span { font:12px monospace; color:#ffd166; }
+.feature-card button { min-height:44px; padding:10px 20px; border:2px solid #ffe3ae; background:#ffd166; color:#211735; font-weight:bold; cursor:pointer; }
+.feature-card button:focus-visible { outline:3px solid #baf9ed; outline-offset:5px; }
+.menu-settings-row { flex-wrap:wrap; }

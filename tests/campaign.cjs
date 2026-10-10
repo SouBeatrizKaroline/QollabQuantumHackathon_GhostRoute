@@ -22,7 +22,7 @@ for(let level=0;level<100;level++){
   // From level 1 the capsule lands on the far side of the chart, among rocks.
   const obstacles=[m.recife,...m.pedras];
   if(level>0){
-    assert.ok(Math.hypot(m.capsula.pouso_real[0]-m.porto[0],m.capsula.pouso_real[1]-m.porto[1])>=90,'Rescue lies across the chart');
+    if(level>=10)assert.ok(Math.hypot(m.capsula.pouso_real[0]-m.porto[0],m.capsula.pouso_real[1]-m.porto[1])>=90,'Later rescues lie across the chart');
     assert.ok(m.pedras.length>=2&&m.pedras.length>=(previous?.pedras.length||0),'Rocks never decrease');
   } else assert.equal(m.pedras.length,0,'The tutorial has no rocks');
   for(const poly of obstacles){
@@ -33,7 +33,7 @@ for(let level=0;level<100;level++){
   for(let i=0;i<obstacles.length;i++)for(let j=i+1;j<obstacles.length;j++)for(const p of obstacles[i])assert.ok(!a.checkReefCollision(p,p,obstacles[j]));
 }
 assert.equal(missions[0].ataques.length,0);assert.equal(missions[0].navio.ruido_corrente_km,0);
-assert.equal(missions[1].ataques.length,1);assert.equal(missions[10].ataques.length,2);assert.equal(missions[99].ataques.length,3);
+assert.equal(missions[1].ataques.length,0);assert.equal(missions[3].ataques.length,1);assert.equal(missions[10].ataques.length,2);assert.equal(missions[99].ataques.length,3);
 a.useCampaignMission(99);assert.equal(a.MISSAO.nivel,99);assert.equal(a.activeAttacks(3).length,1);
 a.useCampaignMission(0);assert.equal(a.MISSAO.nivel,0);assert.equal(a.activeAttacks(3).length,0);
 assert.equal(missions[99].sensor.shots_total,3000,'Switching missions must not mutate saved configs');

@@ -7,10 +7,10 @@ const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'public/assets/js/i18n.js'), 'utf8');
 const texts = vm.runInNewContext(`${source}\n; TEXTOS`, {}, { timeout: 1000 });
-const locales = ['en', 'pt-BR', 'es'];
+const locales = ['en', 'pt-BR', 'pt-PT', 'es'];
 const placeholders = value => (value.match(/\{\w+\}/g) || []).sort();
 
-test('English, Brazilian Portuguese and Spanish provide complete catalogs', () => {
+test('All four languages provide complete catalogs', () => {
   assert.deepEqual(Object.keys(texts).sort(), [...locales].sort());
   const englishKeys = Object.keys(texts.en).sort();
   for (const locale of locales) {
@@ -47,7 +47,7 @@ test('HTML text and accessible translation bindings exist in every language', ()
 });
 
 test('both Portuguese variants and Spanish do not retain English sensor or replay labels', () => {
-  for (const locale of ['pt-BR', 'es']) {
+  for (const locale of ['pt-BR', 'pt-PT', 'es']) {
     for (const [key, value] of Object.entries(texts[locale])) {
       const prose = value.replace(/\{\w+\}/g, '');
       assert.ok(!/\b(?:shots?|debug|replay|debriefing)\b/i.test(prose), `${locale}.${key}: untranslated English UI: ${value}`);
@@ -76,13 +76,15 @@ test('mission, observation, sensor exhaustion and replay states are translated',
   assert.notEqual(texts.es.attributionTranslated, texts.en.attributionTranslated);
 });
 
-test('Portuguese is Brazilian Portuguese only', () => {
-  assert.equal(Object.hasOwn(texts, 'pt-PT'), false);
+test('Portuguese variants have regional wording', () => {
+  assert.equal(Object.hasOwn(texts, 'pt-PT'), true);
+  assert.match(texts['pt-PT'].fullscreen, /Ecrã/);
+  assert.match(texts['pt-PT'].gameSettings, /Definições/);
   assert.match(texts['pt-BR'].fullscreen, /Tela/);
   assert.match(texts['pt-BR'].gameSettings, /Configurações/);
 });
 
-test('menu, campaign, tutorial and accessible controls are complete in all three languages', () => {
+test('menu, campaign, tutorial and accessible controls are complete in all four languages', () => {
   const required = [
     'menuLabel', 'menuEyebrow', 'menuTitle', 'menuIntro', 'menuStart', 'menuContinue',
     'menuClose', 'menuLanguage', 'menuFullscreen', 'menuRestart', 'menuExport', 'menuSettings',
@@ -106,7 +108,7 @@ test('menu, campaign, tutorial and accessible controls are complete in all three
   }
 });
 
-test('language selectors expose all three locales and default to Brazilian Portuguese', () => {
+test('language selectors expose all four locales and default to Brazilian Portuguese', () => {
   const html = fs.readFileSync(path.join(root, 'public/index.html'), 'utf8');
   assert.match(html, /<html\b[^>]*lang=["']pt-BR["']/);
   for (const id of ['lang-select', 'menu-lang-select']) {
