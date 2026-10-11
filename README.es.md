@@ -74,3 +74,5 @@ This effort is supported by Qollab & IonQ
 Gemini Spark ayudó con la implementación inicial; OpenAI Codex ayudó con la interfaz, arte procedural, traducciones, QA, ajustes de campaña y documentación. Claude (Anthropic) ayudó con el tema del atardecer, efectos del mapa, sprite del barco y consola del puente. Las referencias visuales aportadas por la usuaria orientaron el arte. El equipo debe confirmar las fechas de las contribuciones y la declaración final del hackathon. [Centro de documentación](docs/es/README.md).
 
 </details>
+
+La física se basa en técnicas existentes de Ramsey/GHZ e investigación de navegación magnética. El mapa es sintético, el estimador es clásico y los circuitos reproducen estadísticas de una fase suministrada. [Fundamentos científicos y referencias externas](docs/es/scientific-basis.md).

@@ -41,3 +41,22 @@ Play level 00, open an advanced mission, compare Simple/GHZ behavior, inspect a 
 QuantGirls · [MIT license](../LICENSE) · [Credits](../README.md)
 
 This effort is supported by Qollab & IonQ
+
+## Scientific origin and submission disclosure
+
+The sensor is an educational model of established Ramsey/GHZ techniques, inspired by magnetic navigation research. The maritime scenario and synthetic map adapt those ideas for play. The Bayesian grid is classical; neither the browser nor the circuit entry point measures a real magnetic field. [Scientific basis, source-to-code mapping and full bibliography](scientific-basis.md).
+
+For the hackathon, the original contribution is the playable integration and sensing tradeoff, not new physics or a reproduction of Ironstone Opal. External work and AI assistance are disclosed separately. Keep these references with the published project page and package.
+
+## Ready-to-adapt submission summary
+
+**Ghost Route — QuantGirls · intended theme: Quantum Playground.** A four-language pixel-art rescue game about deciding which navigation evidence to trust when GPS is deceptive. Players steer, budget simulated measurements, compare Simple/GHZ ambiguity and inspect their decisions in replay. The browser runs an analytical educational model; a separate Qiskit entry point demonstrates Simple/GHZ X/Y in one eight-qubit circuit and one backend job.
+
+- Play: https://ghostroutegame.vercel.app/
+- Source: https://github.com/SouBeatrizKaroline/QollabQuantumHackathon_GhostRoute
+- Scientific references: [full bibliography](scientific-basis.md).
+- Qollab project URL, backend/run evidence and video: **pending team confirmation**; fill in actual links before submitting.
+
+## Educational pilot acceptance criteria
+
+Proposed pilot: observe whether new players finish level 00 without assistance, explain why GHZ creates ambiguity, and compare uncertain readings before acting. Collect completion, assistance requests and pre/post understanding; do not treat these as measured outcomes yet. Interface release criteria: no unnecessary menu scrolling at supported screen sizes, readable language variants, controls free of overlap, and accessible help/replay when content needs scrolling.

@@ -15,3 +15,5 @@ English is the primary language. All guides are fully available in Brazilian Por
 - [Find references and design decisions](hackathon-research.md)
 
 This effort is supported by Qollab & IonQ
+
+- [Scientific basis and external references](scientific-basis.md)

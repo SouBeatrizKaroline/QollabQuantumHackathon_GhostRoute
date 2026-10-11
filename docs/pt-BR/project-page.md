@@ -43,3 +43,22 @@ Jogue o nível 00, abra uma missão avançada, compare Simples/GHZ, inspecione u
 QuantGirls · [Licença MIT](../../LICENSE) · [Créditos](../../README.pt-BR.md)
 
 This effort is supported by Qollab & IonQ
+
+## Origem científica e declaração para submissão
+
+O sensor é um modelo educativo de técnicas estabelecidas de Ramsey/GHZ, inspirado em pesquisas de navegação magnética. O cenário marítimo e o mapa sintético adaptam essas ideias ao jogo. A grade bayesiana é clássica; navegador e circuitos não medem um campo magnético real. [Base científica, relação com o código e bibliografia completa](scientific-basis.md).
+
+Para o hackathon, a contribuição original é a integração jogável e a escolha entre sensores, sem reivindicar física nova ou reprodução do Ironstone Opal. Trabalho externo e assistência de IA têm declarações separadas. Mantenha as referências na página publicada e no pacote.
+
+## Resumo para adaptar à submissão
+
+**Ghost Route — QuantGirls · tema pretendido: Quantum Playground.** Jogo de resgate em pixel art e quatro idiomas sobre decidir em quais evidências de navegação confiar quando o GPS mente. O jogador escolhe o rumo, administra medições simuladas, compara a ambiguidade Simples/GHZ e inspeciona suas decisões no replay. O navegador executa um modelo educativo analítico; uma entrada Qiskit separada demonstra X/Y Simples/GHZ em um circuito de oito qubits e uma tarefa de backend.
+
+- Jogar: https://ghostroutegame.vercel.app/
+- Código: https://github.com/SouBeatrizKaroline/QollabQuantumHackathon_GhostRoute
+- Referências científicas: [bibliografia completa](scientific-basis.md).
+- URL do projeto Qollab, backend/evidência de execução e vídeo: **pendentes de confirmação da equipe**; preencher com links reais antes de enviar.
+
+## Critérios de aceitação do piloto educacional
+
+Piloto proposto: observar se jogadores novos concluem o nível 00 sem ajuda, explicam a ambiguidade GHZ e comparam leituras incertas antes de agir. Coletar conclusão, pedidos de ajuda e compreensão antes/depois; ainda não são resultados medidos. Para liberar a interface: menu sem rolagem desnecessária nas telas suportadas, idiomas legíveis, controles sem sobreposição e acesso a ajuda/replay quando a rolagem for necessária.

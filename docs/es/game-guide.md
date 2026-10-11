@@ -48,3 +48,5 @@ Idiomas: **IN** inglés, **BR** portugués de Brasil (predeterminado), **PT** po
 Un rescate seguro completa el nivel. El rescate perfecto también requiere marcar al menos una lectura observada de cada ataque presente; los falsos avisos se muestran por separado. La repetición muestra rutas real, GPS e inercial, momentos de ataque y recuentos de mediciones. Los mapas de probabilidad por turno no aparecen en la repetición histórica porque esas imágenes no se guardan. La exportación guarda las decisiones en JSON para inspección y repetición de circuitos en Python.
 
 Más mediciones reducen el ruido del muestreo y consumen presupuesto. Puedes seguir navegando sin mediciones. La alerta de coherencia indica desacuerdo con la estimación, no detección garantizada de un ataque. [Comprende el modelo](technical-guide.md).
+
+Ayuda y acciones en el menú incluye guía de navegación, reinicio y exportación de decisiones. En móvil vertical, el botón principal inicia el nivel recién elegido; en los demás casos continúa la misión o abre su repetición.

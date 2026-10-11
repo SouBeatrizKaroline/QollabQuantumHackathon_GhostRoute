@@ -27,3 +27,20 @@ Local tests do not replace run, video or submission evidence. Check official req
 [Project overview](project-page.md) · [Demo script](demo-script.md)
 
 This effort is supported by Qollab & IonQ
+
+- [ ] Publish the [scientific basis and bibliography](scientific-basis.md) with the project page and package; identify Ramsey, GHZ, magnetic navigation and classical Bayesian localization as external foundations.
+- [ ] State that the maritime map is synthetic and circuits simulate supplied phases; attach actual backend evidence without claiming physical magnetic measurements or Ghost Route quantum advantage.
+- [ ] Verify menu, game, radio, help and replay at laptop/mobile sizes in all four languages; preserve scrolling for expanded help, small screens and zoom.
+
+## Official requirements verified on 11 October 2026
+
+The [registration page](https://qollab.xyz/programs/hackathon/register) and [terms](https://qollab.xyz/programs/hackathon/terms) state a submission deadline of **11 October, 19:00 ET (20:00 in São Paulo)**. Recheck official announcements for extensions. The captain submits through the registered account.
+
+- [ ] Publish a runnable Qiskit project on Qollab under MIT, compatible with its free simulators including IonQ's simulator; keep outside repositories MIT too.
+- [ ] Include what the project does, problem/context, exact run instructions, references and enough detail to reproduce or extend it.
+- [ ] Supply a public 2–3 minute demo video that opens without sign-in.
+- [ ] Disclose existing code, templates, libraries, AI assistance and work added during the 9–11 October build window; confirm the team's actual chronology.
+- [ ] Keep the project available on Qollab for 12 months and preserve the required attribution.
+- [ ] Check UI accessibility and signed-out access. The four judging criteria are creativity, technical execution, impact and documentation; IonQ results themselves do not change scoring.
+
+The updated repository and documentation are preparation materials; they do not establish that publication, platform execution or formal submission happened.

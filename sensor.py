@@ -180,7 +180,9 @@ def estimar_fase(uns_x: int, shots_x: int, uns_y: int, shots_y: int, n: int = 1)
 def incerteza_fase(shots: int, n: int = 1) -> float:
     """
     Desvio padrão aproximado da estimativa de φ (rad).
-    Limite quântico padrão ~ 1/√shots; com GHZ, ~ 1/(n·√shots) (limite de Heisenberg).
+    Escala ideal local ~ 1/(n·√shots), com shots repetições de um estado de n qubits.
+    Não é intervalo de confiança calibrado: ignora fase, divisão X/Y, ruído e
+    ambiguidade de franjas. Não comprova vantagem quântica em navegação.
     """
     shots = _inteiro_positivo(shots, "shots")
     n = _inteiro_positivo(n, "n")

@@ -74,3 +74,5 @@ This effort is supported by Qollab & IonQ
 Gemini Spark apoiou a implementação inicial; OpenAI Codex apoiou a interface, arte procedural, traduções, QA, refinamento da campanha e documentação. Claude (Anthropic) apoiou o tema de pôr do sol, efeitos do mapa, sprite do navio e consola da ponte. As referências visuais fornecidas pela utilizadora orientaram a arte. A equipa deve confirmar as datas dos contributos e a declaração final do hackathon. [Centro de documentação](docs/pt-PT/README.md).
 
 </details>
+
+A física baseia-se em técnicas existentes de Ramsey/GHZ e investigação de navegação magnética. O mapa é sintético, o estimador é clássico e os circuitos reproduzem estatísticas de uma fase fornecida. [Fundamentos científicos e referências externas](docs/pt-PT/scientific-basis.md).

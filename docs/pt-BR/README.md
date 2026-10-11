@@ -15,3 +15,5 @@ O inglês é o idioma principal. Todos os guias têm versões completas em portu
 - [Encontrar referências e decisões](hackathon-research.md)
 
 This effort is supported by Qollab & IonQ
+
+- [Base científica e referências externas](scientific-basis.md)

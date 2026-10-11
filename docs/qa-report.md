@@ -2,6 +2,20 @@
 
 **English** · [Português (Brasil)](pt-BR/qa-report.md) · [Português (Portugal)](pt-PT/qa-report.md) · [Español](es/qa-report.md)
 
+## Current review — 11 October 2026
+
+The scientific references, submission disclosure and educational product criteria now distinguish external foundations from original game integration. Ramsey/GHZ statistics, classical localization, synthetic mapping and independent Qollab execution are explicit.
+
+Fixed: unnecessary initial-menu scrolling on common laptop/phone sizes, duplicate mobile start actions, mission text outside the HUD at intermediate/short sizes, and a primary menu action that previously ignored a newly selected level. Restart/export now sit under **Help and actions**. Scrolling remains available inside menus on very small/landscape screens and when help is expanded; hiding overflow is not used to discard menu content.
+
+Validation: **108 Python tests passed** (Python 3.12, Qiskit 2.5.2); all nine existing frontend suites passed, including campaign route feasibility for 100 levels. The selected-level action has a controller regression. Real Chromium/Edge checks cover four languages at the 16 sizes below, live resizing, menu overflow, controls within their frames, radio/helm separation and expanded help. Small-phone replay export was also exercised. Documentation links and generated-package limits were checked. Screenshots were refreshed from actual English gameplay.
+
+Browser matrix: 1920×1080, 1440×900, 1366×768, 1280×720, 1200×640, 1024×768, 900×600, 899×700, 851×600, 768×1024, 390×844, 390×667, 360×640, 320×568, 844×390, 667×375.
+
+Run the optional `tests/browser-layout.cjs` as described in the technical guide. These checks do not establish exhaustive accessibility compliance, learning outcomes, every device/zoom setting, production deployment or Qollab/IonQ execution. Live platform links, backend evidence, video and formal submission remain team/account actions.
+
+## Earlier verification — 10 October 2026
+
 Reviewed on 2026-10-10: frontend, ship turning, walkie-talkie, gradual campaign and four-language documentation.
 
 | Verified area | Evidence |

@@ -21,3 +21,5 @@ End with the source, playable link, credits and the exact attribution:
 This effort is supported by Qollab & IonQ
 
 [Project overview](project-page.md) · [Submission checklist](submission-checklist.md)
+
+Scientific origin: explain that Ramsey/GHZ and magnetic navigation are established techniques; the original contribution is their educational integration. End with a link to the [bibliography and simplifications](scientific-basis.md).

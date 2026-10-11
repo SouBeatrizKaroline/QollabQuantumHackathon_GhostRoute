@@ -96,3 +96,15 @@ Na Vercel, [vercel.json](../../vercel.json) serve **public/**: framework Other, 
 | scripts/ / tests/ | Repetição, empacotamento e verificação. |
 
 Consulta o âmbito dos testes no [relatório](qa-report.md). “32 bits” indica o estilo visual, não a arquitetura de um executável Windows.
+
+[Base científica e referências externas](scientific-basis.md) — Ghost Route baseia-se em técnicas reais de deteção e navegação quântica, numa versão educativa e simplificada. A equipa pesquisou-as a partir da notícia da Q-CTRL. A contribuição é a sua integração num jogo de resgate; não se reivindica a invenção da interferometria de Ramsey, dos estados GHZ ou da localização bayesiana.
+
+## Compatibilidade com o runtime e regressão no navegador
+
+[Documentação do runtime Qollab](https://qollab.xyz/learn/docs/runtime-environment) verificada em 11 de outubro de 2026: Python importa módulos da raiz, recebe o backend selecionado e IonQ permite uma tarefa por execução. Limites: 100 ficheiros, 2 MB por ficheiro. O pacote é para distribuição; preserve o conteúdo e a raiz. Para demonstração Python mínima envie `main.py`, `sensor.py`, `requirements.txt`, licença MIT e documentação. Não envie `.venv`, caches ou resultados locais.
+
+`public/index.html` é o jogo alojado externamente. Exige adaptação para projeto JS Qollab: essa superfície ignora tags de script e carrega `main.js`/`main.css`. A entrada Qollab entregue é Python. Armazenamento e áudio do jogo externo são separados do ambiente Qollab, que não oferece armazenamento local persistente.
+
+Verificação opcional em navegador real: instalar Playwright (`npm install --no-save playwright` e `npx playwright install chromium`) e executar `node tests/browser-layout.cjs`. Selecione Chromium/Edge existente com `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. É dependência de desenvolvimento; não é necessária para jogar ou executar Python. O teste cobre quatro idiomas, redimensionamento, deslocamento do menu, ação do nível selecionado, controlos nas molduras, rádio e ajuda expandida.
+
+As contagens diferem: o navegador divide o orçamento total entre X e Y. Python `shots` define repetições por quadratura; em `main.py`, quatro leituras partilham cada repetição. Não são custos físicos idênticos nem evidência de vantagem quântica.

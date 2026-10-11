@@ -96,3 +96,15 @@ For Vercel, the repository's [vercel.json](../vercel.json) serves **public/**: f
 | scripts/ / tests/ | Replay, packaging and verification. |
 
 See [verification](qa-report.md) for tested scope. “32-bit” denotes the visual style, not a Windows binary architecture.
+
+[Scientific basis and external references](scientific-basis.md) — Ghost Route is based on real quantum sensing and navigation techniques in an educational, simplified form. The team researched them after reading the Q-CTRL news. The contribution is their integration into a rescue game; the team does not claim to have invented Ramsey interferometry, GHZ states or Bayesian localization.
+
+## Runtime compatibility and browser regression
+
+Verified [Qollab runtime documentation](https://qollab.xyz/learn/docs/runtime-environment) on 11 October 2026: Python imports root modules normally, backend selection is injected, and IonQ permits one job per run. Project limits are 100 files and 2 MB per file. The generated archive is a distribution bundle; preserve its contents/root when uploading. For a minimal Python demonstration upload `main.py`, `sensor.py`, `requirements.txt`, MIT license and explanatory documentation. Do not upload `.venv`, caches or local test output.
+
+`public/index.html` is the externally hosted browser game. It cannot be dropped unchanged into a Qollab JS project: that surface ignores script tags and loads `main.js`/`main.css`. The shipped Qollab entry point is Python. Browser storage and sound behavior on the external host are separate from Qollab's sandbox, which has no persistent local storage.
+
+Optional real-browser layout check: install Playwright locally (`npm install --no-save playwright`, then `npx playwright install chromium`) and run `node tests/browser-layout.cjs`. An existing Chromium/Edge executable can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. Playwright is a development dependency, not required to play or run the Python entry point. The test covers all four languages, resizing, menu overflow, selected-level action, controls inside their frames, radio separation and access to expanded help.
+
+Resource counts differ: the browser splits a selected total measurement budget between X and Y. Python `shots` specifies repetitions per quadrature; in `main.py` all four readouts share one circuit repetition. These budgets should not be compared as identical physical costs or used to infer a quantum advantage.

@@ -21,3 +21,5 @@ Termina con código, juego, créditos y la atribución exacta:
 This effort is supported by Qollab & IonQ
 
 [Visión general](project-page.md) · [Lista de presentación](submission-checklist.md)
+
+Origen científico: explicar que Ramsey/GHZ y navegación magnética son técnicas existentes; la contribución original es su integración educativa. Mostrar la [bibliografía y simplificaciones](scientific-basis.md).

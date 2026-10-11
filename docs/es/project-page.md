@@ -43,3 +43,22 @@ Juega el nivel 00, abre una misión avanzada, compara Simple/GHZ, inspecciona un
 QuantGirls · [Licencia MIT](../../LICENSE) · [Créditos](../../README.es.md)
 
 This effort is supported by Qollab & IonQ
+
+## Origen científico y declaración para el envío
+
+El sensor es un modelo educativo de técnicas establecidas de Ramsey/GHZ, inspirado en investigación de navegación magnética. El escenario marítimo y el mapa sintético adaptan esas ideas al juego. La cuadrícula bayesiana es clásica; navegador y circuitos no miden un campo magnético real. [Base científica, relación con el código y bibliografía completa](scientific-basis.md).
+
+Para el hackathon, la contribución original es la integración jugable y la elección entre sensores, sin reivindicar física nueva ni una reproducción de Ironstone Opal. Trabajo externo y asistencia de IA se declaran por separado. Mantener referencias en la página publicada y el paquete.
+
+## Resumen para adaptar al envío
+
+**Ghost Route — QuantGirls · tema previsto: Quantum Playground.** Juego de rescate en pixel art y cuatro idiomas sobre decidir en qué evidencias confiar cuando el GPS miente. El jugador elige rumbo, administra mediciones simuladas, compara la ambigüedad Simple/GHZ e inspecciona decisiones en la repetición. El navegador ejecuta un modelo educativo analítico; una entrada Qiskit separada demuestra X/Y Simple/GHZ en un circuito de ocho qubits y un trabajo de backend.
+
+- Jugar: https://ghostroutegame.vercel.app/
+- Código: https://github.com/SouBeatrizKaroline/QollabQuantumHackathon_GhostRoute
+- Referencias: [bibliografía completa](scientific-basis.md).
+- URL del proyecto Qollab, backend/evidencia de ejecución y vídeo: **pendientes de confirmación del equipo**; completar con enlaces reales antes del envío.
+
+## Criterios de aceptación del piloto educativo
+
+Piloto propuesto: observar si nuevos jugadores completan el nivel 00 sin ayuda, explican la ambigüedad GHZ y comparan lecturas inciertas antes de actuar. Recoger finalización, solicitudes de ayuda y comprensión antes/después; todavía no son resultados medidos. La interfaz debe tener menú sin desplazamiento innecesario en pantallas admitidas, idiomas legibles, controles sin superposición y acceso a ayuda/repetición cuando haga falta desplazarse.

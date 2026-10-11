@@ -113,3 +113,12 @@ campaign.changeLanguage('pt-BR');assert.equal(JSON.parse(saved.get('ghost-route.
 campaign.changeLanguage('invalid');assert.equal(campaign.currentLang,'pt-BR');
 campaign.beginCampaignLevel(99);assert.equal(campaign.levelNumber,99);assert.equal(campaign.state.maxTurns,12);assert.equal(campaign.state.remainingShots,3000);
 console.log('PASS tutorial rescue, saved completion, campaign JSON, next-level transition, failed rescue and final-level selection');
+
+// The primary menu action must honor a newly selected level on compact screens.
+get('level-select').options=[{value:'99'},{value:'17'}];get('level-select').value='17';
+campaign.openMissionMenu();
+assert.equal(get('menu-primary-label').textContent,a.TEXTOS['pt-BR'].menuStartLevel);
+get('btn-menu-primary').click();
+assert.equal(campaign.levelNumber,17);assert.equal(campaign.state.turnsRecord.length,0);
+assert.equal(campaign.missionMenu.hidden,true);
+console.log('PASS primary menu action starts the selected campaign level');

@@ -96,3 +96,15 @@ Na Vercel, [vercel.json](../../vercel.json) serve **public/**: framework Other, 
 | scripts/ / tests/ | Repetição, empacotamento e verificação. |
 
 Veja o escopo dos testes no [relatório](qa-report.md). “32 bits” indica o estilo visual, não a arquitetura de um executável Windows.
+
+[Base científica e referências externas](scientific-basis.md) — Ghost Route é baseado em técnicas reais de sensoriamento e navegação quântica, numa versão educativa e simplificada. A equipe pesquisou essas técnicas a partir da notícia da Q-CTRL. A contribuição é integrá-las a um jogo de resgate; não se reivindica a invenção da interferometria de Ramsey, dos estados GHZ ou da localização bayesiana.
+
+## Compatibilidade com o runtime e regressão no navegador
+
+[Documentação do runtime Qollab](https://qollab.xyz/learn/docs/runtime-environment) conferida em 11 de outubro de 2026: Python importa módulos da raiz, a seleção de backend é injetada e IonQ permite uma tarefa por execução. Limites: 100 arquivos, 2 MB por arquivo. O arquivo gerado é um pacote de distribuição; preserve o conteúdo e a raiz ao enviar. Para a demonstração Python mínima, envie `main.py`, `sensor.py`, `requirements.txt`, licença MIT e documentação explicativa. Não envie `.venv`, caches ou resultados locais de testes.
+
+`public/index.html` é o jogo hospedado externamente. Não funciona sem adaptação como projeto JS na Qollab: essa superfície ignora tags de script e carrega `main.js`/`main.css`. A entrada Qollab entregue é Python. Armazenamento e áudio do jogo externo são separados do ambiente Qollab, que não oferece armazenamento local persistente.
+
+Verificação opcional em navegador real: instalar Playwright localmente (`npm install --no-save playwright` e `npx playwright install chromium`) e executar `node tests/browser-layout.cjs`. Pode selecionar Chromium/Edge existente com `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. Playwright é dependência de desenvolvimento; não é necessário para jogar ou executar Python. O teste cobre os quatro idiomas, redimensionamento, rolagem do menu, ação do nível selecionado, controles dentro das molduras, separação do rádio e acesso à ajuda expandida.
+
+As contagens de recursos diferem: o navegador divide o orçamento total escolhido entre X e Y. Python `shots` define repetições por quadratura; em `main.py`, as quatro leituras compartilham cada repetição de circuito. Não são custos físicos idênticos nem evidência de vantagem quântica.

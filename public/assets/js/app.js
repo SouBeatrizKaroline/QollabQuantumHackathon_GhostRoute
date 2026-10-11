@@ -857,7 +857,7 @@ GhostRouteApp.prototype.updateCampaignMenu = function(){
   document.getElementById('current-level').textContent=fillText(t.levelName,{level:String(this.levelNumber).padStart(2,'0')});
   document.getElementById('level-progress').textContent=fillText(t.progressLabel,{completed:this.completedLevels?.size||0});
   document.getElementById('mission-badge').textContent=`${fillText(t.levelName,{level:String(this.levelNumber).padStart(2,'0')})} · ${campaignLevelName(this.levelNumber,this.currentLang)}`;
-  document.getElementById('menu-primary-label').textContent=this.state?.isFinished?t.btnViewReplay:this.state?.turnsRecord.length?t.menuContinue:t.menuStart;
+  document.getElementById('menu-primary-label').textContent=selected!==this.levelNumber?t.menuStartLevel:this.state?.isFinished?t.btnViewReplay:this.state?.turnsRecord.length?t.menuContinue:t.menuStart;
   const m=createCampaignMission(selected);
   document.getElementById('level-difficulty').textContent=`${t[this.levelBand(selected)]} · ${m.dificuldade}/100`;
   document.getElementById('level-description').textContent=fillText(t.levelBrief,{turns:m.turnos,budget:numberText(m.sensor.shots_total,this.currentLang,0),radius:numberText(m.vitoria.raio_resgate_km,this.currentLang)});
@@ -929,7 +929,11 @@ GhostRouteApp.prototype.bindEvents=function(){
   window.addEventListener('keydown',e=>{if(e.key==='Escape'&&this.missionMenu.hidden&&this.replayModal.style.display!=='flex'){e.preventDefault();this.openMissionMenu();}});
   document.getElementById('btn-menu').addEventListener('click',()=>this.openMissionMenu());
   document.getElementById('btn-menu-close').addEventListener('click',()=>this.closeMissionMenu());
-  document.getElementById('btn-menu-primary').addEventListener('click',()=>{this.closeMissionMenu();if(this.state.isFinished)this.openReplayModal();});
+  document.getElementById('btn-menu-primary').addEventListener('click',()=>{
+    const selected=Number(document.getElementById('level-select').value);
+    if(selected!==this.levelNumber){this.beginCampaignLevel(selected);return;}
+    this.closeMissionMenu();if(this.state.isFinished)this.openReplayModal();
+  });
   document.getElementById('menu-lang-select').addEventListener('change',e=>this.changeLanguage(e.target.value));
   document.getElementById('level-select').addEventListener('change',()=>this.updateCampaignMenu());
   document.getElementById('btn-start-level').addEventListener('click',()=>this.beginCampaignLevel(Number(document.getElementById('level-select').value)));

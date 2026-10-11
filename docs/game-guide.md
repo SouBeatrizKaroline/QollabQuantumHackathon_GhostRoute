@@ -48,3 +48,5 @@ Language codes: **IN** English, **BR** Brazilian Portuguese (default), **PT** Eu
 A safe rescue completes the level. A perfect rescue also marks at least one observed reading for each attack present in that mission; false alarms are reported separately. Replay reveals actual, GPS and inertial routes, attack timing and measurement counts. Historical replay omits posterior heatmaps because per-turn snapshots are not stored. Export saves decisions as JSON for inspection and Python circuit replay.
 
 More measurements reduce sampling noise but use the budget. Sensor exhaustion still permits navigation. A GPS consistency warning means disagreement with the estimate; it is not a guaranteed attack detector. [Understand the model](technical-guide.md).
+
+Help and actions in the mission menu contains the navigation guide, restart and decision export. On compact portrait screens, the main button starts the newly selected level; otherwise it continues the current mission or opens its replay.

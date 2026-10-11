@@ -29,3 +29,7 @@ Intended theme: Quantum Playground. The prototype does not claim operational nav
 [Technical guide](technical-guide.md) · [Documentation hub](README.md)
 
 This effort is supported by Qollab & IonQ
+
+[Scientific basis and external references](scientific-basis.md)
+
+Ghost Route is based on real quantum sensing and navigation techniques in an educational, simplified form. The team researched them after reading the Q-CTRL news. The contribution is their integration into a rescue game; the team does not claim to have invented Ramsey interferometry, GHZ states or Bayesian localization.

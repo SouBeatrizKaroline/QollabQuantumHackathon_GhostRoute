@@ -74,3 +74,5 @@ This effort is supported by Qollab & IonQ
 Gemini Spark assisted the initial implementation; OpenAI Codex assisted the interface, procedural art, localization, QA, campaign refinement and documentation. Claude (Anthropic) assisted the sunset theme, animated map effects, ship sprite and cockpit console. User-provided visual references informed the art direction. The team must confirm contribution dates and the final hackathon disclosure. [Documentation hub](docs/README.md).
 
 </details>
+
+The physics is based on established Ramsey/GHZ sensing and magnetic-navigation research. The map is synthetic, the position estimator is classical, and circuits reproduce supplied-phase statistics. [Scientific foundations and external references](docs/scientific-basis.md).

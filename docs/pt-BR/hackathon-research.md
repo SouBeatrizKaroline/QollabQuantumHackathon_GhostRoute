@@ -29,3 +29,7 @@ Tema pretendido: Quantum Playground. O protótipo não afirma precisão operacio
 [Guia técnico](technical-guide.md) · [Central de documentação](README.md)
 
 This effort is supported by Qollab & IonQ
+
+[Base científica e referências externas](scientific-basis.md)
+
+Ghost Route é baseado em técnicas reais de sensoriamento e navegação quântica, numa versão educativa e simplificada. A equipe pesquisou essas técnicas a partir da notícia da Q-CTRL. A contribuição é integrá-las a um jogo de resgate; não se reivindica a invenção da interferometria de Ramsey, dos estados GHZ ou da localização bayesiana.

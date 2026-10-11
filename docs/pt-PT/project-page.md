@@ -43,3 +43,22 @@ Joga o nível 00, abre uma missão avançada, compara Simples/GHZ, inspeciona um
 QuantGirls · [Licença MIT](../../LICENSE) · [Créditos](../../README.pt-PT.md)
 
 This effort is supported by Qollab & IonQ
+
+## Origem científica e declaração para submissão
+
+O sensor é um modelo educativo de técnicas estabelecidas de Ramsey/GHZ, inspirado em investigação de navegação magnética. O cenário marítimo e o mapa sintético adaptam essas ideias ao jogo. A grelha bayesiana é clássica; o navegador e os circuitos não medem um campo magnético real. [Base científica, relação com o código e bibliografia completa](scientific-basis.md).
+
+Para o hackathon, a contribuição original é a integração jogável e a escolha entre sensores, sem reivindicar física nova ou uma reprodução do Ironstone Opal. Trabalho externo e assistência de IA são declarados separadamente. Preserve as referências na página publicada e no pacote.
+
+## Resumo para adaptar à submissão
+
+**Ghost Route — QuantGirls · tema pretendido: Quantum Playground.** Jogo de resgate em pixel art e quatro idiomas sobre decidir em que evidências de navegação confiar quando o GPS mente. O jogador escolhe o rumo, gere medições simuladas, compara a ambiguidade Simples/GHZ e inspeciona decisões na repetição. O navegador executa um modelo educativo analítico; uma entrada Qiskit separada demonstra X/Y Simples/GHZ num circuito de oito qubits e uma tarefa de backend.
+
+- Jogar: https://ghostroutegame.vercel.app/
+- Código: https://github.com/SouBeatrizKaroline/QollabQuantumHackathon_GhostRoute
+- Referências: [bibliografia completa](scientific-basis.md).
+- URL do projeto Qollab, backend/evidência de execução e vídeo: **por confirmar pela equipa**; preencher com ligações reais antes de enviar.
+
+## Critérios de aceitação do piloto educativo
+
+Piloto proposto: observar se novos jogadores concluem o nível 00 sem ajuda, explicam a ambiguidade GHZ e comparam leituras incertas antes de agir. Recolher conclusão, pedidos de ajuda e compreensão antes/depois; ainda não são resultados medidos. A interface deve ter menu sem deslocamento desnecessário nas telas suportadas, idiomas legíveis, controlos sem sobreposição e acesso à ajuda/repetição quando for necessário deslocar o conteúdo.
