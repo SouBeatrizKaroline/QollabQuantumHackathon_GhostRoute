@@ -108,3 +108,15 @@ Consulta el alcance de las pruebas en el [informe](qa-report.md). “32 bits” 
 Verificación opcional en navegador real: instalar Playwright (`npm install --no-save playwright` y `npx playwright install chromium`) y ejecutar `node tests/browser-layout.cjs`. Seleccionar Chromium/Edge existente con `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. Es dependencia de desarrollo; no hace falta para jugar ni ejecutar Python. Cubre cuatro idiomas, redimensionamiento, desplazamiento del menú, acción del nivel elegido, controles dentro de marcos, radio y ayuda ampliada.
 
 Las cuentas difieren: el navegador divide el presupuesto total entre X e Y. Python `shots` define repeticiones por cuadratura; en `main.py`, cuatro lecturas comparten cada repetición. No son costes físicos idénticos ni evidencia de ventaja cuántica.
+
+## Campaña, equilibrio e introducciones actualizados — 11 de octubre de 2026
+
+La ruta cruza una puerta en los niveles 01–09, dos en 10–39 y tres en 40–99. La distancia por movimiento considera la ruta por los centros de los pasos. La ruta de referencia consume aproximadamente el 78% de la distancia disponible en el nivel 01 y el 92% en el 99, con aumento suave incluso al cambiar el número de puertas. Los principiantes tienen mayor margen de maniobra. La referencia no incluye todos los desvíos por rocas y no representa una ruta óptima ni dificultad medida con jugadores. Corrientes, pasos estrechos, menos mediciones y menor radio de rescate aumentan la presión posterior.
+
+El terreno se explica al salir. Salto del GPS, apagón, deriva y congelación se presentan antes del primer movimiento afectado. Aurora fantasma se explica cuando aparece por primera vez; un ataque durante el apagón puede no mostrarla. El juego se pausa hasta confirmar la tarjeta. Las mecánicas confirmadas se guardan; saltar a un nivel avanzado enseña las desconocidas en el momento adecuado. La fantasma es un engaño visual del GPS, no una segunda cápsula física. Acercarse a ella no rescata Aurora-1; ganar exige alcanzar la cápsula real dentro del radio configurado.
+
+La radio queda separada del radar GPS, brújula, telemetría y timón. Abrir o cerrar conserva la posición del mapa y los controles. En móviles pequeños se abre temporalmente sobre el mar; los mensajes largos se desplazan dentro de la radio, y cerrarla libera el mapa.
+
+## Verificación de tutoriales en el navegador
+
+`tests/browser-onboarding.cjs` comprueba el rescate real en los cuatro turnos del nivel 00, tarjetas traducidas, pausa y secuencia de diálogos del sensor y las mecánicas en 1336×605, 390×667, 320×568 y 667×375 en los cuatro idiomas. Usa la misma configuración Playwright de la suite de diseño.

@@ -62,3 +62,11 @@ Para o hackathon, a contribuição original é a integração jogável e a escol
 ## Critérios de aceitação do piloto educativo
 
 Piloto proposto: observar se novos jogadores concluem o nível 00 sem ajuda, explicam a ambiguidade GHZ e comparam leituras incertas antes de agir. Recolher conclusão, pedidos de ajuda e compreensão antes/depois; ainda não são resultados medidos. A interface deve ter menu sem deslocamento desnecessário nas telas suportadas, idiomas legíveis, controlos sem sobreposição e acesso à ajuda/repetição quando for necessário deslocar o conteúdo.
+
+## Campanha, equilíbrio e introduções atualizados — 11 de outubro de 2026
+
+A rota atravessa um portão nos níveis 01–09, dois em 10–39 e três em 40–99. A distância por movimento considera a rota pelos centros das passagens. A rota de referência utiliza cerca de 78% da distância disponível no nível 01 e 92% no nível 99, com aumento suave nas transições de portões. Os principiantes dispõem de maior margem de manobra. A referência não inclui todos os desvios por pedras, nem representa uma rota ótima ou dificuldade medida com jogadores. Correntes, passagens estreitas, menos medições e menor raio de salvamento aumentam a pressão nos níveis posteriores.
+
+O terreno é explicado na partida. Salto do GPS, apagão, deriva e congelamento são apresentados antes do primeiro movimento afetado. A Aurora-fantasma é explicada quando surge pela primeira vez; um ataque durante o apagão pode não a mostrar. O jogo pausa até à confirmação. As mecânicas confirmadas ficam guardadas; saltar para um nível avançado apresenta as explicações desconhecidas no momento adequado. A fantasma é um engano visual do GPS, não uma segunda cápsula física. Aproximar-se dela não salva a Aurora-1; a vitória exige alcançar a cápsula verdadeira dentro do raio configurado.
+
+O rádio fica separado do radar GPS, bússola, telemetria e leme. Abrir ou fechar preserva a posição da carta e dos controlos. Em telemóveis pequenos, abre temporariamente sobre o mar; mensagens longas têm deslocamento dentro do rádio, e fechá-lo liberta a carta.

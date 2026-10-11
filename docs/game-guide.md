@@ -23,13 +23,19 @@ Plan the entire movement segment: crossing a rock or reef grounds the ship even 
 | First level | New challenge |
 | --- | --- |
 | 00 | Four safe tutorial turns; no attacks or current noise. |
-| 01 | Rocks and gentle currents, introduced before use. |
-| 03 | A GPS jump: a sudden false offset. |
+| 01 | One wide sandbank passage and gentle currents. |
+| 02 | Rocks near the approach. |
+| 03 | A GPS jump and a false Aurora beacon. |
 | 06 | GHZ mode: greater phase sensitivity with three candidate phases. |
-| 10 | A central reef, hidden rescue coordinates during reentry and gradual GPS drift. |
+| 10 | Two alternating passages, reef walls, reentry blackout and GPS drift. |
 | 30 | GPS freeze: a reading can stop while you move. |
+| 40 | Three alternating passages; openings narrow gradually. |
 | 60 | Guidance for conserving a tighter measurement budget; freeze can last longer. |
 | 99 | The tightest resources and rescue radius, and strongest current noise. |
+
+The route bends through one gate at levels 01–09, two at 10–39 and three at 40–99. Movement distance now accounts for the length of the route through the opening centers. This reference route uses about 78% of available travel at level 01 and 92% at level 99, with a smooth increase even at gate transitions. It leaves beginners more maneuvering distance. The reference does not include every rock detour and is not an optimal route or a measured player difficulty. Currents, narrower openings, reduced shot budgets and tighter rescue radii add later pressure.
+
+Terrain is explained at departure. GPS jumps, blackout, drift and freezing are introduced just before their first affected move. The ghost beacon is explained when it first becomes visible; an attack during blackout may not display it. Play pauses until the player acknowledges the card. Acknowledged mechanics are remembered; skipping to an advanced level still teaches unfamiliar mechanics at the appropriate time. The ghost is a visual GPS deception, not a second physical capsule. Approaching it does not rescue Aurora-1; success requires the real capsule within the configured radius.
 
 Existing rock formations grow gradually instead of being randomly replaced every level. New rocks start small. The menu shows the turn limit, budget, rescue radius and a difficulty index; it is a design index, not a measured player success rate. You can choose any level, and unfamiliar mechanics are still introduced.
 

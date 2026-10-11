@@ -2,6 +2,15 @@
 
 **English** · [Português (Brasil)](pt-BR/qa-report.md) · [Português (Portugal)](pt-PT/qa-report.md) · [Español](es/qa-report.md)
 
+
+## Updated campaign, balance and onboarding — 11 October 2026
+
+The review incorporates upstream commit `a601779` (gates, sandbanks and ghost Aurora). A reference-route comparison found higher relative travel demand in level 01 than in several later levels. Travel allowance now follows the actual alternating opening centers, with gradual reference demand from 78% to 92%. This is a design metric, not a user success rate. All 100 configurations, adjacent resource changes, gate transitions and staged introductions are covered by automated regressions. The route oracle verifies fixed-length integer-heading moves against seeded currents and collisions; it knows the hidden destination, so it does not prove that a novice can discover the route. Human playtests remain necessary for perceived difficulty and comprehension.
+
+Fresh validation: 111 Python tests; nine frontend suites; browser checks in four languages across 21 viewport sizes, including 1336×605 and 1340×613 from the reported issue, 1366×600 and both sides of the 1200×640 breakpoint. Radio tests cover radar/compass/telemetry/helm separation and unchanged map/helm geometry through repeated opening and closing. Introduction tests cover all 100 levels, first affected turns, no duplicate cards, pause during explanations, translation changes and persisted acknowledgement.
+
+The radio stays clear of GPS radar, compass, telemetry and helm. Opening or closing it preserves the chart projection and controls. On small phones it temporarily opens over the sea; long messages scroll inside the radio, and closing it restores the unobstructed chart.
+
 ## Current review — 11 October 2026
 
 The scientific references, submission disclosure and educational product criteria now distinguish external foundations from original game integration. Ramsey/GHZ statistics, classical localization, synthetic mapping and independent Qollab execution are explicit.
@@ -40,3 +49,9 @@ The Python backend was not changed or re-tested in this iteration. Older documen
 [Technical guide](technical-guide.md) · [Documentation hub](README.md)
 
 This effort is supported by Qollab & IonQ
+
+## Browser tutorial verification
+
+`tests/browser-onboarding.cjs` verifies the actual four-turn level 00 rescue, translated cards, pause during explanations and sequential sensor/mechanic dialogs at 1336×605, 390×667, 320×568 and 667×375 in all four languages. Run it with the same Playwright configuration as the layout suite.
+
+![Walkie-talkie, GPS radar and stable chart at 1336×605.](assets/ghost-route-radio.png)

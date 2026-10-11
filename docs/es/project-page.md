@@ -62,3 +62,11 @@ Para el hackathon, la contribución original es la integración jugable y la ele
 ## Criterios de aceptación del piloto educativo
 
 Piloto propuesto: observar si nuevos jugadores completan el nivel 00 sin ayuda, explican la ambigüedad GHZ y comparan lecturas inciertas antes de actuar. Recoger finalización, solicitudes de ayuda y comprensión antes/después; todavía no son resultados medidos. La interfaz debe tener menú sin desplazamiento innecesario en pantallas admitidas, idiomas legibles, controles sin superposición y acceso a ayuda/repetición cuando haga falta desplazarse.
+
+## Campaña, equilibrio e introducciones actualizados — 11 de octubre de 2026
+
+La ruta cruza una puerta en los niveles 01–09, dos en 10–39 y tres en 40–99. La distancia por movimiento considera la ruta por los centros de los pasos. La ruta de referencia consume aproximadamente el 78% de la distancia disponible en el nivel 01 y el 92% en el 99, con aumento suave incluso al cambiar el número de puertas. Los principiantes tienen mayor margen de maniobra. La referencia no incluye todos los desvíos por rocas y no representa una ruta óptima ni dificultad medida con jugadores. Corrientes, pasos estrechos, menos mediciones y menor radio de rescate aumentan la presión posterior.
+
+El terreno se explica al salir. Salto del GPS, apagón, deriva y congelación se presentan antes del primer movimiento afectado. Aurora fantasma se explica cuando aparece por primera vez; un ataque durante el apagón puede no mostrarla. El juego se pausa hasta confirmar la tarjeta. Las mecánicas confirmadas se guardan; saltar a un nivel avanzado enseña las desconocidas en el momento adecuado. La fantasma es un engaño visual del GPS, no una segunda cápsula física. Acercarse a ella no rescata Aurora-1; ganar exige alcanzar la cápsula real dentro del radio configurado.
+
+La radio queda separada del radar GPS, brújula, telemetría y timón. Abrir o cerrar conserva la posición del mapa y los controles. En móviles pequeños se abre temporalmente sobre el mar; los mensajes largos se desplazan dentro de la radio, y cerrarla libera el mapa.

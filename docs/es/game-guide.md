@@ -23,13 +23,19 @@ Planea todo el segmento: cruzar una roca o un arrecife encalla el barco aunque e
 | Primer nivel | Nuevo desafío |
 | --- | --- |
 | 00 | Cuatro turnos seguros de tutorial, sin ataques ni ruido de corriente. |
-| 01 | Rocas y corrientes suaves, presentadas antes de usarlas. |
-| 03 | Salto del GPS: desplazamiento falso repentino. |
+| 01 | Un paso ancho en banco de arena y corrientes suaves. |
+| 02 | Rocas en la aproximación al paso. |
+| 03 | Salto del GPS y señal falsa de Aurora. |
 | 06 | GHZ: mayor sensibilidad de fase con tres fases candidatas. |
-| 10 | Arrecife central, coordenadas ocultas en la reentrada y deriva gradual GPS. |
+| 10 | Dos pasos alternados, muros de arrecife, apagón en la reentrada y deriva del GPS. |
 | 30 | GPS congelado: una lectura puede detenerse mientras avanzas. |
+| 40 | Tres pasos alternados; las aberturas se estrechan gradualmente. |
 | 60 | Orientación para ahorrar mediciones; la congelación puede durar más. |
 | 99 | Menos recursos, menor radio de rescate y mayor ruido de corriente. |
+
+La ruta cruza una puerta en los niveles 01–09, dos en 10–39 y tres en 40–99. La distancia por movimiento considera la ruta por los centros de los pasos. La ruta de referencia consume aproximadamente el 78% de la distancia disponible en el nivel 01 y el 92% en el 99, con aumento suave incluso al cambiar el número de puertas. Los principiantes tienen mayor margen de maniobra. La referencia no incluye todos los desvíos por rocas y no representa una ruta óptima ni dificultad medida con jugadores. Corrientes, pasos estrechos, menos mediciones y menor radio de rescate aumentan la presión posterior.
+
+El terreno se explica al salir. Salto del GPS, apagón, deriva y congelación se presentan antes del primer movimiento afectado. Aurora fantasma se explica cuando aparece por primera vez; un ataque durante el apagón puede no mostrarla. El juego se pausa hasta confirmar la tarjeta. Las mecánicas confirmadas se guardan; saltar a un nivel avanzado enseña las desconocidas en el momento adecuado. La fantasma es un engaño visual del GPS, no una segunda cápsula física. Acercarse a ella no rescata Aurora-1; ganar exige alcanzar la cápsula real dentro del radio configurado.
 
 Las formaciones de rocas crecen gradualmente en lugar de cambiar al azar en cada nivel. Las rocas nuevas empiezan pequeñas. El menú muestra turnos, presupuesto, radio de rescate e índice de dificultad; este índice describe el diseño, no una tasa de éxito medida. Puedes elegir cualquier nivel, con introducciones para mecánicas desconocidas.
 

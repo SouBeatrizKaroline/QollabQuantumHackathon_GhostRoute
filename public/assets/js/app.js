@@ -980,17 +980,35 @@ else startGhostRoute();
       const dock=document.querySelector('.navigation-dock'),shell=document.getElementById('game-shell');
       if(floating&&dock?.getBoundingClientRect&&shell?.getBoundingClientRect){
         const d=dock.getBoundingClientRect(),s=shell.getBoundingClientRect();
+        const box=selector=>{const el=document.querySelector(selector);return visible(el)?el.getBoundingClientRect():null;};
+        const radar=box('.radar-widget'),compass=box('.compass-widget'),hud=box('.hud-top');
         const landscape=matches('(max-height:520px) and (min-width:621px)');
-        if(landscape){
+        let left=12,width=Math.min(340,s.width-24),space;
+        if(matches('(min-width:1200px) and (min-height:640px)')){
+          // Instruments have their own console slots; the radio never covers the GPS.
+          left=(radar?.right||168)-s.left+18;
+          width=Math.min(340,d.left-s.left-left-18);
+          widget.style.top='auto';widget.style.bottom='16px';
+          space=s.bottom-d.top-34;
+        }else if(landscape){
           const telemetry=document.querySelector('.telemetry-strip')?.getBoundingClientRect();
           const top=Math.max(128,(telemetry?.bottom||128)-s.top+14);
           widget.style.top=Math.round(top)+'px';widget.style.bottom='auto';
-          widget.style.setProperty('--radio-space',Math.max(72,s.height-top-58)+'px');
+          width=Math.min(width,d.left-s.left-30);
+          space=s.height-top-58;
         }else{
           widget.style.top='auto';widget.style.bottom=Math.round(s.bottom-d.top+18)+'px';
-          const hud=document.querySelector('.hud-top')?.getBoundingClientRect();
-          widget.style.setProperty('--radio-space',Math.max(72,d.top-(hud?.bottom||100)-36)+'px');
+          if(radar){
+            left=radar.right-s.left+20;
+            const canvas=this.renderer.canvas.getBoundingClientRect();
+            const chartLeft=canvas.left+this.renderer.ox*canvas.width/(this.renderer.canvas.width/2);
+            width=Math.min(width,chartLeft-s.left-left-18);
+          }
+          space=d.top-Math.max(hud?.bottom||100,compass?.bottom||0,radar?0:box('.telemetry-strip')?.bottom||0)-36;
         }
+        widget.style.setProperty('--radio-left',Math.round(left)+'px');
+        widget.style.setProperty('--radio-width',Math.max(100,Math.floor(width))+'px');
+        widget.style.setProperty('--radio-space',Math.max(40,Math.floor(space))+'px');
       }else{widget.style.top='';widget.style.bottom='';}
     }
     this.updateRadioLabel();
@@ -998,7 +1016,7 @@ else startGhostRoute();
     if(widget.classList.contains('radio-unread')&&t?.radioNew)toggle.setAttribute('aria-label',toggle.getAttribute('aria-label')+' · '+t.radioNew);
   };
   const render=proto.renderMap,narrate=proto.updateNarrative;
-  proto.renderMap=function(){this.refreshRadio();return render.apply(this,arguments);};
+  proto.renderMap=function(){document.querySelector('.radio-widget')?.classList.add('radio-floating');const out=render.apply(this,arguments);this.refreshRadio();return out;};
   proto.updateNarrative=function(){const out=narrate.apply(this,arguments);this.refreshRadio();return out;};
   if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('resize',()=>window.gameApp?.refreshRadio?.());
 })();
@@ -1013,6 +1031,7 @@ else startGhostRoute();
   const seen=()=>{try{return window.localStorage.getItem(KEY)==='1';}catch{return false;}};
   const remember=()=>{try{window.localStorage.setItem(KEY,'1');}catch{}};
   proto.openSensorIntro=function(){
+    if(this.introQueue?.length)return;
     const box=document.getElementById('sensor-intro');
     if(!isElement(box)||!box.hidden)return;
     const menu=document.getElementById('mission-menu');
@@ -1025,6 +1044,7 @@ else startGhostRoute();
     if(!isElement(box)||box.hidden)return;
     box.hidden=true;
     const back=this.sensorIntroReturn;if(back&&typeof back.focus==='function'&&document.contains(back))back.focus();
+    this.introduceMission?.();
   };
   const bind=proto.bindEvents;
   proto.bindEvents=function(){

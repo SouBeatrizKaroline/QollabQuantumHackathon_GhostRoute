@@ -60,3 +60,11 @@ For the hackathon, the original contribution is the playable integration and sen
 ## Educational pilot acceptance criteria
 
 Proposed pilot: observe whether new players finish level 00 without assistance, explain why GHZ creates ambiguity, and compare uncertain readings before acting. Collect completion, assistance requests and pre/post understanding; do not treat these as measured outcomes yet. Interface release criteria: no unnecessary menu scrolling at supported screen sizes, readable language variants, controls free of overlap, and accessible help/replay when content needs scrolling.
+
+## Updated campaign, balance and onboarding — 11 October 2026
+
+The route bends through one gate at levels 01–09, two at 10–39 and three at 40–99. Movement distance now accounts for the length of the route through the opening centers. This reference route uses about 78% of available travel at level 01 and 92% at level 99, with a smooth increase even at gate transitions. It leaves beginners more maneuvering distance. The reference does not include every rock detour and is not an optimal route or a measured player difficulty. Currents, narrower openings, reduced shot budgets and tighter rescue radii add later pressure.
+
+Terrain is explained at departure. GPS jumps, blackout, drift and freezing are introduced just before their first affected move. The ghost beacon is explained when it first becomes visible; an attack during blackout may not display it. Play pauses until the player acknowledges the card. Acknowledged mechanics are remembered; skipping to an advanced level still teaches unfamiliar mechanics at the appropriate time. The ghost is a visual GPS deception, not a second physical capsule. Approaching it does not rescue Aurora-1; success requires the real capsule within the configured radius.
+
+The radio stays clear of GPS radar, compass, telemetry and helm. Opening or closing it preserves the chart projection and controls. On small phones it temporarily opens over the sea; long messages scroll inside the radio, and closing it restores the unobstructed chart.

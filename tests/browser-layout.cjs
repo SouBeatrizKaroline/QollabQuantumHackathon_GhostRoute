@@ -5,7 +5,7 @@ const assert=require('node:assert/strict');
 const path=require('node:path');
 const {pathToFileURL}=require('node:url');
 const {chromium}=require('playwright');
-const sizes=process.env.GHOST_ROUTE_VIEWPORTS?JSON.parse(process.env.GHOST_ROUTE_VIEWPORTS):[[1920,1080],[1440,900],[1366,768],[1280,720],[1200,640],[1024,768],[900,600],[899,700],[851,600],[768,1024],[390,844],[390,667],[360,640],[320,568],[844,390],[667,375]];
+const sizes=process.env.GHOST_ROUTE_VIEWPORTS?JSON.parse(process.env.GHOST_ROUTE_VIEWPORTS):[[1920,1080],[1440,900],[1366,768],[1336,605],[1340,613],[1366,600],[1280,720],[1200,640],[1200,639],[1199,640],[1024,768],[900,600],[899,700],[851,600],[768,1024],[390,844],[390,667],[360,640],[320,568],[844,390],[667,375]];
 const languages=['en','pt-BR','pt-PT','es'];
 async function run(){
  const browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE?{executablePath:process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE}:{})});
@@ -50,10 +50,25 @@ async function run(){
      return problems;
     });
     assert.deepEqual(overlaps,[],`${label}: controls/readings outside their frame`);
-    await page.locator('#btn-radio-toggle').click();
-    const radio=await page.evaluate(()=>{const r=document.querySelector('.radio-widget').getBoundingClientRect(),d=document.querySelector('.navigation-dock').getBoundingClientRect();return Math.min(r.right,d.right)-Math.max(r.left,d.left)>1&&Math.min(r.bottom,d.bottom)-Math.max(r.top,d.top)>1;});
-    assert.equal(radio,false,`${label}: radio covers helm`);
-    await page.locator('#btn-radio-toggle').click();
+    const geometry=()=>page.evaluate(()=>({chart:[gameApp.renderer.ox,gameApp.renderer.oy,gameApp.renderer.scale],dock:document.querySelector('.navigation-dock').getBoundingClientRect().toJSON()}));
+    const closed=await geometry();
+    for(let cycle=0;cycle<2;cycle++){
+     await page.locator('#btn-radio-toggle').click();
+     const radio=await page.evaluate(()=>{
+      const r=document.querySelector('.radio-widget').getBoundingClientRect(),problems=[];
+      for(const selector of['.navigation-dock','.radar-widget','.compass-widget','.hud-top','.telemetry-strip']){
+       const el=document.querySelector(selector);if(getComputedStyle(el).display==='none')continue;
+       const b=el.getBoundingClientRect();
+       if(Math.min(r.right,b.right)-Math.max(r.left,b.left)>1&&Math.min(r.bottom,b.bottom)-Math.max(r.top,b.top)>1)problems.push(selector);
+      }
+      if(r.left<0||r.right>innerWidth||r.top<0||r.bottom>innerHeight)problems.push('viewport');
+      return problems;
+     });
+     assert.deepEqual(radio,[],`${label}: radio covers instruments`);
+     assert.deepEqual(await geometry(),closed,`${label}: opening radio moves chart or helm`);
+     await page.locator('#btn-radio-toggle').click();
+     assert.deepEqual(await geometry(),closed,`${label}: closing radio moves chart or helm`);
+    }
     await page.evaluate(()=>{gameApp.openMissionMenu();document.querySelector('.menu-guide').open=true;});
     await page.locator('#btn-menu-export').scrollIntoViewIfNeeded();
     assert.equal(await page.locator('#btn-menu-export').isVisible(),true,`${label}: expanded help accessible`);

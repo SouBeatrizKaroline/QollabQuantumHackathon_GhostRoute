@@ -23,13 +23,19 @@ Planeia todo o segmento: atravessar uma pedra ou um recife encalha o navio mesmo
 | Primeiro nível | Novo desafio |
 | --- | --- |
 | 00 | Quatro turnos seguros de tutorial, sem ataques nem ruído de corrente. |
-| 01 | Pedras e correntes suaves, apresentadas antes da utilização. |
-| 03 | Salto do GPS: deslocamento falso repentino. |
+| 01 | Uma passagem larga em banco de areia e correntes suaves. |
+| 02 | Pedras na aproximação da passagem. |
+| 03 | Salto do GPS e sinal falso da Aurora. |
 | 06 | GHZ: maior sensibilidade de fase com três fases candidatas. |
-| 10 | Recife central, coordenadas ocultas na reentrada e deriva gradual do GPS. |
+| 10 | Duas passagens alternadas, muralhas de recife, apagão na reentrada e deriva do GPS. |
 | 30 | GPS congelado: a leitura pode parar enquanto avanças. |
+| 40 | Três passagens alternadas; aberturas estreitam gradualmente. |
 | 60 | Orientação para poupar medições; o congelamento pode durar mais. |
 | 99 | Menos recursos, menor raio de salvamento e maior ruído de corrente. |
+
+A rota atravessa um portão nos níveis 01–09, dois em 10–39 e três em 40–99. A distância por movimento considera a rota pelos centros das passagens. A rota de referência utiliza cerca de 78% da distância disponível no nível 01 e 92% no nível 99, com aumento suave nas transições de portões. Os principiantes dispõem de maior margem de manobra. A referência não inclui todos os desvios por pedras, nem representa uma rota ótima ou dificuldade medida com jogadores. Correntes, passagens estreitas, menos medições e menor raio de salvamento aumentam a pressão nos níveis posteriores.
+
+O terreno é explicado na partida. Salto do GPS, apagão, deriva e congelamento são apresentados antes do primeiro movimento afetado. A Aurora-fantasma é explicada quando surge pela primeira vez; um ataque durante o apagão pode não a mostrar. O jogo pausa até à confirmação. As mecânicas confirmadas ficam guardadas; saltar para um nível avançado apresenta as explicações desconhecidas no momento adequado. A fantasma é um engano visual do GPS, não uma segunda cápsula física. Aproximar-se dela não salva a Aurora-1; a vitória exige alcançar a cápsula verdadeira dentro do raio configurado.
 
 As formações de pedras crescem gradualmente, em vez de mudar aleatoriamente em cada nível. As pedras novas começam pequenas. O menu mostra turnos, orçamento, raio de salvamento e índice de dificuldade; este índice descreve o projeto, não uma taxa de sucesso medida. Podes escolher qualquer nível, com introduções para mecânicas desconhecidas.
 

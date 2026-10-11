@@ -2,6 +2,15 @@
 
 [English](../qa-report.md) · **Português (Brasil)** · [Português (Portugal)](../pt-PT/qa-report.md) · [Español](../es/qa-report.md)
 
+
+## Campanha, balanceamento e introduções atualizados — 11 de outubro de 2026
+
+A revisão incorpora o commit `a601779` (portões, bancos de areia e Aurora-fantasma). A comparação de rotas mostrou maior exigência proporcional de distância na fase 01 do que em várias fases posteriores. A margem de deslocamento agora acompanha os centros das passagens alternadas, com demanda de referência gradual de 78% a 92%. É uma métrica de projeto, não uma taxa de sucesso de usuários. As regressões cobrem as 100 configurações, mudanças de recursos entre fases, transições de portões e introduções no momento adequado. A busca de rotas verifica movimentos completos com rumos inteiros, correntes da semente e colisões; conhece o destino oculto, portanto não comprova que um iniciante descobrirá a rota. Sessões com jogadores ainda são necessárias para avaliar dificuldade percebida e compreensão.
+
+Validação nova: 111 testes Python; nove suítes do frontend; navegador nos quatro idiomas em 21 tamanhos, incluindo 1336×605 e 1340×613 do problema relatado, 1366×600 e os dois lados da transição de 1200×640. Os testes do rádio verificam separação de radar, bússola, telemetria e leme, além de estabilidade do mapa e controles ao abrir e fechar repetidamente. Os testes de introdução cobrem 100 fases, primeiro turno afetado, ausência de cartões duplicados, pausa durante explicações, troca de idioma e confirmação salva.
+
+O rádio fica separado do radar GPS, bússola, telemetria e leme. Abrir ou fechar preserva a posição do mapa e dos controles. Em celulares pequenos, ele abre temporariamente sobre o mar; mensagens longas têm rolagem dentro do rádio, e fechá-lo libera a visualização do mapa.
+
 ## Revisão atual — 11 de outubro de 2026
 
 As referências científicas, a declaração para submissão e os critérios de produto educacional agora distinguem fundamentos externos da integração original do jogo. Estatística Ramsey/GHZ, localização clássica, mapa sintético e execução Qollab independente estão explícitos.
@@ -40,3 +49,9 @@ O backend Python não foi alterado nem testado novamente nesta etapa. Documentos
 [Guia técnico](technical-guide.md) · [Central de documentação](README.md)
 
 This effort is supported by Qollab & IonQ
+
+## Verificação dos tutoriais no navegador
+
+`tests/browser-onboarding.cjs` verifica o resgate real nos quatro turnos do nível 00, cartões traduzidos, pausa durante explicações e sequência dos diálogos do sensor e das mecânicas em 1336×605, 390×667, 320×568 e 667×375, nos quatro idiomas. Execute com a mesma configuração Playwright da suíte de layout.
+
+![Walkie-talkie separado do radar GPS, com mapa estável em 1336×605.](../assets/ghost-route-radio.png)

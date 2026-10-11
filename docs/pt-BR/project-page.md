@@ -62,3 +62,11 @@ Para o hackathon, a contribuição original é a integração jogável e a escol
 ## Critérios de aceitação do piloto educacional
 
 Piloto proposto: observar se jogadores novos concluem o nível 00 sem ajuda, explicam a ambiguidade GHZ e comparam leituras incertas antes de agir. Coletar conclusão, pedidos de ajuda e compreensão antes/depois; ainda não são resultados medidos. Para liberar a interface: menu sem rolagem desnecessária nas telas suportadas, idiomas legíveis, controles sem sobreposição e acesso a ajuda/replay quando a rolagem for necessária.
+
+## Campanha, balanceamento e introduções atualizados — 11 de outubro de 2026
+
+A rota atravessa um portão nos níveis 01–09, dois em 10–39 e três em 40–99. A distância por movimento considera agora a extensão da rota pelos centros das passagens. Essa rota de referência consome cerca de 78% da distância disponível na fase 01 e 92% na fase 99, com aumento suave inclusive nas transições de portões. Assim, iniciantes têm mais margem de manobra. A referência não inclui todos os desvios por pedras e não representa uma rota ótima ou dificuldade medida com jogadores. Correntes, passagens estreitas, redução de medições e menor raio de resgate aumentam a pressão nas fases posteriores.
+
+O terreno é explicado na partida. Salto do GPS, apagão, deriva e congelamento são apresentados antes do primeiro movimento afetado. A Aurora-fantasma é explicada quando aparece pela primeira vez; um ataque durante o apagão pode não exibi-la. O jogo pausa até a confirmação do cartão. As mecânicas confirmadas são lembradas; quem pula para uma fase avançada recebe as explicações desconhecidas no momento adequado. A fantasma é um engano visual do GPS, não uma segunda cápsula física. Aproximar-se dela não resgata a Aurora-1; a vitória exige alcançar a cápsula real dentro do raio configurado.
+
+O rádio fica separado do radar GPS, bússola, telemetria e leme. Abrir ou fechar preserva a posição do mapa e dos controles. Em celulares pequenos, ele abre temporariamente sobre o mar; mensagens longas têm rolagem dentro do rádio, e fechá-lo libera a visualização do mapa.

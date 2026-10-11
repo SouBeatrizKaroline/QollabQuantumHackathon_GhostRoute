@@ -108,3 +108,15 @@ Veja o escopo dos testes no [relatório](qa-report.md). “32 bits” indica o e
 Verificação opcional em navegador real: instalar Playwright localmente (`npm install --no-save playwright` e `npx playwright install chromium`) e executar `node tests/browser-layout.cjs`. Pode selecionar Chromium/Edge existente com `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. Playwright é dependência de desenvolvimento; não é necessário para jogar ou executar Python. O teste cobre os quatro idiomas, redimensionamento, rolagem do menu, ação do nível selecionado, controles dentro das molduras, separação do rádio e acesso à ajuda expandida.
 
 As contagens de recursos diferem: o navegador divide o orçamento total escolhido entre X e Y. Python `shots` define repetições por quadratura; em `main.py`, as quatro leituras compartilham cada repetição de circuito. Não são custos físicos idênticos nem evidência de vantagem quântica.
+
+## Campanha, balanceamento e introduções atualizados — 11 de outubro de 2026
+
+A rota atravessa um portão nos níveis 01–09, dois em 10–39 e três em 40–99. A distância por movimento considera agora a extensão da rota pelos centros das passagens. Essa rota de referência consome cerca de 78% da distância disponível na fase 01 e 92% na fase 99, com aumento suave inclusive nas transições de portões. Assim, iniciantes têm mais margem de manobra. A referência não inclui todos os desvios por pedras e não representa uma rota ótima ou dificuldade medida com jogadores. Correntes, passagens estreitas, redução de medições e menor raio de resgate aumentam a pressão nas fases posteriores.
+
+O terreno é explicado na partida. Salto do GPS, apagão, deriva e congelamento são apresentados antes do primeiro movimento afetado. A Aurora-fantasma é explicada quando aparece pela primeira vez; um ataque durante o apagão pode não exibi-la. O jogo pausa até a confirmação do cartão. As mecânicas confirmadas são lembradas; quem pula para uma fase avançada recebe as explicações desconhecidas no momento adequado. A fantasma é um engano visual do GPS, não uma segunda cápsula física. Aproximar-se dela não resgata a Aurora-1; a vitória exige alcançar a cápsula real dentro do raio configurado.
+
+O rádio fica separado do radar GPS, bússola, telemetria e leme. Abrir ou fechar preserva a posição do mapa e dos controles. Em celulares pequenos, ele abre temporariamente sobre o mar; mensagens longas têm rolagem dentro do rádio, e fechá-lo libera a visualização do mapa.
+
+## Verificação dos tutoriais no navegador
+
+`tests/browser-onboarding.cjs` verifica o resgate real nos quatro turnos do nível 00, cartões traduzidos, pausa durante explicações e sequência dos diálogos do sensor e das mecânicas em 1336×605, 390×667, 320×568 e 667×375, nos quatro idiomas. Execute com a mesma configuração Playwright da suíte de layout.

@@ -121,6 +121,15 @@ function createCampaignMission(level) {
       if (clipped.length >= 3) (sand ? m.bancos : m.barreiras).push(clipped);
     }
   });
+  // Reserve maneuvering distance using the actual alternating passage centers.
+  // A fixed multiplier of the direct distance made level 01 tighter than late
+  // missions, and produced sudden pressure jumps when a second/third gate appeared.
+  // This is a design reference (not a shortest path or a human success rate).
+  if(level>0){
+    const route=[m.porto,...m.passagens,target];
+    const length=route.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p[0]-route[i][0],p[1]-route[i][1]),0);
+    m.navio.velocidade_km_turno=length/(m.turnos*(.78+.14*curve));
+  }
   // The square landmark reef moves to the first patch of open water away from the walls.
   const overlaps = (a, b) => a.some(p => isPointInPoly(p, b)) || b.some(p => isPointInPoly(p, a)) ||
     a.some((p, i) => b.some((q, j) => segmentsIntersect(p, a[(i + 1) % a.length], q, b[(j + 1) % b.length])));
@@ -782,7 +791,7 @@ class TacticalMapRenderer {
     else if(!portrait){
       // Only panels that sit beside the chart band push it sideways; console panels below it do not.
       const bandTop=top/ratioY+r.top,bandBottom=bottom/ratioY+r.top,beside=p=>p&&p.top<bandBottom&&p.bottom>bandTop;
-      for(const selector of['.compass-widget','.radar-widget','.radio-widget']){const p=bounds(selector);if(beside(p))left=Math.max(left,(p.right-r.left+24)*ratioX);}
+      for(const selector of['.compass-widget','.radar-widget',...(!floatingRadio?['.radio-widget']:[])]){const p=bounds(selector);if(beside(p))left=Math.max(left,(p.right-r.left+24)*ratioX);}
       for(const selector of['.utility','.telemetry-strip','.chart-legend']){const p=bounds(selector);if(beside(p))right=Math.min(right,(p.left-r.left-24)*ratioX);}
     }
     this.scale=Math.max(.12,Math.min((right-left)/100,(bottom-top)/100));

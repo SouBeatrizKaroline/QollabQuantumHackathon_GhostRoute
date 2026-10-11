@@ -122,3 +122,19 @@ get('btn-menu-primary').click();
 assert.equal(campaign.levelNumber,17);assert.equal(campaign.state.turnsRecord.length,0);
 assert.equal(campaign.missionMenu.hidden,true);
 console.log('PASS primary menu action starts the selected campaign level');
+
+campaign.seenFeatures=new Set();campaign.beginCampaignLevel(99);
+assert.ok(campaign.introQueue.length>0);
+assert.ok(!campaign.introQueue.includes('jump')&&!campaign.introQueue.includes('freeze'),'Future attacks are deferred');
+const beforeIntro=campaign.state.turnsRecord.length;
+campaign.advanceTurn();assert.equal(campaign.state.turnsRecord.length,beforeIntro,'An introduction pauses the simulation');
+for(const language of['en','pt-BR','pt-PT','es']){
+ campaign.changeLanguage(language);
+ assert.ok(get('feature-title').textContent&&get('feature-body').textContent,'Every active card translates when language changes');
+}
+while(campaign.introQueue.length)campaign.ackFeature();
+assert.equal(get('feature-intro').hidden,true);
+assert.equal(get('game-shell').inert,false,'Acknowledgement restores play');
+assert.ok(JSON.parse(saved.get('ghost-route.preferences')).features.length>0,'Acknowledged mechanics persist');
+campaign.beginCampaignLevel(99);assert.equal(campaign.introQueue.length,0,'Restart does not repeat acknowledged terrain cards');
+console.log('PASS staged advanced-level onboarding, blocked turns, four-language cards, acknowledgement and saved learning');

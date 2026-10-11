@@ -408,7 +408,6 @@ input[type=range],input[type=checkbox]{accent-color:var(--seafoam)}
  .radio-widget{top:84px;left:calc(50% + 12px);right:auto;bottom:auto;width:calc(50% - 267px);min-width:110px;padding:5px 7px}
  .radio-widget h2{font-size:10px}
  .radio-widget.radio-open{top:123px;width:calc(50% - 24px);max-height:126px;overflow:auto}
- .radio-widget.radio-open~.navigation-dock{top:263px}
  .navigation-dock{top:132px;bottom:43px;left:auto;right:12px;transform:none;width:calc(50% - 24px);min-height:0;overflow:hidden;grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) auto;padding:9px 0}
  .navigation-dock>div{padding:0 9px}
  .navigation-dock .dock-notices{grid-row:1}
@@ -930,15 +929,14 @@ html:has(.mission-menu:not([hidden])),body:has(.mission-menu:not([hidden])){over
  .hud-top .mission-line{font-size:9px;line-height:1.1;}
  .hud-top .hull>span{display:none;}
  .telemetry-strip{top:104px;}
- .navigation-dock,.radio-widget.radio-floating.radio-open~.navigation-dock{top:152px;}
+ .navigation-dock{top:152px;}
 }
 /* A collapsed walkie-talkie on every screen; messages open away from the helm. */
-.radio-widget.radio-floating { min-width:0!important; z-index:11; }
+.radio-widget.radio-floating { min-width:0!important; z-index:11; left:var(--radio-left,12px)!important; }
 .radio-widget.radio-floating .radio-toggle { display:block!important; }
 .radio-widget.radio-floating:not(.radio-open) :is(.radio-body,#dialogue-box,#dialogue-nav) { display:none!important; }
-.radio-widget.radio-floating.radio-open { width:min(340px,calc(100% - 24px))!important; max-height:min(260px,45dvh,var(--radio-space,260px))!important; }
+.radio-widget.radio-floating.radio-open { width:var(--radio-width, min(340px,calc(100% - 24px)))!important; max-height:min(260px,45dvh,var(--radio-space,260px))!important; }
 .radio-widget.radio-floating.radio-open #dialogue-box { display:block; }
 @media(max-height:520px) and (min-width:621px){
- .radio-widget.radio-floating.radio-open { width:min(340px,calc(50% - 24px))!important; max-height:var(--radio-space,200px)!important; }
- .radio-widget.radio-floating.radio-open~.navigation-dock { top:132px; }
+ .radio-widget.radio-floating.radio-open { max-height:var(--radio-space,200px)!important; }
 }

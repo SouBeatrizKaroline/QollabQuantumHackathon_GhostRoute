@@ -9,6 +9,21 @@ function campaignLevelName(level,lang){
   return lang==='en'?`${places[level%10]} ${themes[Math.floor(level/10)]}`:`${themes[Math.floor(level/10)]} ${places[level%10]}`;
 }
 function featureQueue(mission,seen){return mission.mecanicas.filter(key=>!['navigation','sensor','rescue'].includes(key)&&!seen.has(key));}
+// Introduce timed hazards just before their first affected move, instead of
+// making a player who skips levels read every future event at departure.
+function scheduledFeatures(mission,seen,completedTurns,record){
+  const next=completedTurns+1,types={jump:'salto',drift:'deriva',freeze:'congelamento'};
+  return featureQueue(mission,seen).filter(key=>{
+    // Teach the false beacon when it is actually visible, including a late
+    // drift/freeze after reentry. An early jump may happen while Aurora is hidden.
+    if(key==='ghost')return !!record&&record.turn>=mission.capsula.turno_revelacao&&
+      mission.ataques.some(attack=>record.turn>=attack.inicio&&record.turn<=attack.fim)&&
+      Math.hypot(...record.gpsReported.map((v,i)=>v-record.realAfter[i]))>=1.5;
+    if(key==='blackout')return mission.capsula.turno_blackout_inicio>0&&next>=mission.capsula.turno_blackout_inicio;
+    if(types[key])return mission.ataques.some(attack=>attack.tipo===types[key]&&next>=attack.inicio);
+    return true;
+  });
+}
 function installMissionExperience(App){
   const proto=App.prototype;
   const bind=proto.bindEvents;
@@ -60,8 +75,9 @@ function installMissionExperience(App){
   };
   proto.introduceMission=function(){
     if(this.levelNumber===undefined||this.state.isFinished)return;
+    if(!document.getElementById('sensor-intro').hidden)return;
     if(this.levelNumber===0){const step=Math.min(this.state.turnsRecord.length,3);if(this.tutorialAcknowledged!==step)this.queueIntro(['tutorial'+step]);}
-    else this.queueIntro(featureQueue(MISSAO,this.seenFeatures));
+    else this.queueIntro(scheduledFeatures(MISSAO,this.seenFeatures,this.state.turnsRecord.length,this.state.turnsRecord.at(-1)));
   };
   const start=proto.startNewGame;
   proto.startNewGame=function(seed){

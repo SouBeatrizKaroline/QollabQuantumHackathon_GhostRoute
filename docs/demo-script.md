@@ -14,6 +14,8 @@ Use real gameplay and results. Keep Ghost Route, SPOOFED, Aurora-1 and Quoora un
 
 ## Before recording
 
+Show an opening and, when it appears, the ghost Aurora. Explain that the campaign grows from one to two to three gates while maneuvering allowance decreases gradually. The false capsule follows GPS error; only reaching the real capsule completes rescue.
+
 Choose an advanced level for GHZ; it is unavailable in tutorial 00. Use the rescue radius and score actually shown. If you do not have a real platform run, show the implementation and label it as such. Do not present a local replay as an IonQ hardware run.
 
 End with the source, playable link, credits and the exact attribution:

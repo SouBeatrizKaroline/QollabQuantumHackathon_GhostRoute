@@ -14,6 +14,8 @@ Usa imagens e resultados reais. Mantém Ghost Route, SPOOFED, Aurora-1 e Quoora 
 
 ## Antes de gravar
 
+Mostra uma passagem e, quando surgir, a Aurora-fantasma. Explica que a campanha passa de um para dois e três portões, com margem de manobra a diminuir gradualmente. A cápsula falsa acompanha o erro do GPS; só alcançar a cápsula verdadeira conclui o salvamento.
+
 Escolhe um nível avançado para GHZ; não está disponível no tutorial 00. Usa o raio de salvamento e a pontuação realmente apresentados. Sem execução real na plataforma, mostra a implementação e identifica-a como tal. Não apresentes uma repetição local como execução em hardware IonQ.
 
 Termina com código, jogo, créditos e a atribuição exata:

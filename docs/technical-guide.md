@@ -108,3 +108,15 @@ Verified [Qollab runtime documentation](https://qollab.xyz/learn/docs/runtime-en
 Optional real-browser layout check: install Playwright locally (`npm install --no-save playwright`, then `npx playwright install chromium`) and run `node tests/browser-layout.cjs`. An existing Chromium/Edge executable can be selected with `PLAYWRIGHT_CHROMIUM_EXECUTABLE`. Playwright is a development dependency, not required to play or run the Python entry point. The test covers all four languages, resizing, menu overflow, selected-level action, controls inside their frames, radio separation and access to expanded help.
 
 Resource counts differ: the browser splits a selected total measurement budget between X and Y. Python `shots` specifies repetitions per quadrature; in `main.py` all four readouts share one circuit repetition. These budgets should not be compared as identical physical costs or used to infer a quantum advantage.
+
+## Updated campaign, balance and onboarding — 11 October 2026
+
+The route bends through one gate at levels 01–09, two at 10–39 and three at 40–99. Movement distance now accounts for the length of the route through the opening centers. This reference route uses about 78% of available travel at level 01 and 92% at level 99, with a smooth increase even at gate transitions. It leaves beginners more maneuvering distance. The reference does not include every rock detour and is not an optimal route or a measured player difficulty. Currents, narrower openings, reduced shot budgets and tighter rescue radii add later pressure.
+
+Terrain is explained at departure. GPS jumps, blackout, drift and freezing are introduced just before their first affected move. The ghost beacon is explained when it first becomes visible; an attack during blackout may not display it. Play pauses until the player acknowledges the card. Acknowledged mechanics are remembered; skipping to an advanced level still teaches unfamiliar mechanics at the appropriate time. The ghost is a visual GPS deception, not a second physical capsule. Approaching it does not rescue Aurora-1; success requires the real capsule within the configured radius.
+
+The radio stays clear of GPS radar, compass, telemetry and helm. Opening or closing it preserves the chart projection and controls. On small phones it temporarily opens over the sea; long messages scroll inside the radio, and closing it restores the unobstructed chart.
+
+## Browser tutorial verification
+
+`tests/browser-onboarding.cjs` verifies the actual four-turn level 00 rescue, translated cards, pause during explanations and sequential sensor/mechanic dialogs at 1336×605, 390×667, 320×568 and 667×375 in all four languages. Run it with the same Playwright configuration as the layout suite.
