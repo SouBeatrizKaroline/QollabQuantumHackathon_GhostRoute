@@ -2,8 +2,22 @@
 
 [English](../qa-report.md) · [Português (Brasil)](../pt-BR/qa-report.md) · [Português (Portugal)](../pt-PT/qa-report.md) · **Español**
 
+## Progresión actual de aprendizaje — 11 de octubre de 2026
 
-## Campaña, equilibrio e introducciones actualizados — 11 de octubre de 2026
+El objetivo educativo sigue siendo comprender el sensor: incertidumbre de muestreo, relación entre firma magnética y fase, ambigüedad, combinación de lectura y movimiento, y comparación con GPS. La radio en fases tranquilas invita a variar mediciones; el terreno posterior da sentido a esas decisiones. Los obstáculos aplican lo aprendido. El navegador sigue siendo una simulación estadística educativa, sin magnetómetro físico ni ventaja cuántica demostrada.
+
+Los niveles 01–04 refuerzan el uso del sensor enseñado en el tutorial 00. Las mecánicas entran una por una, con al menos cinco niveles entre introducciones. El destino se desplaza suavemente; la incertidumbre de corriente crece, el presupuesto baja y la precisión de rescate aumenta gradualmente. La demanda de distancia de la ruta de referencia crece del 70% en el nivel 01 al 92% en el 99. La referencia usa los centros de los pasos, excluye desvíos por rocas y no mide éxito ni garantiza que cada jugador perciba todos los niveles adyacentes como más difíciles.
+
+Las misiones con pasos empiezan en el 25. Los niveles terminados en 5–9 usan puertas; los terminados en 0–4 tienen mar abierto. Una, dos y tres puertas aparecen en 25, 55 y 85. Cada abertura nueva empieza ancha. Las existentes se estrechan y desplazan gradualmente, sin invertir de lado en cada nivel. Las rocas pequeñas pueden exigir curvas sin muros. La misión final combina los retos presentados; las variantes de mar abierto conservan la presión de corriente, sensor, ataques y precisión.
+
+Evidencia nueva: 112 pruebas Python, nueve suites del frontend, búsqueda de rutas con semilla en los 100 niveles y exportaciones reales del controlador validadas en Python. Las pruebas exigen primeras fases tranquilas, una mecánica nueva por vez, espacio entre introducciones, cambios limitados de recursos y configuración final combinada. El navegador cubre cuatro idiomas, 21 tamaños, tutorial de cuatro turnos, fases tranquilas 01–04 y las 12 explicaciones. La observación humana sigue siendo necesaria para comprensión, frustración y dificultad percibida.
+
+[Aprendizaje del sensor y progresión de la campaña](campaign-design.md)
+
+---
+
+
+## Revisión anterior de la campaña — commit f3b7fa8
 
 La revisión incorpora el commit `a601779` (puertas, bancos de arena y Aurora fantasma). La comparación mostró mayor demanda proporcional de distancia en el nivel 01 que en varios posteriores. El margen de movimiento sigue ahora los centros de los pasos alternados, con demanda de referencia gradual del 78% al 92%. Es una métrica de diseño, no una tasa de éxito de usuarios. Las regresiones cubren 100 configuraciones, recursos entre niveles, transiciones de puertas e introducciones oportunas. La búsqueda verifica movimientos completos, rumbos enteros, corrientes de la semilla y colisiones; conoce el destino oculto, por lo que no demuestra que un principiante pueda descubrir la ruta. Las sesiones con jugadores siguen siendo necesarias para dificultad percibida y comprensión.
 
@@ -11,7 +25,7 @@ Validación nueva: 111 pruebas Python; nueve suites del frontend; navegador en c
 
 La radio queda separada del radar GPS, brújula, telemetría y timón. Abrir o cerrar conserva la posición del mapa y los controles. En móviles pequeños se abre temporalmente sobre el mar; los mensajes largos se desplazan dentro de la radio, y cerrarla libera el mapa.
 
-## Revisión actual — 11 de octubre de 2026
+## Revisión anterior de documentación e interfaz — commit 6902d93
 
 Referencias científicas, declaración para el envío y criterios educativos distinguen fundamentos externos de la integración original. Estadística Ramsey/GHZ, localización clásica, mapa sintético y ejecución Qollab independiente están explícitos.
 

@@ -111,7 +111,11 @@ Resource counts differ: the browser splits a selected total measurement budget b
 
 ## Updated campaign, balance and onboarding — 11 October 2026
 
-The route bends through one gate at levels 01–09, two at 10–39 and three at 40–99. Movement distance now accounts for the length of the route through the opening centers. This reference route uses about 78% of available travel at level 01 and 92% at level 99, with a smooth increase even at gate transitions. It leaves beginners more maneuvering distance. The reference does not include every rock detour and is not an optimal route or a measured player difficulty. Currents, narrower openings, reduced shot budgets and tighter rescue radii add later pressure.
+Levels 01–04 reinforce the sensor skills taught in level 00. New mechanics enter one at a time, with at least five levels between introductions. The destination moves gently across the chart; current uncertainty grows, measurement budgets shrink and rescue precision tightens gradually. The reference-route travel demand grows smoothly from about 70% at level 01 to 92% at level 99. This reference uses opening centers, excludes rock detours and does not measure player success or guarantee that every individual finds adjacent levels equally harder.
+
+Passage missions begin at level 25. From then on, levels ending in 5–9 use gates; levels ending in 0–4 use open water. One, two and three gates first appear at 25, 55 and 85. Each new opening starts wide. Existing openings narrow and offset gradually without flipping sides every level. Small rocks can require a curved route even without walls. The final mission combines all introduced challenges; open-water variants retain their current, sensor, attack and precision pressure.
+
+The educational purpose remains understanding sensing: sampling uncertainty, the relationship between magnetic signature and phase, phase ambiguity, combining measurements with movement, and comparing independent position evidence with GPS. Calm radio prompts invite different shot counts; later terrain gives these decisions a reason. Navigation hazards are applications of the lesson. The browser remains an educational statistical simulation, not a physical magnetometer or demonstrated quantum advantage.
 
 Terrain is explained at departure. GPS jumps, blackout, drift and freezing are introduced just before their first affected move. The ghost beacon is explained when it first becomes visible; an attack during blackout may not display it. Play pauses until the player acknowledges the card. Acknowledged mechanics are remembered; skipping to an advanced level still teaches unfamiliar mechanics at the appropriate time. The ghost is a visual GPS deception, not a second physical capsule. Approaching it does not rescue Aurora-1; success requires the real capsule within the configured radius.
 
@@ -120,3 +124,5 @@ The radio stays clear of GPS radar, compass, telemetry and helm. Opening or clos
 ## Browser tutorial verification
 
 `tests/browser-onboarding.cjs` verifies the actual four-turn level 00 rescue, translated cards, pause during explanations and sequential sensor/mechanic dialogs at 1336×605, 390×667, 320×568 and 667×375 in all four languages. Run it with the same Playwright configuration as the layout suite.
+
+[Sensor learning and campaign progression](campaign-design.md)

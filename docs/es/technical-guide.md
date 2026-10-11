@@ -111,7 +111,11 @@ Las cuentas difieren: el navegador divide el presupuesto total entre X e Y. Pyth
 
 ## Campaña, equilibrio e introducciones actualizados — 11 de octubre de 2026
 
-La ruta cruza una puerta en los niveles 01–09, dos en 10–39 y tres en 40–99. La distancia por movimiento considera la ruta por los centros de los pasos. La ruta de referencia consume aproximadamente el 78% de la distancia disponible en el nivel 01 y el 92% en el 99, con aumento suave incluso al cambiar el número de puertas. Los principiantes tienen mayor margen de maniobra. La referencia no incluye todos los desvíos por rocas y no representa una ruta óptima ni dificultad medida con jugadores. Corrientes, pasos estrechos, menos mediciones y menor radio de rescate aumentan la presión posterior.
+Los niveles 01–04 refuerzan el uso del sensor enseñado en el tutorial 00. Las mecánicas entran una por una, con al menos cinco niveles entre introducciones. El destino se desplaza suavemente; la incertidumbre de corriente crece, el presupuesto baja y la precisión de rescate aumenta gradualmente. La demanda de distancia de la ruta de referencia crece del 70% en el nivel 01 al 92% en el 99. La referencia usa los centros de los pasos, excluye desvíos por rocas y no mide éxito ni garantiza que cada jugador perciba todos los niveles adyacentes como más difíciles.
+
+Las misiones con pasos empiezan en el 25. Los niveles terminados en 5–9 usan puertas; los terminados en 0–4 tienen mar abierto. Una, dos y tres puertas aparecen en 25, 55 y 85. Cada abertura nueva empieza ancha. Las existentes se estrechan y desplazan gradualmente, sin invertir de lado en cada nivel. Las rocas pequeñas pueden exigir curvas sin muros. La misión final combina los retos presentados; las variantes de mar abierto conservan la presión de corriente, sensor, ataques y precisión.
+
+El objetivo educativo sigue siendo comprender el sensor: incertidumbre de muestreo, relación entre firma magnética y fase, ambigüedad, combinación de lectura y movimiento, y comparación con GPS. La radio en fases tranquilas invita a variar mediciones; el terreno posterior da sentido a esas decisiones. Los obstáculos aplican lo aprendido. El navegador sigue siendo una simulación estadística educativa, sin magnetómetro físico ni ventaja cuántica demostrada.
 
 El terreno se explica al salir. Salto del GPS, apagón, deriva y congelación se presentan antes del primer movimiento afectado. Aurora fantasma se explica cuando aparece por primera vez; un ataque durante el apagón puede no mostrarla. El juego se pausa hasta confirmar la tarjeta. Las mecánicas confirmadas se guardan; saltar a un nivel avanzado enseña las desconocidas en el momento adecuado. La fantasma es un engaño visual del GPS, no una segunda cápsula física. Acercarse a ella no rescata Aurora-1; ganar exige alcanzar la cápsula real dentro del radio configurado.
 
@@ -120,3 +124,5 @@ La radio queda separada del radar GPS, brújula, telemetría y timón. Abrir o c
 ## Verificación de tutoriales en el navegador
 
 `tests/browser-onboarding.cjs` comprueba el rescate real en los cuatro turnos del nivel 00, tarjetas traducidas, pausa y secuencia de diálogos del sensor y las mecánicas en 1336×605, 390×667, 320×568 y 667×375 en los cuatro idiomas. Usa la misma configuración Playwright de la suite de diseño.
+
+[Aprendizaje del sensor y progresión de la campaña](campaign-design.md)

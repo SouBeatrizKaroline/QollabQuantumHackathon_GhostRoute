@@ -76,3 +76,5 @@ Gemini Spark assisted the initial implementation; OpenAI Codex assisted the inte
 </details>
 
 The physics is based on established Ramsey/GHZ sensing and magnetic-navigation research. The map is synthetic, the position estimator is classical, and circuits reproduce supplied-phase statistics. [Scientific foundations and external references](docs/scientific-basis.md).
+
+[Sensor learning and campaign progression](docs/campaign-design.md)

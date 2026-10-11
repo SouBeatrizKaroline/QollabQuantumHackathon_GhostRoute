@@ -138,3 +138,16 @@ assert.equal(get('game-shell').inert,false,'Acknowledgement restores play');
 assert.ok(JSON.parse(saved.get('ghost-route.preferences')).features.length>0,'Acknowledged mechanics persist');
 campaign.beginCampaignLevel(99);assert.equal(campaign.introQueue.length,0,'Restart does not repeat acknowledged terrain cards');
 console.log('PASS staged advanced-level onboarding, blocked turns, four-language cards, acknowledgement and saved learning');
+
+// Python verifies actual controller exports for all generated configurations.
+if(process.env.GHOST_ROUTE_EXPORT_DIR){
+ fs.mkdirSync(process.env.GHOST_ROUTE_EXPORT_DIR,{recursive:true});
+ for(let level=0;level<100;level++){
+  campaign.beginCampaignLevel(level);campaign.sensorModeSelect.value='none';campaign.setHeading(45);
+  while(!campaign.state.isFinished){while(campaign.introQueue.length)campaign.ackFeature();campaign.advanceTurn();}
+  document.createElement=tag=>{const result=node();result.remove=()=>{};if(tag==='a')download=result;return result;};
+  campaign.exportDecisionsJSON();document.createElement=createElement;
+  fs.writeFileSync(path.join(process.env.GHOST_ROUTE_EXPORT_DIR,`${level}.json`),decodeURIComponent(download.attributes.href.split(',').slice(1).join(',')));
+ }
+ console.log('PASS actual controller JSON exports for all 100 campaign configurations');
+}

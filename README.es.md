@@ -76,3 +76,5 @@ Gemini Spark ayudó con la implementación inicial; OpenAI Codex ayudó con la i
 </details>
 
 La física se basa en técnicas existentes de Ramsey/GHZ e investigación de navegación magnética. El mapa es sintético, el estimador es clásico y los circuitos reproducen estadísticas de una fase suministrada. [Fundamentos científicos y referencias externas](docs/es/scientific-basis.md).
+
+[Aprendizaje del sensor y progresión de la campaña](docs/es/campaign-design.md)

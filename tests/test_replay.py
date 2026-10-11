@@ -4,6 +4,9 @@ import importlib.util
 import json
 import math
 from pathlib import Path
+import os
+import shutil
+import subprocess
 import sys
 
 import pytest
@@ -20,6 +23,20 @@ from sensor import estimar_fase, prob_um
 @pytest.fixture
 def session():
     return json.loads((ROOT / "examples/session-seed-20261011.json").read_text(encoding="utf-8"))
+
+
+def test_actual_controller_exports_for_all_campaign_levels(tmp_path):
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node.js is needed for frontend/Python export integration")
+    env = dict(os.environ, GHOST_ROUTE_EXPORT_DIR=str(tmp_path))
+    subprocess.run([node, str(ROOT / "tests/ui-state.cjs")], cwd=ROOT,
+                   env=env, check=True, capture_output=True, timeout=180)
+    for level in range(100):
+        exported = json.loads((tmp_path / f"{level}.json").read_text(encoding="utf-8"))
+        report = bridge.replay_session(exported, validate_only=True)
+        assert report["campaignLevel"] == level
+        assert report["totalTurns"] > 0
 
 
 class CountingSampler:
@@ -202,7 +219,7 @@ def test_campaign_replay_samples_short_mission_once_and_honors_its_budget(sessio
     lambda s: s["configuracao_missao"]["sensor"].update(shots_total=100001),
     lambda s: s["configuracao_missao"]["sensor"].update(ghz_n=2),
     lambda s: s["configuracao_missao"]["navio"].update(velocidade_km_turno=5.49),
-    lambda s: s["configuracao_missao"]["navio"].update(velocidade_km_turno=12.51),
+    lambda s: s["configuracao_missao"]["navio"].update(velocidade_km_turno=25.01),
     lambda s: s["configuracao_missao"].update(pedras={}),
     lambda s: s["configuracao_missao"].update(bancos={}),
     lambda s: s["configuracao_missao"].update(barreiras=[[[10, 10], [12, 10]]]),

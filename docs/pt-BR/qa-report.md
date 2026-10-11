@@ -2,8 +2,22 @@
 
 [English](../qa-report.md) · **Português (Brasil)** · [Português (Portugal)](../pt-PT/qa-report.md) · [Español](../es/qa-report.md)
 
+## Progressão atual de aprendizagem — 11 de outubro de 2026
 
-## Campanha, balanceamento e introduções atualizados — 11 de outubro de 2026
+O objetivo educacional continua sendo compreender o sensor: incerteza da amostragem, relação entre assinatura magnética e fase, ambiguidade, combinação de leitura com movimento e comparação de evidências independentes com o GPS. O rádio nas fases calmas sugere variar as medições; o terreno posterior dá um motivo para essas decisões. Os obstáculos são uma aplicação do aprendizado. O navegador continua uma simulação estatística educativa, sem magnetômetro físico ou vantagem quântica demonstrada.
+
+Os níveis 01–04 reforçam o uso do sensor ensinado no tutorial 00. As mecânicas entram uma por vez, com pelo menos cinco níveis entre introduções. O destino se desloca suavemente pelo mapa; a incerteza da corrente aumenta, o orçamento diminui e a precisão exigida no resgate cresce gradualmente. A demanda de distância da rota de referência aumenta de cerca de 70% no nível 01 a 92% no 99. Essa referência usa os centros das passagens, não inclui desvios por pedras e não mede sucesso nem garante que todo jogador perceba cada nível adjacente como mais difícil.
+
+As missões com passagens começam no 25. A partir daí, níveis terminados em 5–9 usam portões; os terminados em 0–4 têm mar aberto. Um, dois e três portões aparecem pela primeira vez em 25, 55 e 85. Cada abertura nova começa larga. As existentes estreitam e se deslocam gradualmente, sem inverter de lado a cada nível. Pedras pequenas podem exigir curvas mesmo sem muralhas. A missão final combina os desafios apresentados; as variantes em mar aberto mantêm a pressão de corrente, sensor, ataques e precisão.
+
+Evidência nova: 112 testes Python, nove suítes do frontend, busca de rotas com semente nos 100 níveis e exportações reais do controlador validadas pelo Python. Os testes exigem primeiras fases calmas, uma mecânica nova por vez, intervalo entre introduções, mudanças limitadas nos recursos e configuração final combinada. O navegador cobre quatro idiomas, 21 tamanhos, tutorial de quatro turnos, fases calmas 01–04 e as 12 explicações de mecânicas. Observação humana ainda é necessária para medir compreensão, frustração e dificuldade percebida.
+
+[Aprendizagem do sensor e progressão da campanha](campaign-design.md)
+
+---
+
+
+## Revisão anterior da campanha — commit f3b7fa8
 
 A revisão incorpora o commit `a601779` (portões, bancos de areia e Aurora-fantasma). A comparação de rotas mostrou maior exigência proporcional de distância na fase 01 do que em várias fases posteriores. A margem de deslocamento agora acompanha os centros das passagens alternadas, com demanda de referência gradual de 78% a 92%. É uma métrica de projeto, não uma taxa de sucesso de usuários. As regressões cobrem as 100 configurações, mudanças de recursos entre fases, transições de portões e introduções no momento adequado. A busca de rotas verifica movimentos completos com rumos inteiros, correntes da semente e colisões; conhece o destino oculto, portanto não comprova que um iniciante descobrirá a rota. Sessões com jogadores ainda são necessárias para avaliar dificuldade percebida e compreensão.
 
@@ -11,7 +25,7 @@ Validação nova: 111 testes Python; nove suítes do frontend; navegador nos qua
 
 O rádio fica separado do radar GPS, bússola, telemetria e leme. Abrir ou fechar preserva a posição do mapa e dos controles. Em celulares pequenos, ele abre temporariamente sobre o mar; mensagens longas têm rolagem dentro do rádio, e fechá-lo libera a visualização do mapa.
 
-## Revisão atual — 11 de outubro de 2026
+## Revisão anterior de documentação e interface — commit 6902d93
 
 As referências científicas, a declaração para submissão e os critérios de produto educacional agora distinguem fundamentos externos da integração original do jogo. Estatística Ramsey/GHZ, localização clássica, mapa sintético e execução Qollab independente estão explícitos.
 

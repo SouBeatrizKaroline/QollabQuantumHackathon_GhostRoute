@@ -65,8 +65,14 @@ Piloto proposto: observar se novos jogadores concluem o nível 00 sem ajuda, exp
 
 ## Campanha, equilíbrio e introduções atualizados — 11 de outubro de 2026
 
-A rota atravessa um portão nos níveis 01–09, dois em 10–39 e três em 40–99. A distância por movimento considera a rota pelos centros das passagens. A rota de referência utiliza cerca de 78% da distância disponível no nível 01 e 92% no nível 99, com aumento suave nas transições de portões. Os principiantes dispõem de maior margem de manobra. A referência não inclui todos os desvios por pedras, nem representa uma rota ótima ou dificuldade medida com jogadores. Correntes, passagens estreitas, menos medições e menor raio de salvamento aumentam a pressão nos níveis posteriores.
+Os níveis 01–04 reforçam o uso do sensor ensinado no tutorial 00. As mecânicas entram uma de cada vez, com pelo menos cinco níveis entre introduções. O destino desloca-se suavemente; a incerteza da corrente aumenta, o orçamento diminui e a precisão exigida no salvamento cresce gradualmente. A procura de distância da rota de referência aumenta de cerca de 70% no nível 01 a 92% no 99. A referência usa os centros das passagens, não inclui desvios por pedras e não mede sucesso nem garante que cada jogador perceba todos os níveis adjacentes como mais difíceis.
+
+As missões com passagens começam no 25. Os níveis terminados em 5–9 usam portões; os terminados em 0–4 têm mar aberto. Um, dois e três portões surgem em 25, 55 e 85. Cada abertura nova começa larga. As existentes estreitam e deslocam-se gradualmente, sem inverter de lado em cada nível. Pedras pequenas podem exigir curvas sem muralhas. A missão final combina os desafios apresentados; as variantes de mar aberto mantêm a pressão de corrente, sensor, ataques e precisão.
+
+O objetivo educativo continua a ser compreender o sensor: incerteza da amostragem, relação entre assinatura magnética e fase, ambiguidade, combinação de leitura com movimento e comparação com o GPS. O rádio nas fases calmas sugere variar as medições; o terreno posterior dá um motivo a estas decisões. Os obstáculos aplicam a aprendizagem. O navegador continua uma simulação estatística educativa, sem magnetómetro físico ou vantagem quântica demonstrada.
 
 O terreno é explicado na partida. Salto do GPS, apagão, deriva e congelamento são apresentados antes do primeiro movimento afetado. A Aurora-fantasma é explicada quando surge pela primeira vez; um ataque durante o apagão pode não a mostrar. O jogo pausa até à confirmação. As mecânicas confirmadas ficam guardadas; saltar para um nível avançado apresenta as explicações desconhecidas no momento adequado. A fantasma é um engano visual do GPS, não uma segunda cápsula física. Aproximar-se dela não salva a Aurora-1; a vitória exige alcançar a cápsula verdadeira dentro do raio configurado.
 
 O rádio fica separado do radar GPS, bússola, telemetria e leme. Abrir ou fechar preserva a posição da carta e dos controlos. Em telemóveis pequenos, abre temporariamente sobre o mar; mensagens longas têm deslocamento dentro do rádio, e fechá-lo liberta a carta.
+
+[Aprendizagem do sensor e progressão da campanha](campaign-design.md)

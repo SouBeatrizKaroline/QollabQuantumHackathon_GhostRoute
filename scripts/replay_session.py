@@ -88,8 +88,8 @@ def validate_session(session):
     speed = _number(ship.get("velocidade_km_turno"), "velocidade_km_turno")
     if speed <= 0:
         raise SessionValidationError("velocidade_km_turno must be positive")
-    if campaign and not 5.5 <= speed <= 12.5:
-        raise SessionValidationError("Version 1.1.0 requires a ship speed between 5.5 and 12.5 km per turn")
+    if campaign and not 5.5 <= speed <= 25:
+        raise SessionValidationError("Version 1.1.0 requires a ship speed between 5.5 and 25 km per turn")
     _number(ship.get("ruido_corrente_km"), "ruido_corrente_km", 0)
     sensor = _object(mission.get("sensor"), "sensor")
     budget = _integer(sensor.get("shots_total"), "shots_total", 1 if campaign else 0, 100000 if campaign else None)
@@ -104,8 +104,8 @@ def validate_session(session):
     capsule_position = _coordinate(capsule.get("pouso_real"), "pouso_real")
     if campaign:
         reef = mission.get("recife")
-        if not isinstance(reef, list) or len(reef) != 4:
-            raise SessionValidationError("Version 1.1.0 requires a four-vertex reef")
+        if not isinstance(reef, list) or len(reef) not in (0, 4):
+            raise SessionValidationError("Version 1.1.0 requires no reef or a four-vertex reef")
         for index, vertex in enumerate(reef):
             _coordinate(vertex, f"recife[{index}]")
         rocks = mission.get("pedras", [])

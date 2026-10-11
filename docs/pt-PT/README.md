@@ -17,3 +17,5 @@ O inglês é o idioma principal. Todos os guias têm versões completas em portu
 This effort is supported by Qollab & IonQ
 
 - [Base científica e referências externas](scientific-basis.md)
+
+[Aprendizagem do sensor e progressão da campanha](campaign-design.md)

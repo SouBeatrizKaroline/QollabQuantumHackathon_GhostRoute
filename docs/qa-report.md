@@ -2,8 +2,22 @@
 
 **English** · [Português (Brasil)](pt-BR/qa-report.md) · [Português (Portugal)](pt-PT/qa-report.md) · [Español](es/qa-report.md)
 
+## Current learning progression — 11 October 2026
 
-## Updated campaign, balance and onboarding — 11 October 2026
+The educational purpose remains understanding sensing: sampling uncertainty, the relationship between magnetic signature and phase, phase ambiguity, combining measurements with movement, and comparing independent position evidence with GPS. Calm radio prompts invite different shot counts; later terrain gives these decisions a reason. Navigation hazards are applications of the lesson. The browser remains an educational statistical simulation, not a physical magnetometer or demonstrated quantum advantage.
+
+Levels 01–04 reinforce the sensor skills taught in level 00. New mechanics enter one at a time, with at least five levels between introductions. The destination moves gently across the chart; current uncertainty grows, measurement budgets shrink and rescue precision tightens gradually. The reference-route travel demand grows smoothly from about 70% at level 01 to 92% at level 99. This reference uses opening centers, excludes rock detours and does not measure player success or guarantee that every individual finds adjacent levels equally harder.
+
+Passage missions begin at level 25. From then on, levels ending in 5–9 use gates; levels ending in 0–4 use open water. One, two and three gates first appear at 25, 55 and 85. Each new opening starts wide. Existing openings narrow and offset gradually without flipping sides every level. Small rocks can require a curved route even without walls. The final mission combines all introduced challenges; open-water variants retain their current, sensor, attack and precision pressure.
+
+Fresh automated evidence: 112 Python tests, all nine frontend suites, all 100 seeded route searches and actual controller exports validated by Python. Progression tests enforce calm first missions, one new mechanic at a time, introduction spacing, bounded resource changes and the final combined configuration. Real-browser checks cover four languages, 21 viewport sizes, the four-turn tutorial, calm missions 01–04 and all 12 mechanic explanations. Human observation is still required to measure comprehension, frustration and perceived difficulty.
+
+[Sensor learning and campaign progression](campaign-design.md)
+
+---
+
+
+## Previous campaign review — commit f3b7fa8
 
 The review incorporates upstream commit `a601779` (gates, sandbanks and ghost Aurora). A reference-route comparison found higher relative travel demand in level 01 than in several later levels. Travel allowance now follows the actual alternating opening centers, with gradual reference demand from 78% to 92%. This is a design metric, not a user success rate. All 100 configurations, adjacent resource changes, gate transitions and staged introductions are covered by automated regressions. The route oracle verifies fixed-length integer-heading moves against seeded currents and collisions; it knows the hidden destination, so it does not prove that a novice can discover the route. Human playtests remain necessary for perceived difficulty and comprehension.
 
@@ -11,7 +25,7 @@ Fresh validation: 111 Python tests; nine frontend suites; browser checks in four
 
 The radio stays clear of GPS radar, compass, telemetry and helm. Opening or closing it preserves the chart projection and controls. On small phones it temporarily opens over the sea; long messages scroll inside the radio, and closing it restores the unobstructed chart.
 
-## Current review — 11 October 2026
+## Previous documentation and layout review — commit 6902d93
 
 The scientific references, submission disclosure and educational product criteria now distinguish external foundations from original game integration. Ramsey/GHZ statistics, classical localization, synthetic mapping and independent Qollab execution are explicit.
 

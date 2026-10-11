@@ -10,10 +10,10 @@ for(const lang of ['pt-BR','pt-PT','en','es']){
   assert.ok(a.TEXTOS[lang]['feature_'+key+'_title']);assert.ok(a.TEXTOS[lang]['feature_'+key+'_body']);
  }
 }
-for(const [level,key] of [[1,'sandbank'],[2,'rocks'],[1,'current'],[3,'jump'],[3,'ghost'],[6,'ghz'],[10,'reef'],[10,'blackout'],[10,'drift'],[30,'freeze'],[60,'budget']]){
+for(const [level,key] of [[25,'sandbank'],[10,'rocks'],[5,'current'],[35,'jump'],[70,'ghost'],[45,'ghz'],[55,'reef'],[65,'blackout'],[75,'drift'],[90,'freeze'],[95,'budget'],[85,'slalom']]){
  assert.ok(!a.createCampaignMission(level-1).mecanicas.includes(key));assert.ok(a.createCampaignMission(level).mecanicas.includes(key));
 }
-const all=a.featureQueue(a.createCampaignMission(99),new Set());assert.equal(all.length,11);
+const all=a.featureQueue(a.createCampaignMission(99),new Set());assert.equal(all.length,12);
 assert.equal(a.featureQueue(a.createCampaignMission(99),new Set(all)).length,0);
 assert.equal(a.featureQueue(a.createCampaignMission(0),new Set()).length,0);
 for(let level=1;level<100;level++){

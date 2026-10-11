@@ -11,7 +11,7 @@ Abra [o jogo](../../public/index.html) ou a [versão online](https://ghostrouteg
 ## O ciclo de decisões
 
 1. **Escolha o rumo.** Use a bússola ou arraste o seletor. Norte é 0°, leste é 90°.
-2. **Faça uma leitura.** Escolha Desligado ou Simples; GHZ fica disponível no nível 06. Selecione quantas medições gastar.
+2. **Faça uma leitura.** Escolha Desligado ou Simples; GHZ fica disponível no nível 45. Selecione quantas medições gastar.
 3. **Avance.** O navio percorre uma distância fixa para aquela missão, com a incerteza da corrente. Um turno representa 20 minutos fictícios.
 4. **Compare.** O navio mostra a posição estimada; o quadrado GPS é a posição informada. A densidade lilás mostra possibilidades, não certeza.
 5. **Marque.** Se a leitura exibida parecer suspeita, marque-a depois de observá-la. A caixa pertence ao turno concluído, não ao próximo movimento.
@@ -20,20 +20,25 @@ Planeje todo o segmento: cruzar uma pedra ou um recife encalha o navio mesmo que
 
 ## Uma campanha gradual
 
-| Primeiro nível | Novo desafio |
+| Primeiro nível | O que muda e o que praticar |
 | --- | --- |
-| 00 | Quatro turnos seguros de tutorial, sem ataques nem ruído de corrente. |
-| 01 | Uma passagem larga em banco de areia e correntes leves. |
-| 02 | Pedras na aproximação da passagem. |
-| 03 | Salto do GPS e sinal falso da Aurora. |
-| 06 | GHZ: maior sensibilidade de fase com três fases candidatas. |
-| 10 | Duas passagens alternadas, muralhas de recife, apagão na reentrada e deriva do GPS. |
-| 30 | GPS congelado: a leitura pode parar enquanto você avança. |
-| 40 | Três passagens alternadas; aberturas estreitam gradualmente. |
-| 60 | Orientação para economizar medições; o congelamento pode durar mais. |
-| 99 | Menos recursos, menor raio de resgate e maior ruído de corrente. |
+| 00 | Quatro turnos guiados: rumo, leitura Simples, comparação GPS e resgate. |
+| 01–04 | Prática das mesmas habilidades em mar calmo, sem obstáculos, correntes, ataques ou cartões de novas mecânicas. |
+| 05 | Correntes muito leves: medir depois de avançar e corrigir o rumo. |
+| 10 | Uma pedra pequena: planejar uma curva suave em mar aberto. |
+| 25 | Primeira passagem larga em banco de areia, nas missões com portões. |
+| 35 | Um salto curto do GPS: comparar a leitura exibida com o sensor. |
+| 45 | GHZ opcional: maior sensibilidade de fase com ambiguidade; Simples continua disponível. |
+| 55 | Recife e segunda abertura nas missões com portões. |
+| 65 | Apagão na reentrada: usar a elipse prevista até o sinal voltar. |
+| 70 | Sinal falso da Aurora: usar evidências independentes da posição, além da aparência. |
+| 75 | Deriva do GPS: comparar leituras sucessivas. |
+| 85 | Terceira abertura alternada nas missões com portões. |
+| 90 | Congelamento do GPS: observar se a posição informada acompanha o navio. |
+| 95 | Orientação de orçamento antes dos desafios finais combinados. |
+| 99 | Maior pressão conjunta: três passagens estreitas, oito pedras, três tipos de ataque e precisão de resgate exigente. |
 
-A rota atravessa um portão nos níveis 01–09, dois em 10–39 e três em 40–99. A distância por movimento considera agora a extensão da rota pelos centros das passagens. Essa rota de referência consome cerca de 78% da distância disponível na fase 01 e 92% na fase 99, com aumento suave inclusive nas transições de portões. Assim, iniciantes têm mais margem de manobra. A referência não inclui todos os desvios por pedras e não representa uma rota ótima ou dificuldade medida com jogadores. Correntes, passagens estreitas, redução de medições e menor raio de resgate aumentam a pressão nas fases posteriores.
+Os níveis 01–04 reforçam o uso do sensor ensinado no tutorial 00. As mecânicas entram uma por vez, com pelo menos cinco níveis entre introduções. O destino se desloca suavemente pelo mapa; a incerteza da corrente aumenta, o orçamento diminui e a precisão exigida no resgate cresce gradualmente. A demanda de distância da rota de referência aumenta de cerca de 70% no nível 01 a 92% no 99. Essa referência usa os centros das passagens, não inclui desvios por pedras e não mede sucesso nem garante que todo jogador perceba cada nível adjacente como mais difícil.
 
 O terreno é explicado na partida. Salto do GPS, apagão, deriva e congelamento são apresentados antes do primeiro movimento afetado. A Aurora-fantasma é explicada quando aparece pela primeira vez; um ataque durante o apagão pode não exibi-la. O jogo pausa até a confirmação do cartão. As mecânicas confirmadas são lembradas; quem pula para uma fase avançada recebe as explicações desconhecidas no momento adequado. A fantasma é um engano visual do GPS, não uma segunda cápsula física. Aproximar-se dela não resgata a Aurora-1; a vitória exige alcançar a cápsula real dentro do raio configurado.
 
@@ -56,3 +61,5 @@ Um resgate seguro conclui a fase. O resgate perfeito também exige marcar ao men
 Mais medições reduzem o ruído de amostragem e gastam o orçamento. Você ainda pode navegar sem medições. O alerta de coerência indica discordância com a estimativa, não detecção garantida de ataque. [Entenda o modelo](technical-guide.md).
 
 Ajuda e ações no menu contém o guia de navegação, reinício e exportação de decisões. Em celular na vertical, o botão principal inicia o nível recém-selecionado; nos demais casos continua a missão ou abre seu replay.
+
+[Aprendizagem do sensor e progressão da campanha](campaign-design.md)

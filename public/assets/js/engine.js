@@ -60,36 +60,43 @@ function createCampaignMission(level) {
   const curve=difficulty*difficulty*(3-2*difficulty);
   m.dificuldade = Math.round(difficulty*100);
   // The voyage grows from sheltered training water to the far side of the chart.
-  m.turnos = Math.min(12, 4 + level);
-  m.navio.velocidade_km_turno = level === 0 ? Math.SQRT2 * 4 : 10.5 + difficulty * 1.5;
-  m.navio.ruido_corrente_km = level === 0 ? 0 : .04 + curve * .46;
+  m.turnos = Math.min(12, 4 + Math.floor(level/10));
+  m.navio.velocidade_km_turno = Math.SQRT2 * 4;
+  const currentProgress=Math.max(0,(level-5)/94);
+  m.navio.ruido_corrente_km = level < 5 ? 0 : .01+.49*currentProgress*currentProgress*(3-2*currentProgress);
   m.inercial.crescimento_km_turno = .12 + difficulty * .88;
   m.sensor.shots_total = 8000 - Math.round(curve * 5000 / 100) * 100;
   m.vitoria.raio_resgate_km = 4 - curve * 2.4;
   const rng = mulberry32(7717), round = v => Math.round(v * 10) / 10;
-  const target = level === 0 ? [26, 31] : level < 10
-    ? [round(26 + level * 5.5), round(31 + level * 5)]
-    : [round(79 + difficulty * 7), round(79 + difficulty * 8)];
+  const target = [round(26+difficulty*60),round(31+difficulty*56)];
   // Gates: walls of reef or sandbank across the route, each with one opening on
   // alternating sides, so every voyage bends into a zigzag instead of a straight line.
-  const gateCount = level === 0 ? 0 : level < 10 ? 1 : level < 40 ? 2 : 3;
-  if (level > 0) m.navio.velocidade_km_turno = Math.hypot(target[0]-m.porto[0],target[1]-m.porto[1]) / m.turnos * (1.22 + .07 * gateCount);
+  // Alternate open-water rock courses with gated passages. Gates are one
+  // challenge family, not the prerequisite for every voyage or every curve.
+  const gateCount = level<25||level%10<5 ? 0 : level<55 ? 1 : level<85 ? 2 : 3;
+  m.tipo_rota=gateCount?'passages':'openWater';
   m.mecanicas = ['navigation', 'sensor', 'rescue'];
-  if (level >= 1) m.mecanicas.push('sandbank', 'current');
-  if (level >= 3) m.mecanicas.push('jump', 'ghost');
-  if (level >= 6) m.mecanicas.push('ghz');
-  if (level >= 10) m.mecanicas.push('reef', 'blackout', 'drift');
-  if (level >= 30) m.mecanicas.push('freeze');
-  if (level >= 60) m.mecanicas.push('budget');
+  if (level >= 5) m.mecanicas.push('current');
+  if (level >= 10) m.mecanicas.push('rocks');
+  if (gateCount) m.mecanicas.push('sandbank');
+  if (level >= 35) m.mecanicas.push('jump');
+  if (level >= 45) m.mecanicas.push('ghz');
+  if (level >= 55) m.mecanicas.push('reef');
+  if (level >= 65) m.mecanicas.push('blackout');
+  if (level >= 70) m.mecanicas.push('ghost');
+  if (level >= 75) m.mecanicas.push('drift');
+  if (level >= 90) m.mecanicas.push('freeze');
+  if (level >= 95) m.mecanicas.push('budget');
+  if (gateCount===3) m.mecanicas.push('slalom');
   m.capsula.pouso_real = target;
   m.capsula.elipse_prevista = {centro:[target[0],round(target[1]-difficulty*3)],semi_eixo_x:2+difficulty*6,semi_eixo_y:2+difficulty*3};
-  m.capsula.turno_blackout_inicio = level < 10 ? 0 : 2;
-  m.capsula.turno_revelacao = level < 10 ? 0 : Math.max(3,Math.floor(m.turnos * .65));
+  m.capsula.turno_blackout_inicio = level < 65 ? 0 : 2;
+  m.capsula.turno_revelacao = level < 65 ? 0 : Math.max(3,Math.floor(m.turnos * .65));
   const port = m.porto, along = [target[0]-port[0], target[1]-port[1]], span = Math.hypot(...along);
   const dir = [along[0]/span, along[1]/span], side = [-dir[1], dir[0]];
   const at = (t, offset) => [port[0]+along[0]*t+side[0]*offset, port[1]+along[1]*t+side[1]*offset];
   // The original square reef now sits away from the route as a landmark.
-  m.recife = [[78,22],[84,22],[84,28],[78,28]];
+  m.recife = [];
   const clip = poly => {
     // Sutherland-Hodgman clipping to the chart, so every vertex stays inside 1..99 km.
     let out = poly;
@@ -104,11 +111,12 @@ function createCampaignMission(level) {
     return out.map(p => [round(p[0]), round(p[1])]);
   };
   m.barreiras = []; m.bancos = []; m.passagens = [];
-  const gateT = gateCount === 0 ? [] : gateCount === 1 ? [.5] : gateCount === 2 ? [.38, .68] : [.3, .55, .78];
-  const width = gateCount === 1 ? 18 - curve * 4 : gateCount === 2 ? 14 - curve * 4 : 12 - curve * 4;
+  const gateT = [.42,.65,.82].slice(0,gateCount);
+  const widths=[25,55,85].map(first=>26-18*Math.max(0,(level-first)/(99-first)));
+  const gapOffset=i=>(i%2?-1:1)*(8+curve*9);
   gateT.forEach((t, i) => {
-    const sideSign = (i + level) % 2 ? 1 : -1, gap = sideSign * (12 + ((level * 7 + i * 5) % 6));
-    const sand = gateCount === 1 || i % 2 === 1, thick = sand ? 4.4 : 3;
+    const gap=gapOffset(i),width=widths[i];
+    const sand = i%2===0, thick = sand ? 3+curve*1.4 : 2+curve;
     m.passagens.push(at(t, gap).map(round));
     // Each gate is two wall pieces, one on each side of the opening.
     for (const [from, to] of [[-160, gap - width / 2], [gap + width / 2, 160]]) {
@@ -128,7 +136,7 @@ function createCampaignMission(level) {
   if(level>0){
     const route=[m.porto,...m.passagens,target];
     const length=route.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p[0]-route[i][0],p[1]-route[i][1]),0);
-    m.navio.velocidade_km_turno=length/(m.turnos*(.78+.14*curve));
+    m.navio.velocidade_km_turno=length/(m.turnos*(.70+.22*curve));
   }
   // The square landmark reef moves to the first patch of open water away from the walls.
   const overlaps = (a, b) => a.some(p => isPointInPoly(p, b)) || b.some(p => isPointInPoly(p, a)) ||
@@ -137,37 +145,32 @@ function createCampaignMission(level) {
   const spots = [[78,22],[86,8],[8,86],[90,40],[40,90],[60,8],[8,60]];
   for (let x = 4; x <= 90; x += 4) for (let y = 4; y <= 90; y += 4) spots.push([x, y]);
   const clearOf = (x, y) => [port, target, ...m.passagens].every(q => Math.hypot(x + 3 - q[0], y + 3 - q[1]) > 12);
-  for (const [x, y] of spots) {
+  for (const [x, y] of level>=55?spots:[]) {
     if (!clearOf(x, y)) continue;
     const square = [[x,y],[x+6,y],[x+6,y+6],[x,y+6]], grown = [[x-3,y-3],[x+9,y-3],[x+9,y+9],[x-3,y+9]];
     if (!walls.some(w => overlaps(grown, w))) { m.recife = square; break; }
   }
   // Rocks guard the approaches to each opening without closing it.
   m.pedras = [];
-  const rockCount = level === 0 ? 0 : Math.min(8, 1 + Math.floor(difficulty * 7));
-  // Distinct slots beside each opening: before/after the wall, on either side of the gap.
-  const slots = [];
-  for (const [dt, sideOfGap] of [[-.1, 1], [.1, -1], [-.07, -1], [.07, 1]])
-    gateT.forEach((t, gi) => slots.push({t: t + dt, gi, sideOfGap}));
-  for (const slot of slots) {
+  const rockCount = level<10 ? 0 : 1+Math.floor((level-10)/89*7);
+  // Independent rocks bend open-water routes too. The first is small and
+  // easy to go around; later rocks create a course without full-width walls.
+  for (let slot=0;slot<48;slot++) {
     if (m.pedras.length >= rockCount) break;
-    const gapOff = (12 + ((level * 7 + slot.gi * 5) % 6)) * ((slot.gi + level) % 2 ? 1 : -1);
-    const off = gapOff + slot.sideOfGap * (width / 2 + 3);
-    const radius = 1 + curve * 1.4 + rng() * .3, center = at(slot.t, off), sides = 6, angle = rng() * Math.PI;
+    const off=slot===0?0:(slot%2?-1:1)*(2+(slot%4)*2);
+    const radius = .65+curve*1.75, center = at(.20+(slot%12)*.05,off), sides = 6, angle = rng() * Math.PI;
     const shape = Array.from({length: sides}, () => .8 + rng() * .2);
     const rock = shape.map((factor, i) => { const a = angle + i / sides * Math.PI * 2; return [round(center[0] + Math.cos(a) * radius * factor), round(center[1] + Math.sin(a) * radius * factor)]; });
     if (rock.some(p => p.some(v => v <= 1 || v >= 99))) continue;
-    if ([m.recife, ...walls, ...m.pedras].some(o => overlaps(rock, o))) continue;
+    if ([m.recife, ...walls, ...m.pedras].filter(o=>o.length).some(o => overlaps(rock, o))) continue;
     if ([port, target].some(q => Math.hypot(center[0] - q[0], center[1] - q[1]) < radius + 4)) continue;
     m.pedras.push(rock);
   }
-  // Rocks are introduced on the first level that actually has them.
-  if (m.pedras.length) m.mecanicas.splice(m.mecanicas.indexOf('sandbank') + 1, 0, 'rocks');
   m.ataques = [];
   // Jumps are large enough that the ghost Aurora separates clearly from the real capsule.
-  if (level >= 3) m.ataques.push({tipo:'salto',inicio:3,fim:4,deslocamento_km:[-(3.5+difficulty*5),1+difficulty*2]});
-  if (level >= 10) m.ataques.push({tipo:'deriva',inicio:Math.max(3,Math.floor(m.turnos*.4)),fim:m.turnos-2,km_por_turno:[.1+difficulty*.5,-(.1+difficulty*.5)]});
-  if (level >= 30) m.ataques.push({tipo:'congelamento',inicio:level<60?m.turnos-2:m.turnos-3,fim:m.turnos-2});
+  if (level >= 35){const start=level<65?3:8; m.ataques.push({tipo:'salto',inicio:start,fim:start+(level>=80?1:0),deslocamento_km:[-(1.6+(level-35)/64*6.9),.6+(level-35)/64*2.4]});}
+  if (level >= 75) m.ataques.push({tipo:'deriva',inicio:5,fim:m.turnos-2,km_por_turno:[.08+(level-75)/24*.52,-(.08+(level-75)/24*.52)]});
+  if (level >= 90) m.ataques.push({tipo:'congelamento',inicio:level<95?m.turnos-2:m.turnos-3,fim:m.turnos-2});
   return m;
 }
 function useCampaignMission(level) {
@@ -919,7 +922,7 @@ class TacticalMapRenderer {
       foam(p,index*5+2,['#fff6ea','#ffd3c9']);
     });
   }
-  drawReef(t){const c=this.ctx,p=MISSAO.recife.map(p=>this.worldToScreen(...p));c.fillStyle='#7a2b3acc';c.strokeStyle='#ff7b6b';c.lineWidth=1;c.beginPath();p.forEach((q,i)=>i?c.lineTo(q.sx,q.sy):c.moveTo(q.sx,q.sy));c.closePath();c.fill();c.stroke();c.save();c.clip();c.strokeStyle='#ff8f7a80';for(let x=p[0].sx-30;x<p[1].sx+30;x+=4){c.beginPath();c.moveTo(x,p[0].sy+3);c.lineTo(x+20,p[2].sy-3);c.stroke();}c.fillStyle='#c4766877';for(let x=p[0].sx+1;x<p[1].sx;x+=2){for(let y=p[2].sy+1;y<p[0].sy;y+=2)c.fillRect(x+.5,y+.5,1,.5);}c.restore();
+  drawReef(t){if(MISSAO.recife.length<3)return;const c=this.ctx,p=MISSAO.recife.map(p=>this.worldToScreen(...p));c.fillStyle='#7a2b3acc';c.strokeStyle='#ff7b6b';c.lineWidth=1;c.beginPath();p.forEach((q,i)=>i?c.lineTo(q.sx,q.sy):c.moveTo(q.sx,q.sy));c.closePath();c.fill();c.stroke();c.save();c.clip();c.strokeStyle='#ff8f7a80';for(let x=p[0].sx-30;x<p[1].sx+30;x+=4){c.beginPath();c.moveTo(x,p[0].sy+3);c.lineTo(x+20,p[2].sy-3);c.stroke();}c.fillStyle='#c4766877';for(let x=p[0].sx+1;x<p[1].sx;x+=2){for(let y=p[2].sy+1;y<p[0].sy;y+=2)c.fillRect(x+.5,y+.5,1,.5);}c.restore();
     // Foam breaking on the reef edge: a few white pixels that twinkle.
     const foamTick=this.reduced?0:Math.floor((this.frameNow||0)/400);for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length];for(let k=0;k<6;k++){if(((k*7+i*3+foamTick)%5)>1)continue;const f=(k+.5)/6;c.fillStyle=k%2?'#fff6ea':'#ffd3c9';c.fillRect(Math.round(a.sx+(b.sx-a.sx)*f),Math.round(a.sy+(b.sy-a.sy)*f),1,1);}}
     this.labelBoxes.push({left:Math.min(...p.map(q=>q.sx))-2,right:Math.max(...p.map(q=>q.sx))+2,top:Math.min(...p.map(q=>q.sy))-2,bottom:Math.max(...p.map(q=>q.sy))+2});this.mapLabel(t.reefLabel,p[3].sx,p[3].sy-5,'#ffc2b5');}
@@ -951,7 +954,7 @@ class TacticalMapRenderer {
   drawTarget(s,t){const c=this.ctx,observed=s.turnsRecord?.at(-1)?.turn||0,now=this.frameNow||0;if(observed>=MISSAO.capsula.turno_revelacao){
       // Ghost Aurora: a spoofed beacon is shifted exactly as far as the GPS is lying.
       // Both markers look identical; only the quantum estimate tells them apart.
-      const rec=s.turnsRecord?.at(-1),ghostOffset=!this.current?.isReplay&&rec?.gpsReported&&rec?.realAfter&&activeAttacks(rec.turn).length?[rec.gpsReported[0]-rec.realAfter[0],rec.gpsReported[1]-rec.realAfter[1]]:null;
+      const rec=s.turnsRecord?.at(-1),ghostOffset=(!MISSAO.mecanicas||MISSAO.mecanicas.includes('ghost'))&&!this.current?.isReplay&&rec?.gpsReported&&rec?.realAfter&&activeAttacks(rec.turn).length?[rec.gpsReported[0]-rec.realAfter[0],rec.gpsReported[1]-rec.realAfter[1]]:null;
       const real=MISSAO.capsula.pouso_real,ghost=ghostOffset&&Math.hypot(...ghostOffset)>=1.5?real.map((v,i)=>Math.max(1,Math.min(99,v+ghostOffset[i]))):null;
       const label=ghost?'AURORA-1 ?':'AURORA-1';
       // Draw in a stable order that does not reveal which one is real.

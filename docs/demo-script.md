@@ -7,7 +7,7 @@ Use real gameplay and results. Keep Ghost Route, SPOOFED, Aurora-1 and Quoora un
 | Time | Show | Say |
 | --- | --- | --- |
 | 00:00–00:30 | Mission menu, language choices and tutorial 00. | “When GPS lies, which signal do you trust? In Ghost Route, you steer SPOOFED to rescue the Aurora-1 crew. Your first voyage teaches the controls in four turns.” |
-| 00:30–01:10 | Switch to level 06 or later, acknowledge introductions and show Simple/GHZ controls. | “Quoora offers a simulated quantum sensor. More measurements use more resources. GHZ responds to three times the phase, but leaves three candidates: sensitivity brings a decision, not a guaranteed position.” |
+| 00:30–01:10 | Switch to level 45 or later, acknowledge introductions and show Simple/GHZ controls. | “Quoora offers a simulated quantum sensor. More measurements use more resources. GHZ responds to three times the phase, but leaves three candidates: sensitivity brings a decision, not a guaranteed position.” |
 | 01:10–01:45 | An observed suspicious reading, its mark and the walkie-talkie message. | “Jump, drift and freeze attacks appear gradually. Compare the instruments, mark the reading you observed and adjust the route around hazards.” |
 | 01:45–02:15 | Actual mission outcome, replay and JSON export. | “Replay reveals the true route and attack timeline. Your decisions can be inspected and replayed with the Python circuit model.” |
 | 02:15–02:45 | Circuit code or actual Qollab execution evidence, then the source/play links. | “The browser samples the model offline. Separate Qiskit circuits make the sensor implementation inspectable. The Qollab entry point combines both modes in one eight-qubit job.” |
@@ -25,3 +25,5 @@ This effort is supported by Qollab & IonQ
 [Project overview](project-page.md) · [Submission checklist](submission-checklist.md)
 
 Scientific origin: explain that Ramsey/GHZ and magnetic navigation are established techniques; the original contribution is their educational integration. End with a link to the [bibliography and simplifications](scientific-basis.md).
+
+[Sensor learning and campaign progression](campaign-design.md)

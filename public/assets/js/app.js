@@ -840,7 +840,7 @@ GhostRouteApp.prototype.changeLanguage = function(lang){
   this.currentLang=lang;this.savePreferences();this.updateLocalization();
 };
 GhostRouteApp.prototype.levelBand = function(level){
-  return level===0?'levelTutorial':level<10?'levelBeginner':level<30?'levelIntermediate':level<60?'levelAdvanced':'levelExpert';
+  return level===0?'levelTutorial':level<25?'levelBeginner':level<55?'levelIntermediate':level<85?'levelAdvanced':'levelExpert';
 };
 GhostRouteApp.prototype.updateCampaignMenu = function(){
   if(this.levelNumber===undefined)return;
@@ -900,7 +900,7 @@ GhostRouteApp.prototype.updateNarrative=function(){
   const t=TEXTOS[this.currentLang],turn=this.state.turnsRecord.length;
   const tutorial=['tutorialHeading','tutorialSensor','tutorialGps','tutorialRescue'];
   document.getElementById('dialogue-box').textContent=this.levelNumber===0?fillText(t[tutorial[Math.min(turn,3)]],{radius:numberText(MISSAO.vitoria.raio_resgate_km,this.currentLang)}):
-    fillText(t.levelIntro,{turns:MISSAO.turnos,radius:numberText(MISSAO.vitoria.raio_resgate_km,this.currentLang)});
+    fillText(t.levelIntro,{turns:MISSAO.turnos,radius:numberText(MISSAO.vitoria.raio_resgate_km,this.currentLang)})+'\n'+t[this.levelNumber<5?'practiceCalm':this.levelNumber<10?'practiceCurrent':MISSAO.tipo_rota==='openWater'?'practiceOpenWater':'practicePassages'];
   document.getElementById('speaker-name').textContent=t.speakerQuoora;
   document.getElementById('speaker-role').textContent=this.levelNumber===0?t.trainingMode:t.roleQuoora;
   this.dialogueNav.style.display='none';
@@ -1064,13 +1064,13 @@ else startGhostRoute();
       if(!box.contains(e.target)){e.preventDefault();e.stopImmediatePropagation();document.getElementById('btn-sensor-intro-ok').focus();}
     },true);
     for(const id of['sensor-mode-select','sensor-shots-select'])
-      document.getElementById(id).addEventListener('pointerdown',e=>{if(this.levelNumber!==0&&!seen()){e.preventDefault();this.openSensorIntro();}});
+      document.getElementById(id).addEventListener('pointerdown',e=>{if(this.levelNumber>=5&&!seen()){e.preventDefault();this.openSensorIntro();}});
   };
   const render=proto.renderMap;
   proto.renderMap=function(){
     const out=render.apply(this,arguments);
     const rec=this.state?.turnsRecord?.at?.(-1);
-    if(this.levelNumber!==0&&rec?.shots>0&&!this.state.isFinished&&!seen())this.openSensorIntro();
+    if(this.levelNumber>=5&&rec?.shots>0&&!this.state.isFinished&&!seen())this.openSensorIntro();
     return out;
   };
 })();

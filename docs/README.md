@@ -17,3 +17,5 @@ English is the primary language. All guides are fully available in Brazilian Por
 This effort is supported by Qollab & IonQ
 
 - [Scientific basis and external references](scientific-basis.md)
+
+[Sensor learning and campaign progression](campaign-design.md)

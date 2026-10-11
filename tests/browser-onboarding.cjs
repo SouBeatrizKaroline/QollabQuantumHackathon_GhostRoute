@@ -29,7 +29,16 @@ const {pathToFileURL}=require('node:url'),{chromium}=require('playwright');
       gameApp.ackFeature();gameApp.setHeading(45);gameApp.advanceTurn();
      }
      if(!gameApp.completedLevels.has(0)||gameApp.state.isAground)issues.push('guided tutorial not rescued');
-     gameApp.seenFeatures=new Set();gameApp.beginCampaignLevel(3);
+     for(let level=1;level<=4;level++){
+      gameApp.seenFeatures=new Set();gameApp.beginCampaignLevel(level);gameApp.setHeading(45);
+      if(gameApp.introQueue.length)issues.push('new mechanic in first calm missions');
+      while(!gameApp.state.isFinished){
+       gameApp.advanceTurn();
+       if(gameApp.introQueue.length||!document.getElementById('sensor-intro').hidden)issues.push('unexpected popup during calm sensor practice');
+      }
+      if(!gameApp.completedLevels.has(level)||gameApp.state.isAground)issues.push('calm mission is not reachable using tutorial heading');
+     }
+     gameApp.seenFeatures=new Set();gameApp.beginCampaignLevel(35);
      gameApp.openSensorIntro();check(); // An active terrain card retains precedence.
      while(gameApp.introQueue.length){check();gameApp.ackFeature();}
      gameApp.openSensorIntro();gameApp.state.turnsRecord.push(...[1,2].map(turn=>({turn,gpsReported:[10,15],realAfter:[10,15]})));
@@ -38,6 +47,9 @@ const {pathToFileURL}=require('node:url'),{chromium}=require('playwright');
      gameApp.closeSensorIntro();check();
      if(!gameApp.introQueue.includes('jump'))issues.push('deferred attack explanation lost');
      while(gameApp.introQueue.length)gameApp.ackFeature();
+     for(const key of['current','rocks','sandbank','jump','ghz','reef','blackout','ghost','drift','slalom','freeze','budget']){
+      gameApp.queueIntro([key]);check();gameApp.ackFeature();
+     }
      return {issues,steps};
     },language);
     assert.deepEqual(result.steps,['tutorial0','tutorial1','tutorial2','tutorial3']);

@@ -186,8 +186,8 @@ const TEXTOS = {
     "nextLevel": "Next level",
     "campaignComplete": "All 100 levels complete",
     "tutorialHeading": "Set a heading of 045° (NE). Each advance moves one fixed distance. Keep this heading for all four training turns; no currents or attacks occur here.",
-    "tutorialSensor": "Keep Simple mode and 500 measurements selected. Lilac density shows possible positions, not a guaranteed location. More measurements reduce sampling uncertainty and spend the budget.",
-    "tutorialGps": "Compare the GPS square with the sensor estimate. This training GPS is reliable. From level 03, false readings can appear: mark a reading only after observing it.",
+    "tutorialSensor": "The simulated sensor turns a magnetic signature into quantum phase and uses repeated measurements to estimate position. Keep Simple and 500 measurements. Lilac density shows possibilities; more measurements reduce sampling noise and spend the budget.",
+    "tutorialGps": "Compare the GPS square with the sensor estimate. This training GPS is reliable. From level 35, false readings can appear: mark a reading only after observing it.",
     "tutorialRescue": "One more move northeast brings you to AURORA-1. Finish within {radius} km of the capsule. Review your route at the end and select the next level.",
     "levelIntro": "Reach AURORA-1 within {turns} turns. Rescue radius: {radius} km.",
     "trainingMode": "Guided training",
@@ -217,7 +217,13 @@ const TEXTOS = {
     "feature_ghost_title": "Ghost Aurora",
     "feature_ghost_body": "Two Aurora beacons appear during GPS deception. The false beacon follows the GPS error. Compare GPS with the sensor estimate of your position; only reaching the real capsule completes the rescue. Following the ghost wastes turns.",
     "soundOn": "Sound: on",
-    "soundOff": "Sound: off"
+    "soundOff": "Sound: off",
+    "feature_slalom_title": "Three passages ahead",
+    "feature_slalom_body": "This route has three openings on alternating sides. Plan the next bend before advancing. Compare GPS with the sensor after each move; a clear passage does not mean the signal is reliable.",
+    "practiceCalm": "Calm water: practise Simple readings and compare the lilac estimate with the GPS. Try a different measurement count and observe the uncertainty. No currents, obstacles or attacks occur in levels 01–04.",
+    "practiceCurrent": "The current is gentle. Measure after moving, compare the estimated position with the GPS, and adjust your heading if needed.",
+    "practiceOpenWater": "Open water does not always mean a straight route. Small rocks and currents call for gradual course corrections. Use the sensor estimate before choosing your next heading.",
+    "practicePassages": "Plan a safe passage, then measure and compare the GPS. The sensor helps estimate where you are; it does not steer the ship or reveal a guaranteed position."
   },
   "pt-BR": {
     "appTitle": "Ghost Route",
@@ -405,8 +411,8 @@ const TEXTOS = {
     "nextLevel": "Próximo nível",
     "campaignComplete": "Você concluiu os 100 níveis",
     "tutorialHeading": "Ajuste o rumo para 045° (NE). Cada avanço percorre uma distância fixa. Mantenha esse rumo nos quatro turnos do tutorial; aqui não há correntes nem ataques.",
-    "tutorialSensor": "Mantenha o modo simples e 500 medições. A densidade lilás mostra posições possíveis. Mais medições reduzem a incerteza da amostragem e gastam o orçamento.",
-    "tutorialGps": "Compare o quadrado GPS com a estimativa do sensor. Neste treino, o GPS é confiável. A partir do nível 03 surgem leituras falsas: marque uma leitura depois de observá-la.",
+    "tutorialSensor": "O sensor simulado transforma a assinatura magnética em fase quântica e usa medições repetidas para estimar a posição. Mantenha Simples e 500 medições. A nuvem lilás mostra possibilidades; mais medições reduzem o ruído da amostragem e gastam o orçamento.",
+    "tutorialGps": "Compare o quadrado GPS com a estimativa do sensor. Neste treino, o GPS é confiável. A partir do nível 35 surgem leituras falsas: marque uma leitura depois de observá-la.",
     "tutorialRescue": "Mais um avanço ao nordeste leva você à AURORA-1. Termine a menos de {radius} km da cápsula. Revise a rota no final e escolha o próximo nível.",
     "levelIntro": "Chegue à AURORA-1 em até {turns} turnos. Raio de resgate: {radius} km.",
     "trainingMode": "Treinamento guiado",
@@ -436,7 +442,13 @@ const TEXTOS = {
     "feature_ghost_title": "Aurora-fantasma",
     "feature_ghost_body": "Dois sinais da Aurora aparecem durante o engano do GPS. O falso acompanha o erro do GPS. Compare o GPS com a estimativa do sensor sobre sua posição; só alcançar a cápsula real conclui o resgate. Seguir a fantasma desperdiça turnos.",
     "soundOn": "Som: ligado",
-    "soundOff": "Som: desligado"
+    "soundOff": "Som: desligado",
+    "feature_slalom_title": "Três passagens à frente",
+    "feature_slalom_body": "Esta rota tem três aberturas em lados alternados. Planeje a próxima curva antes de avançar. Compare GPS e sensor após cada movimento; uma passagem livre não significa que o sinal é confiável.",
+    "practiceCalm": "Mar calmo: pratique leituras no modo Simples e compare a estimativa lilás com o GPS. Experimente outra quantidade de medições e observe a incerteza. Os níveis 01–04 não têm correntes, obstáculos nem ataques.",
+    "practiceCurrent": "A corrente é leve. Meça depois de avançar, compare a posição estimada com o GPS e ajuste o rumo se precisar.",
+    "practiceOpenWater": "Mar aberto nem sempre pede linha reta. Pequenas pedras e correntes pedem ajustes graduais de rumo. Consulte a estimativa do sensor antes da próxima manobra.",
+    "practicePassages": "Planeje uma passagem segura, faça uma leitura e compare com o GPS. O sensor ajuda a estimar onde você está; ele não conduz o navio nem garante uma posição exata."
   },
   "es": {
     "appTitle": "Ghost Route",
@@ -624,8 +636,8 @@ const TEXTOS = {
     "nextLevel": "Siguiente nivel",
     "campaignComplete": "Has completado los 100 niveles",
     "tutorialHeading": "Fija un rumbo de 045° (NE). Cada avance recorre una distancia fija. Mantén este rumbo durante los cuatro turnos de entrenamiento; aquí no hay corrientes ni ataques.",
-    "tutorialSensor": "Mantén el modo simple y 500 mediciones. La densidad lila muestra posiciones posibles. Más mediciones reducen la incertidumbre del muestreo y consumen presupuesto.",
-    "tutorialGps": "Compara el cuadrado GPS con la estimación del sensor. Aquí el GPS es fiable. A partir del nivel 03 aparecen lecturas falsas: márcalas después de observarlas.",
+    "tutorialSensor": "El sensor simulado transforma la firma magnética en fase cuántica y usa mediciones repetidas para estimar la posición. Mantén Simple y 500 mediciones. La nube lila muestra posibilidades; más mediciones reducen el ruido de muestreo y consumen presupuesto.",
+    "tutorialGps": "Compara el cuadrado GPS con la estimación del sensor. Aquí el GPS es fiable. A partir del nivel 35 aparecen lecturas falsas: márcalas después de observarlas.",
     "tutorialRescue": "Un avance más hacia el noreste te lleva a AURORA-1. Termina a menos de {radius} km de la cápsula. Revisa la ruta al final y elige el siguiente nivel.",
     "levelIntro": "Llega a AURORA-1 en {turns} turnos o menos. Radio de rescate: {radius} km.",
     "trainingMode": "Entrenamiento guiado",
@@ -655,7 +667,13 @@ const TEXTOS = {
     "feature_ghost_title": "Aurora fantasma",
     "feature_ghost_body": "Dos señales de Aurora aparecen durante el engaño del GPS. La falsa sigue el error del GPS. Compara el GPS con la estimación del sensor de tu posición; solo alcanzar la cápsula real completa el rescate. Seguir a la fantasma desperdicia turnos.",
     "soundOn": "Sonido: activado",
-    "soundOff": "Sonido: desactivado"
+    "soundOff": "Sonido: desactivado",
+    "feature_slalom_title": "Tres pasos por delante",
+    "feature_slalom_body": "Esta ruta tiene tres aberturas en lados alternados. Planea la próxima curva antes de avanzar. Compara GPS y sensor después de cada movimiento; un paso libre no significa que la señal sea fiable.",
+    "practiceCalm": "Mar tranquilo: practica lecturas en modo Simple y compara la estimación lila con el GPS. Prueba otra cantidad de mediciones y observa la incertidumbre. Los niveles 01–04 no tienen corrientes, obstáculos ni ataques.",
+    "practiceCurrent": "La corriente es suave. Mide después de avanzar, compara la posición estimada con el GPS y ajusta el rumbo si hace falta.",
+    "practiceOpenWater": "Mar abierto no siempre exige una línea recta. Pequeñas rocas y corrientes requieren cambios graduales de rumbo. Consulta la estimación del sensor antes de la próxima maniobra.",
+    "practicePassages": "Planea un paso seguro, mide y compara con el GPS. El sensor ayuda a estimar dónde estás; no conduce el barco ni garantiza una posición exacta."
   },
   "pt-PT": {
     "appTitle": "Ghost Route",
@@ -843,8 +861,8 @@ const TEXTOS = {
     "nextLevel": "Próximo nível",
     "campaignComplete": "Tu concluiu os 100 níveis",
     "tutorialHeading": "Ajusta o rumo para 045° (NE). Cada avanço percorre uma distância fixa. Mantém este rumo nos quatro turnos do tutorial; aqui não há correntes nem ataques.",
-    "tutorialSensor": "Mantém o modo simples e 500 medições. A densidade lilás mostra posições possíveis. Mais medições reduzem a incerteza da amostragem e gastam o orçamento.",
-    "tutorialGps": "Compara o quadrado GPS com a estimativa do sensor. Neste treino, o GPS é fiável. A partir do nível 03 surgem leituras falsas: marca uma leitura depois de a observares.",
+    "tutorialSensor": "O sensor simulado transforma a assinatura magnética em fase quântica e usa medições repetidas para estimar a posição. Mantém Simples e 500 medições. A nuvem lilás mostra possibilidades; mais medições reduzem o ruído da amostragem e gastam o orçamento.",
+    "tutorialGps": "Compara o quadrado GPS com a estimativa do sensor. Neste treino, o GPS é fiável. A partir do nível 35 surgem leituras falsas: marca uma leitura depois de a observares.",
     "tutorialRescue": "Mais um avanço para nordeste leva-te à AURORA-1. Termina a menos de {radius} km da cápsula. Revê a rota no final e escolhe o próximo nível.",
     "levelIntro": "Chegue à AURORA-1 em até {turns} turnos. Raio de resgate: {radius} km.",
     "trainingMode": "Treino guiado",
@@ -874,6 +892,12 @@ const TEXTOS = {
     "feature_ghost_title": "Aurora-fantasma",
     "feature_ghost_body": "Dois sinais da Aurora surgem durante o engano do GPS. O falso acompanha o erro do GPS. Compara o GPS com a estimativa do sensor sobre a tua posição; só alcançar a cápsula verdadeira conclui o salvamento. Seguir a fantasma desperdiça turnos.",
     "soundOn": "Som: ligado",
-    "soundOff": "Som: desligado"
+    "soundOff": "Som: desligado",
+    "feature_slalom_title": "Três passagens à frente",
+    "feature_slalom_body": "Esta rota tem três aberturas em lados alternados. Planeia a próxima curva antes de avançar. Compara GPS e sensor após cada movimento; uma passagem livre não significa que o sinal é fiável.",
+    "practiceCalm": "Mar calmo: pratica leituras no modo Simples e compara a estimativa lilás com o GPS. Experimenta outra quantidade de medições e observa a incerteza. Os níveis 01–04 não têm correntes, obstáculos nem ataques.",
+    "practiceCurrent": "A corrente é suave. Mede depois de avançar, compara a posição estimada com o GPS e ajusta o rumo se necessário.",
+    "practiceOpenWater": "Mar aberto nem sempre pede linha reta. Pequenas pedras e correntes pedem ajustes graduais de rumo. Consulta a estimativa do sensor antes da próxima manobra.",
+    "practicePassages": "Planeia uma passagem segura, faz uma leitura e compara com o GPS. O sensor ajuda a estimar onde estás; não conduz o navio nem garante uma posição exata."
   }
 };

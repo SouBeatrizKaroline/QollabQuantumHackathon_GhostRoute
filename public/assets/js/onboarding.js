@@ -67,7 +67,10 @@ function installMissionExperience(App){
   };
   proto.ackFeature=function(){
     const key=this.introQueue.shift();if(!key)return;
-    if(key.startsWith('tutorial'))this.tutorialAcknowledged=Number(key.slice(-1));else this.seenFeatures.add(key);
+    if(key.startsWith('tutorial')){
+      this.tutorialAcknowledged=Number(key.slice(-1));
+      if(key==='tutorial1')try{window.localStorage.setItem('ghost-route.sensor-intro-seen','1');}catch{}
+    }else this.seenFeatures.add(key);
     this.savePreferences();this.sound.play('click');
     if(this.introQueue.length){this.renderIntro();return;}
     document.getElementById('feature-intro').hidden=true;document.getElementById('game-shell').inert=!this.missionMenu.hidden;
@@ -83,7 +86,7 @@ function installMissionExperience(App){
   proto.startNewGame=function(seed){
     this.introQueue=[];this.tutorialAcknowledged=-1;document.getElementById('feature-intro').hidden=true;
     start.call(this,seed);
-    const ghz=this.sensorModeSelect.querySelector('option[value="ghz"]');if(ghz){ghz.disabled=this.levelNumber<6;ghz.hidden=this.levelNumber<6;}
+    const ghz=this.sensorModeSelect.querySelector('option[value="ghz"]');if(ghz){ghz.disabled=this.levelNumber<45;ghz.hidden=this.levelNumber<45;}
     if(this.experienceReady&&this.missionMenu?.hidden)this.introduceMission();
   };
   const close=proto.closeMissionMenu;

@@ -7,7 +7,7 @@ Usa imágenes y resultados reales. Mantén Ghost Route, SPOOFED, Aurora-1 y Quoo
 | Tiempo | Mostrar | Decir |
 | --- | --- | --- |
 | 00:00–00:30 | Menú, idiomas y tutorial 00. | “Cuando el GPS miente, ¿en qué señal confías? En Ghost Route, conduces el SPOOFED para rescatar a la tripulación de Aurora-1. El primer viaje enseña los controles en cuatro turnos.” |
-| 00:30–01:10 | Nivel 06 o posterior, introducciones y controles Simple/GHZ. | “Quoora ofrece un sensor cuántico simulado. Más mediciones consumen más recursos. GHZ responde al triple de la fase, pero deja tres candidatas: la sensibilidad plantea una decisión, no una posición garantizada.” |
+| 00:30–01:10 | Nivel 45 o posterior, introducciones y controles Simple/GHZ. | “Quoora ofrece un sensor cuántico simulado. Más mediciones consumen más recursos. GHZ responde al triple de la fase, pero deja tres candidatas: la sensibilidad plantea una decisión, no una posición garantizada.” |
 | 01:10–01:45 | Lectura sospechosa observada, marca y mensaje del walkie-talkie. | “Saltos, deriva y congelación aparecen gradualmente. Compara los instrumentos, marca la lectura observada y ajusta la ruta para evitar obstáculos.” |
 | 01:45–02:15 | Resultado real, repetición y exportación JSON. | “La repetición revela la ruta real y el historial de ataques. Tus decisiones se pueden inspeccionar y repetir con el modelo de circuitos Python.” |
 | 02:15–02:45 | Circuitos o ejecución real en Qollab; enlaces de código y juego. | “El navegador muestrea el modelo offline. Circuitos Qiskit separados permiten verificar la implementación. La entrada de Qollab reúne ambos modos en un trabajo de ocho cúbits.” |
@@ -25,3 +25,5 @@ This effort is supported by Qollab & IonQ
 [Visión general](project-page.md) · [Lista de presentación](submission-checklist.md)
 
 Origen científico: explicar que Ramsey/GHZ y navegación magnética son técnicas existentes; la contribución original es su integración educativa. Mostrar la [bibliografía y simplificaciones](scientific-basis.md).
+
+[Aprendizaje del sensor y progresión de la campaña](campaign-design.md)
