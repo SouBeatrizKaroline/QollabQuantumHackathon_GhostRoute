@@ -59,13 +59,13 @@ for(const lang of['pt-BR','es','en']){
  assert.equal(get('translated-credit').hidden,lang==='en');
 }
 while(!game.state.isFinished)game.advanceTurn();
-assert.ok(get('dialogue-box').textContent.includes(a.TEXTOS.en.endingDeceived));
+assert.equal(get('dialogue-box').textContent,a.TEXTOS.en.endingDeceived.replace('{radius}','2.0'));
 assert.equal(get('last-reading').textContent.includes(a.TEXTOS.en.budgetExhausted),false,'Do not tell a finished player to continue');
 get('btn-close-replay').click();
 for(const lang of['pt-BR','es']){
  game.currentLang=lang;game.updateLocalization();
  assert.equal(game.replayModal.style.display,'none','Changing language must not reopen a closed replay');
- assert.equal(get('dialogue-box').textContent,a.TEXTOS[lang].endingDeceived);
+ assert.equal(get('dialogue-box').textContent,a.TEXTOS[lang].endingDeceived.replace('{radius}','2,0'));
  assert.equal(get('outcome-banner').textContent,get('dialogue-box').textContent);
 }
 game.openReplayModal();
@@ -138,6 +138,35 @@ assert.equal(get('game-shell').inert,false,'Acknowledgement restores play');
 assert.ok(JSON.parse(saved.get('ghost-route.preferences')).features.length>0,'Acknowledged mechanics persist');
 campaign.beginCampaignLevel(99);assert.equal(campaign.introQueue.length,0,'Restart does not repeat acknowledged terrain cards');
 console.log('PASS staged advanced-level onboarding, blocked turns, four-language cards, acknowledgement and saved learning');
+
+// Availability must survive telemetry updates and language changes, not only startup.
+for(const level of[0,1,44,45,99]){
+ campaign.beginCampaignLevel(level);while(campaign.introQueue.length)campaign.ackFeature();
+ campaign.updateTelemetryUI();
+ const ghz=campaign.sensorModeSelect.options.find(option=>option.value==='ghz');
+ assert.equal(ghz.disabled,level<45,`Level ${level}: GHZ follows the learning milestone`);
+ campaign.changeLanguage('es');assert.equal(ghz.disabled,level<45);
+ campaign.state.remainingShots=0;campaign.updateTelemetryUI();assert.equal(ghz.disabled,true);
+}
+
+// A rescue before a scheduled attack must only score attacks actually observed.
+campaign.beginCampaignLevel(99);while(campaign.introQueue.length)campaign.ackFeature();
+campaign.state.turnsRecord=Array.from({length:8},(_,i)=>({turn:i+1,heading:45,realAfter:[86,87],gpsReported:[77,90],inertial:[86,87],sensorMode:'none',shots:0,markedSuspicious:i===7,remainingShots:3000}));
+campaign.state.realPosition=[86,87];campaign.state.isFinished=true;
+campaign.openReplayModal();assert.equal(get('val-rep-score').textContent,'2 / 2','Do not count the future freeze');
+campaign.state.turnsRecord.at(-1).markedSuspicious=false;campaign.openReplayModal();
+assert.equal(get('btn-replay-mark-final').hidden,false,'Final observation can be marked after automatic rescue');
+get('btn-replay-mark-final').click();
+assert.equal(campaign.state.turnsRecord.at(-1).markedSuspicious,true);
+assert.equal(get('val-rep-score').textContent,'2 / 2');
+get('btn-replay-mark-final').click();assert.equal(get('val-rep-score').textContent,'0 / 2');
+campaign.scrubberRange.value='2';campaign.renderScrubberTurn(2);
+assert.equal(get('btn-replay-mark-final').hidden,true,'Historical decisions cannot be rewritten during replay');
+get('btn-replay-mark-final').click();assert.equal(campaign.state.turnsRecord.at(-1).markedSuspicious,false);
+assert.equal(get('histogram-caption').hidden,true,'No histogram explanation for a turn without a measurement');
+campaign.state.realPosition=[0,0];campaign.openReplayModal();
+assert.ok(get('outcome-banner').textContent.includes('1,6 km'),'Failure uses the actual rescue radius');
+console.log('PASS GHZ gating, encountered-attack scoring, final-observation marking and actual rescue radius');
 
 // Python verifies actual controller exports for all generated configurations.
 if(process.env.GHOST_ROUTE_EXPORT_DIR){

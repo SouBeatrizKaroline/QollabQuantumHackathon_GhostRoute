@@ -440,7 +440,8 @@ class GhostRouteApp {
     let attacksDetected = 0;
     let falseAlarms = 0;
 
-    attacksDetected = MISSAO.ataques.filter(a=>this.state.turnsRecord.some(r=>r.markedSuspicious&&r.turn>=a.inicio&&r.turn<=a.fim)).length;
+    const encounteredAttacks = MISSAO.ataques.filter(a=>this.state.turnsRecord.some(r=>r.turn>=a.inicio&&r.turn<=a.fim));
+    attacksDetected = encounteredAttacks.filter(a=>this.state.turnsRecord.some(r=>r.markedSuspicious&&r.turn>=a.inicio&&r.turn<=a.fim)).length;
     const honestMarks = this.state.turnsRecord.filter(r => !activeAttacks(r.turn).length && r.markedSuspicious);
     falseAlarms = honestMarks.length;
 
@@ -449,7 +450,7 @@ class GhostRouteApp {
     const dy = this.state.realPosition[1] - MISSAO.capsula.pouso_real[1];
     const finalDist = Math.hypot(dx, dy);
 
-    document.getElementById('val-rep-score').textContent = `${attacksDetected} / ${MISSAO.ataques.length}`;
+    document.getElementById('val-rep-score').textContent = `${attacksDetected} / ${encounteredAttacks.length}`;
     document.getElementById('val-rep-false').textContent = `${falseAlarms}`;
     document.getElementById('val-rep-dist').textContent = `${finalDist.toFixed(1)} km`;
     document.getElementById('val-rep-shots').textContent = `${this.state.remainingShots}`;
@@ -462,10 +463,10 @@ class GhostRouteApp {
       banner.classList.add("outcome-aground");
       banner.textContent = t.endingAground;
     } else if (finalDist <= MISSAO.vitoria.raio_resgate_km) {
-      if (MISSAO.ataques.length === 0) {
+      if (encounteredAttacks.length === 0) {
         banner.classList.add('outcome-rescue');
         banner.textContent = fillText(t.levelCompleted,{level:String(this.levelNumber).padStart(2,'0')}) + ' · AURORA-1 ✓';
-      } else if (attacksDetected === MISSAO.ataques.length) {
+      } else if (attacksDetected === encounteredAttacks.length) {
         banner.classList.add("outcome-perfect");
         banner.textContent = t.endingPerfect;
       } else {
@@ -474,7 +475,7 @@ class GhostRouteApp {
       }
     } else {
       banner.classList.add("outcome-deceived");
-      banner.textContent = t.endingDeceived;
+      banner.textContent = fillText(t.endingDeceived,{radius:numberText(MISSAO.vitoria.raio_resgate_km,this.currentLang)});
     }
 
     this.scrubberRange.max = this.state.turnsRecord.length;
@@ -662,7 +663,12 @@ GhostRouteApp.prototype.updateTelemetryUI = function () {
     x:numberText(map[0],this.currentLang), y:numberText(map[1],this.currentLang), distance:numberText(Math.hypot(map[0]-target[0],map[1]-target[1]),this.currentLang),
     turn:completed, alerts:(!rec?t.gpsPending:aligned?t.gpsAligned:t.gpsMismatch)
   });
-  Array.from(this.sensorModeSelect.options).forEach(opt => opt.disabled = opt.value !== 'none' && exhausted);
+  Array.from(this.sensorModeSelect.options).forEach(opt => {
+    const locked=opt.value==='ghz'&&this.levelNumber!==undefined&&this.levelNumber<45;
+    opt.disabled = locked || opt.value !== 'none' && exhausted;
+    if(opt.value==='ghz')opt.hidden=locked;
+  });
+  if(this.sensorModeSelect.selectedOptions[0]?.disabled&&!exhausted)this.sensorModeSelect.value='simple';
   if (exhausted) this.sensorModeSelect.value = 'none';
   this.sensorShotsSelect.disabled = this.sensorModeSelect.value === 'none' || exhausted || this.state.isFinished;
   this.sensorModeSelect.disabled = this.state.isFinished;
@@ -738,6 +744,14 @@ GhostRouteApp.prototype.bindEvents = function () {
     }
   });
   this.sensorModeSelect.addEventListener('change', () => this.updateTelemetryUI());
+  document.getElementById('btn-replay-mark-final').addEventListener('click',()=>{
+    const rec=lastRecord(this);
+    if(!this.state.isFinished||!rec||Number(this.scrubberRange.value)!==rec.turn)return;
+    rec.markedSuspicious=!rec.markedSuspicious;
+    this.openReplayModal();
+    document.getElementById('btn-replay-mark-final').focus();
+    this.announce(TEXTOS[this.currentLang][rec.markedSuspicious?'markSaved':'markRemoved']);
+  });
   document.getElementById('btn-radio-toggle').addEventListener('click', e => {
     const open = document.querySelector('.radio-widget').classList.toggle('radio-open');
     e.currentTarget.setAttribute('aria-expanded',String(open));
@@ -775,6 +789,10 @@ GhostRouteApp.prototype.renderScrubberTurn = function (turnIndex) {
   const rec = this.state.turnsRecord[turnIndex - 1];
   if (!rec) return;
   const t = TEXTOS[this.currentLang];
+  const finalMark=document.getElementById('btn-replay-mark-final');
+  finalMark.hidden=!this.state.isFinished||rec!==lastRecord(this);
+  finalMark.textContent=fillText(t[rec.markedSuspicious?'unmarkObserved':'observedMark'],{turn:rec.turn});
+  finalMark.setAttribute('aria-pressed',String(Boolean(rec.markedSuspicious)));
   const focusedTurn = document.activeElement?.dataset?.turn;
   const finalDist = Math.hypot(this.state.realPosition[0]-MISSAO.capsula.pouso_real[0],this.state.realPosition[1]-MISSAO.capsula.pouso_real[1]);
   document.getElementById('val-rep-dist').textContent = `${numberText(finalDist,this.currentLang)} km`;
@@ -789,6 +807,7 @@ GhostRouteApp.prototype.renderScrubberTurn = function (turnIndex) {
   const cv = document.getElementById('histogram-canvas'), ctx = cv.getContext('2d');
   ctx.clearRect(0,0,cv.width,cv.height);
   cv.style.display = rec.shots ? 'block' : 'none';
+  document.getElementById('histogram-caption').hidden=!rec.shots;
   if(rec.shots) {
     const bars = [['X0',rec.NX-rec.kX],['X1',rec.kX],['Y0',rec.NY-rec.kY],['Y1',rec.kY]];
     const max = Math.max(rec.NX,rec.NY,1);

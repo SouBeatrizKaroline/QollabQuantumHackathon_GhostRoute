@@ -56,10 +56,12 @@ Idiomas: **IN** inglês, **BR** português do Brasil (predefinido), **PT** portu
 
 ## Aprende com o resultado
 
-Um salvamento seguro conclui o nível. O salvamento perfeito também exige assinalar pelo menos uma leitura observada de cada ataque presente; os falsos alarmes são apresentados separadamente. A repetição mostra rotas verdadeira, GPS e inercial, momentos dos ataques e contagens de medições. O mapa de probabilidade de cada turno não aparece na repetição histórica porque essas imagens não são guardadas. A exportação guarda as decisões em JSON para inspeção e repetição dos circuitos em Python.
+Um salvamento seguro conclui o nível. O salvamento perfeito também exige assinalar pelo menos uma leitura observada de cada ataque encontrado antes de a missão terminar; os falsos alarmes são apresentados separadamente. A repetição mostra rotas verdadeira, GPS e inercial, momentos dos ataques e contagens de medições. O mapa de probabilidade de cada turno não aparece na repetição histórica porque essas imagens não são guardadas. A exportação guarda as decisões em JSON para inspeção e repetição dos circuitos em Python.
 
 Mais medições reduzem o ruído de amostragem e gastam o orçamento. Ainda podes navegar sem medições. O alerta de coerência indica discordância com a estimativa, não deteção garantida de ataque. [Compreende o modelo](technical-guide.md).
 
 Ajuda e ações no menu contém guia de navegação, reinício e exportação de decisões. Na vertical, o botão principal inicia o nível recém-selecionado; nos restantes casos continua a missão ou abre a repetição.
 
 [Aprendizagem do sensor e progressão da campanha](campaign-design.md)
+
+Quando a missão termina automaticamente, o resultado permite assinalar ou retirar a suspeita da leitura GPS final. Decisões anteriores permanecem fixas. A pontuação e a decisão exportada acompanham esta revisão final; isto não comprova deteção de ataques em tempo real.

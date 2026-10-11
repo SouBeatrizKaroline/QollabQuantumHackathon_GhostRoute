@@ -125,4 +125,6 @@ La radio queda separada del radar GPS, brújula, telemetría y timón. Abrir o c
 
 `tests/browser-onboarding.cjs` comprueba el rescate real en los cuatro turnos del nivel 00, tarjetas traducidas, pausa y secuencia de diálogos del sensor y las mecánicas en 1336×605, 390×667, 320×568 y 667×375 en los cuatro idiomas. Usa la misma configuración Playwright de la suite de diseño.
 
+`node tests/browser-qa.cjs` ejercita rescate y fallo reales, marca GPS final, falsas alarmas, descarga JSON, ayuda del sensor y disponibilidad de GHZ antes/después del nivel 45 y del presupuesto agotado. Cubre cuatro idiomas en 1366×768, 1336×605, 320×568 y 667×375, con la misma configuración Playwright.
+
 [Aprendizaje del sensor y progresión de la campaña](campaign-design.md)

@@ -125,4 +125,6 @@ The radio stays clear of GPS radar, compass, telemetry and helm. Opening or clos
 
 `tests/browser-onboarding.cjs` verifies the actual four-turn level 00 rescue, translated cards, pause during explanations and sequential sensor/mechanic dialogs at 1336×605, 390×667, 320×568 and 667×375 in all four languages. Run it with the same Playwright configuration as the layout suite.
 
+`node tests/browser-qa.cjs` exercises actual rescue and failure results, final GPS marking, false alarms, JSON downloads, sensor help and GHZ availability before/after level 45 and budget exhaustion, in four languages at 1366×768, 1336×605, 320×568 and 667×375. Use the same Playwright configuration.
+
 [Sensor learning and campaign progression](campaign-design.md)

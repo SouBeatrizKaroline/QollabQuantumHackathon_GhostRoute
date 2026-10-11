@@ -2,6 +2,16 @@
 
 **English** · [Português (Brasil)](pt-BR/qa-report.md) · [Português (Portugal)](pt-PT/qa-report.md) · [Español](es/qa-report.md)
 
+## Technical QA follow-up — 11 October 2026
+
+Fixed: GHZ remains unavailable before level 45 after telemetry and language updates; replay scores only attacks actually encountered; failure text uses the level’s rescue radius; sensor help distinguishes simulated phase sensing, candidate phases and sampling uncertainty. Turns without measurements hide the histogram caption.
+
+When a mission ends automatically, the result offers a suspicion toggle for the final GPS reading. Earlier decisions remain fixed. The score and exported decision update with this final review; it is not evidence of real-time attack detection.
+
+Regression evidence: 112 Python tests, nine frontend suites and browser checks in four languages. Layout covers 21 viewport sizes, tutorial sequencing covers four sizes and the new end-of-mission checks cover four sizes, including 320×568 and 667×375. Those checks exercise successful and failed rescue, final marking, false alarms, JSON download, sensor help, GHZ gating and exhausted sensing.
+
+`tests/browser-qa.cjs`
+
 ## Current learning progression — 11 October 2026
 
 The educational purpose remains understanding sensing: sampling uncertainty, the relationship between magnetic signature and phase, phase ambiguity, combining measurements with movement, and comparing independent position evidence with GPS. Calm radio prompts invite different shot counts; later terrain gives these decisions a reason. Navigation hazards are applications of the lesson. The browser remains an educational statistical simulation, not a physical magnetometer or demonstrated quantum advantage.

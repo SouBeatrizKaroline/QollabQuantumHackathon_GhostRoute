@@ -2,6 +2,16 @@
 
 [English](../qa-report.md) · **Português (Brasil)** · [Português (Portugal)](../pt-PT/qa-report.md) · [Español](../es/qa-report.md)
 
+## Nova revisão técnica de QA — 11 de outubro de 2026
+
+Corrigidos: GHZ permanece indisponível antes do nível 45 após atualizações e troca de idioma; a pontuação considera apenas ataques encontrados; o texto de falha usa o raio de resgate do nível; a ajuda distingue sensoriamento simulado de fase, fases candidatas e incerteza da amostragem. Turnos sem medição ocultam a legenda do histograma.
+
+Quando a missão termina automaticamente, o resultado permite marcar ou desmarcar a leitura GPS final. Decisões anteriores permanecem fixas. A pontuação e a decisão exportada acompanham essa revisão final; isso não comprova detecção de ataques em tempo real.
+
+Evidência de regressão: 112 testes Python, nove suítes do frontend e verificações de navegador nos quatro idiomas. O layout cobre 21 tamanhos, a sequência de tutoriais cobre quatro tamanhos e os novos fluxos de resultado cobrem quatro tamanhos, incluindo 320×568 e 667×375. Eles exercitam resgate bem-sucedido e falha, marcação final, falsos alarmes, download JSON, ajuda do sensor, bloqueio de GHZ e esgotamento de medições.
+
+`tests/browser-qa.cjs`
+
 ## Progressão atual de aprendizagem — 11 de outubro de 2026
 
 O objetivo educacional continua sendo compreender o sensor: incerteza da amostragem, relação entre assinatura magnética e fase, ambiguidade, combinação de leitura com movimento e comparação de evidências independentes com o GPS. O rádio nas fases calmas sugere variar as medições; o terreno posterior dá um motivo para essas decisões. Os obstáculos são uma aplicação do aprendizado. O navegador continua uma simulação estatística educativa, sem magnetômetro físico ou vantagem quântica demonstrada.

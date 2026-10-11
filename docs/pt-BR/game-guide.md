@@ -56,10 +56,12 @@ Idiomas: **IN** inglês, **BR** português do Brasil (padrão), **PT** portuguê
 
 ## Aprenda com o resultado
 
-Um resgate seguro conclui a fase. O resgate perfeito também exige marcar ao menos uma leitura observada de cada ataque presente; falsos alarmes são informados separadamente. A repetição mostra rotas real, GPS e inercial, horários dos ataques e contagens de medições. O mapa de probabilidade de cada turno não aparece na repetição histórica porque essas imagens não são armazenadas. A exportação salva as decisões em JSON para inspeção e repetição dos circuitos em Python.
+Um resgate seguro conclui a fase. O resgate perfeito também exige marcar ao menos uma leitura observada de cada ataque encontrado antes de a missão terminar; falsos alarmes são informados separadamente. A repetição mostra rotas real, GPS e inercial, horários dos ataques e contagens de medições. O mapa de probabilidade de cada turno não aparece na repetição histórica porque essas imagens não são armazenadas. A exportação salva as decisões em JSON para inspeção e repetição dos circuitos em Python.
 
 Mais medições reduzem o ruído de amostragem e gastam o orçamento. Você ainda pode navegar sem medições. O alerta de coerência indica discordância com a estimativa, não detecção garantida de ataque. [Entenda o modelo](technical-guide.md).
 
 Ajuda e ações no menu contém o guia de navegação, reinício e exportação de decisões. Em celular na vertical, o botão principal inicia o nível recém-selecionado; nos demais casos continua a missão ou abre seu replay.
 
 [Aprendizagem do sensor e progressão da campanha](campaign-design.md)
+
+Quando a missão termina automaticamente, o resultado permite marcar ou desmarcar a leitura GPS final. Decisões anteriores permanecem fixas. A pontuação e a decisão exportada acompanham essa revisão final; isso não comprova detecção de ataques em tempo real.
