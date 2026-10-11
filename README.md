@@ -52,6 +52,8 @@ The browser runs an **educational simulation**. A separate Python implementation
 
 ## Play locally, without a build step
 
+To play the campaign inside Qollab, build and upload the [HTML/JS distribution](docs/qollab-playable.md). It includes the game and a separate one-job Qiskit sensor experiment on the selected backend.
+
 Open [public/index.html](public/index.html) in your browser, keeping its assets folder beside it. No frontend installation is required. For a local server:
 
 ~~~sh
