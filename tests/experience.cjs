@@ -10,10 +10,10 @@ for(const lang of ['pt-BR','pt-PT','en','es']){
   assert.ok(a.TEXTOS[lang]['feature_'+key+'_title']);assert.ok(a.TEXTOS[lang]['feature_'+key+'_body']);
  }
 }
-for(const [level,key] of [[1,'rocks'],[1,'current'],[3,'jump'],[6,'ghz'],[10,'reef'],[10,'blackout'],[10,'drift'],[30,'freeze'],[60,'budget']]){
+for(const [level,key] of [[1,'sandbank'],[2,'rocks'],[1,'current'],[3,'jump'],[3,'ghost'],[6,'ghz'],[10,'reef'],[10,'blackout'],[10,'drift'],[30,'freeze'],[60,'budget']]){
  assert.ok(!a.createCampaignMission(level-1).mecanicas.includes(key));assert.ok(a.createCampaignMission(level).mecanicas.includes(key));
 }
-const all=a.featureQueue(a.createCampaignMission(99),new Set());assert.equal(all.length,9);
+const all=a.featureQueue(a.createCampaignMission(99),new Set());assert.equal(all.length,11);
 assert.equal(a.featureQueue(a.createCampaignMission(99),new Set(all)).length,0);
 assert.equal(a.featureQueue(a.createCampaignMission(0),new Set()).length,0);
 let started=0,stopped=0,connections=0;

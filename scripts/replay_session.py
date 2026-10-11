@@ -116,6 +116,15 @@ def validate_session(session):
                 raise SessionValidationError(f"pedras[{rock_index}] must have 3 to 8 vertices")
             for index, vertex in enumerate(rock):
                 _coordinate(vertex, f"pedras[{rock_index}][{index}]")
+        for key in ("barreiras", "bancos"):
+            walls = mission.get(key, [])
+            if not isinstance(walls, list) or len(walls) > 8:
+                raise SessionValidationError(f"{key} must be a list of at most 8 walls")
+            for wall_index, wall in enumerate(walls):
+                if not isinstance(wall, list) or not 3 <= len(wall) <= 12:
+                    raise SessionValidationError(f"{key}[{wall_index}] must have 3 to 12 vertices")
+                for index, vertex in enumerate(wall):
+                    _coordinate(vertex, f"{key}[{wall_index}][{index}]")
     field = _object(mission.get("campo"), "campo")
     _number(field.get("base"), "campo.base")
     _number(field.get("kappa"), "campo.kappa")

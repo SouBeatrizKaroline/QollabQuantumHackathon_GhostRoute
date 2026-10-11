@@ -70,10 +70,13 @@ function createCampaignMission(level) {
   const target = level === 0 ? [26, 31] : level < 10
     ? [round(26 + level * 5.5), round(31 + level * 5)]
     : [round(79 + difficulty * 7), round(79 + difficulty * 8)];
-  if (level > 0) m.navio.velocidade_km_turno = Math.hypot(target[0]-m.porto[0],target[1]-m.porto[1]) / m.turnos * (1.06 + .10 * Math.min(1,level/30));
+  // Gates: walls of reef or sandbank across the route, each with one opening on
+  // alternating sides, so every voyage bends into a zigzag instead of a straight line.
+  const gateCount = level === 0 ? 0 : level < 10 ? 1 : level < 40 ? 2 : 3;
+  if (level > 0) m.navio.velocidade_km_turno = Math.hypot(target[0]-m.porto[0],target[1]-m.porto[1]) / m.turnos * (1.22 + .07 * gateCount);
   m.mecanicas = ['navigation', 'sensor', 'rescue'];
-  if (level >= 1) m.mecanicas.push('rocks', 'current');
-  if (level >= 3) m.mecanicas.push('jump');
+  if (level >= 1) m.mecanicas.push('sandbank', 'current');
+  if (level >= 3) m.mecanicas.push('jump', 'ghost');
   if (level >= 6) m.mecanicas.push('ghz');
   if (level >= 10) m.mecanicas.push('reef', 'blackout', 'drift');
   if (level >= 30) m.mecanicas.push('freeze');
@@ -85,28 +88,75 @@ function createCampaignMission(level) {
   const port = m.porto, along = [target[0]-port[0], target[1]-port[1]], span = Math.hypot(...along);
   const dir = [along[0]/span, along[1]/span], side = [-dir[1], dir[0]];
   const at = (t, offset) => [port[0]+along[0]*t+side[0]*offset, port[1]+along[1]*t+side[1]*offset];
-  // The big reef sits mid-route from level 10; before that it stays out of the way.
-  const middle = at(.5, 0), reefH = 3 + difficulty * 2;
-  m.recife = level < 10 ? [[78,22],[84,22],[84,28],[78,28]] :
-    [[round(middle[0]-4),round(middle[1]-1)],[round(middle[0]+4),round(middle[1]-1)],[round(middle[0]+4),round(middle[1]-1+reefH)],[round(middle[0]-4),round(middle[1]-1+reefH)]];
-  // Stable formations avoid a fresh random difficulty spike at every level.
-  // Existing rocks grow gradually; newly introduced ones start small.
-  m.pedras = [];
-  const rockCount = level === 0 ? 0 : 2 + Math.floor(difficulty * 6);
-  const slots = [[.22,12-8*curve],[.32,-12+8*curve],[.40,10],[.58,-10],[.65,13],[.75,-11],[.82,9],[.48,-16]];
-  for(let index=0;index<rockCount;index++){
-    const introduced=index<2?1:Math.ceil((index-1)*99/6);
-    const growth=Math.min(1,Math.max(0,(level-introduced)/14));
-    const radius=index<2?1.1+curve*1.5:.65+growth*(1.5+rng()*.5);
-    const center=at(...slots[index]),sides=6,angle=rng()*Math.PI;
-    const shape=Array.from({length:sides},()=>.8+rng()*.2);
-    m.pedras.push(shape.map((factor,i)=>{
-      const a=angle+i/sides*Math.PI*2;
-      return [round(center[0]+Math.cos(a)*radius*factor),round(center[1]+Math.sin(a)*radius*factor)];
-    }));
+  // The original square reef now sits away from the route as a landmark.
+  m.recife = [[78,22],[84,22],[84,28],[78,28]];
+  const clip = poly => {
+    // Sutherland-Hodgman clipping to the chart, so every vertex stays inside 1..99 km.
+    let out = poly;
+    for (const [axis, limit, keep] of [[0,1,v=>v>=1],[0,99,v=>v<=99],[1,1,v=>v>=1],[1,99,v=>v<=99]]) {
+      const input = out; out = [];
+      for (let i = 0; i < input.length; i++) {
+        const a = input[i], b = input[(i + 1) % input.length], ia = keep(a[axis]), ib = keep(b[axis]);
+        if (ia) out.push(a);
+        if (ia !== ib) { const f = (limit - a[axis]) / (b[axis] - a[axis]); out.push([a[0] + (b[0]-a[0]) * f, a[1] + (b[1]-a[1]) * f]); }
+      }
+    }
+    return out.map(p => [round(p[0]), round(p[1])]);
+  };
+  m.barreiras = []; m.bancos = []; m.passagens = [];
+  const gateT = gateCount === 0 ? [] : gateCount === 1 ? [.5] : gateCount === 2 ? [.38, .68] : [.3, .55, .78];
+  const width = gateCount === 1 ? 18 - curve * 4 : gateCount === 2 ? 14 - curve * 4 : 12 - curve * 4;
+  gateT.forEach((t, i) => {
+    const sideSign = (i + level) % 2 ? 1 : -1, gap = sideSign * (12 + ((level * 7 + i * 5) % 6));
+    const sand = gateCount === 1 || i % 2 === 1, thick = sand ? 4.4 : 3;
+    m.passagens.push(at(t, gap).map(round));
+    // Each gate is two wall pieces, one on each side of the opening.
+    for (const [from, to] of [[-160, gap - width / 2], [gap + width / 2, 160]]) {
+      const inner = Math.abs(from) < Math.abs(to) ? from : to, outer = inner === from ? to : from, dirOut = Math.sign(outer - inner);
+      const along = h => [dir[0] * h, dir[1] * h], pt = (o, h) => { const q = at(t, o), d = along(h); return [q[0] + d[0], q[1] + d[1]]; };
+      // Sandbanks taper into a soft point at the opening; reefs end square.
+      const tip = sand ? [pt(inner - dirOut * 1.2, 0)] : [];
+      const piece = [pt(outer, -thick / 2), pt(inner, -thick / 2), ...tip, pt(inner, thick / 2), pt(outer, thick / 2)];
+      const clipped = clip(piece);
+      if (clipped.length >= 3) (sand ? m.bancos : m.barreiras).push(clipped);
+    }
+  });
+  // The square landmark reef moves to the first patch of open water away from the walls.
+  const overlaps = (a, b) => a.some(p => isPointInPoly(p, b)) || b.some(p => isPointInPoly(p, a)) ||
+    a.some((p, i) => b.some((q, j) => segmentsIntersect(p, a[(i + 1) % a.length], q, b[(j + 1) % b.length])));
+  const walls = [...m.barreiras, ...m.bancos];
+  const spots = [[78,22],[86,8],[8,86],[90,40],[40,90],[60,8],[8,60]];
+  for (let x = 4; x <= 90; x += 4) for (let y = 4; y <= 90; y += 4) spots.push([x, y]);
+  const clearOf = (x, y) => [port, target, ...m.passagens].every(q => Math.hypot(x + 3 - q[0], y + 3 - q[1]) > 12);
+  for (const [x, y] of spots) {
+    if (!clearOf(x, y)) continue;
+    const square = [[x,y],[x+6,y],[x+6,y+6],[x,y+6]], grown = [[x-3,y-3],[x+9,y-3],[x+9,y+9],[x-3,y+9]];
+    if (!walls.some(w => overlaps(grown, w))) { m.recife = square; break; }
   }
+  // Rocks guard the approaches to each opening without closing it.
+  m.pedras = [];
+  const rockCount = level === 0 ? 0 : Math.min(8, 1 + Math.floor(difficulty * 7));
+  // Distinct slots beside each opening: before/after the wall, on either side of the gap.
+  const slots = [];
+  for (const [dt, sideOfGap] of [[-.1, 1], [.1, -1], [-.07, -1], [.07, 1]])
+    gateT.forEach((t, gi) => slots.push({t: t + dt, gi, sideOfGap}));
+  for (const slot of slots) {
+    if (m.pedras.length >= rockCount) break;
+    const gapOff = (12 + ((level * 7 + slot.gi * 5) % 6)) * ((slot.gi + level) % 2 ? 1 : -1);
+    const off = gapOff + slot.sideOfGap * (width / 2 + 3);
+    const radius = 1 + curve * 1.4 + rng() * .3, center = at(slot.t, off), sides = 6, angle = rng() * Math.PI;
+    const shape = Array.from({length: sides}, () => .8 + rng() * .2);
+    const rock = shape.map((factor, i) => { const a = angle + i / sides * Math.PI * 2; return [round(center[0] + Math.cos(a) * radius * factor), round(center[1] + Math.sin(a) * radius * factor)]; });
+    if (rock.some(p => p.some(v => v <= 1 || v >= 99))) continue;
+    if ([m.recife, ...walls, ...m.pedras].some(o => overlaps(rock, o))) continue;
+    if ([port, target].some(q => Math.hypot(center[0] - q[0], center[1] - q[1]) < radius + 4)) continue;
+    m.pedras.push(rock);
+  }
+  // Rocks are introduced on the first level that actually has them.
+  if (m.pedras.length) m.mecanicas.splice(m.mecanicas.indexOf('sandbank') + 1, 0, 'rocks');
   m.ataques = [];
-  if (level >= 3) m.ataques.push({tipo:'salto',inicio:3,fim:3,deslocamento_km:[-(.8+difficulty*7),difficulty*2]});
+  // Jumps are large enough that the ghost Aurora separates clearly from the real capsule.
+  if (level >= 3) m.ataques.push({tipo:'salto',inicio:3,fim:4,deslocamento_km:[-(3.5+difficulty*5),1+difficulty*2]});
   if (level >= 10) m.ataques.push({tipo:'deriva',inicio:Math.max(3,Math.floor(m.turnos*.4)),fim:m.turnos-2,km_por_turno:[.1+difficulty*.5,-(.1+difficulty*.5)]});
   if (level >= 30) m.ataques.push({tipo:'congelamento',inicio:level<60?m.turnos-2:m.turnos-3,fim:m.turnos-2});
   return m;
@@ -272,7 +322,7 @@ function checkReefCollision(p1, p2, reefPoly) {
 }
 
 // The reef and every rock are obstacles: hitting any of them runs the ship aground.
-function missionObstacles() { return [MISSAO.recife, ...(MISSAO.pedras || [])]; }
+function missionObstacles() { return [MISSAO.recife, ...(MISSAO.pedras || []), ...(MISSAO.barreiras || []), ...(MISSAO.bancos || [])]; }
 function hitsObstacle(p1, p2) { return missionObstacles().some(poly => checkReefCollision(p1, p2, poly)); }
 function distToObstacles(pt) { return Math.min(...missionObstacles().map(poly => distToPolygon(pt, poly))); }
 
@@ -824,7 +874,7 @@ class TacticalMapRenderer {
     const port=this.worldToScreen(...MISSAO.porto);c.fillStyle='#3a2440';c.beginPath();c.moveTo(this.ox,this.oy+this.chartSize);c.lineTo(this.ox+this.scale*8,this.oy+this.chartSize);c.lineTo(this.ox+this.scale*6,this.oy+this.chartSize-this.scale*8);c.lineTo(this.ox+this.scale*2,this.oy+this.chartSize-this.scale*18);c.lineTo(this.ox,this.oy+this.chartSize-this.scale*21);c.fill();c.fillStyle='#ffb34799';for(let i=0;i<9;i++)c.fillRect(this.ox+1+i%3*3,this.oy+this.chartSize-9-Math.floor(i/3)*4,3,2);
     // Known magnetic anomalies: contour rings, not revealed attack locations.
     c.strokeStyle='#b69cff30';c.lineWidth=.5;for(const a of MISSAO.campo.anomalias){const p=this.worldToScreen(a.x,a.y);for(const k of [1,1.45]){c.beginPath();c.arc(p.sx,p.sy,a.raio_km*this.scale*k,0,Math.PI*2);c.stroke();}}
-    this.drawReef(t);this.drawRocks();if(!replay)this.drawHeatmap(e);this.drawTarget(s,t);
+    this.drawReef(t);this.drawBarriers(t);this.drawRocks();if(!replay)this.drawHeatmap(e);this.drawTarget(s,t);
     const inertial=this.worldToScreen(...s.inertialPosition);c.strokeStyle='#e9ddff99';c.lineWidth=.6;c.setLineDash([1,3]);c.beginPath();c.arc(inertial.sx,inertial.sy,s.inertialRadiusKm*this.scale,0,Math.PI*2);c.stroke();c.setLineDash([]);
     if(replay){this.line(s.realHistory,'#fff1de',2);this.line(s.inertialHistory,'#d7c8ff',.8,[1,3]);}else if(debug)this.line(s.realHistory,'#fff1de',1.6);
     this.line(s.gpsHistory,'#ffb347',1,[3,3]);
@@ -839,6 +889,26 @@ class TacticalMapRenderer {
     const b=this.worldToScreen(0,0);if(this.scale>=.7){c.strokeStyle='#e9d8c6';c.beginPath();c.moveTo(b.sx,b.sy+17);c.lineTo(b.sx+this.scale*10,b.sy+17);c.stroke();this.text('10 km',b.sx,b.sy+26,'#e9d8c6');}if(!compact)this.mapLabel(t.northLabel,this.ox+this.chartSize-3,this.oy+10,'#ffd166','right',true); // the compass already shows north on small charts
     this.mapLabels.forEach(label=>this.text(label.label,label.x,label.y,label.color));
     this.drawCompass(s.currentHeading);this.drawRadar(s,e,now);
+  }
+  drawBarriers(t){
+    // Gate walls: coral reefs (hatched red) and sandbanks (pale sand with turquoise shallows).
+    const c=this.ctx,tick=this.reduced?0:Math.floor((this.frameNow||0)/420);
+    const shape=(poly)=>{const p=poly.map(q=>this.worldToScreen(...q));c.beginPath();p.forEach((q,i)=>i?c.lineTo(q.sx,q.sy):c.moveTo(q.sx,q.sy));c.closePath();return p;};
+    const foam=(p,seed,colors)=>{for(let i=0;i<p.length;i++){const a=p[i],b=p[(i+1)%p.length],n=Math.max(2,Math.round(Math.hypot(b.sx-a.sx,b.sy-a.sy)/5));for(let k=0;k<n;k++){if(((k*7+i*3+seed+tick)%5)>1)continue;const f=(k+.5)/n;c.fillStyle=colors[k%2];c.fillRect(Math.round(a.sx+(b.sx-a.sx)*f),Math.round(a.sy+(b.sy-a.sy)*f),1,1);}}};
+    (MISSAO.bancos||[]).forEach((poly,index)=>{
+      shape(poly);c.strokeStyle='#5fc4c455';c.lineWidth=Math.max(3,this.scale*2.2);c.lineJoin='round';c.stroke();c.lineJoin='miter';
+      const p=shape(poly);c.fillStyle='#c79a5e';c.fill();c.save();c.clip();
+      const xs=p.map(q=>q.sx),ys=p.map(q=>q.sy),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+      for(let y=Math.floor(y0);y<y1;y+=2)for(let x=Math.floor(x0)+(y%4?1:0);x<x1;x+=4){c.fillStyle=(x*7+y*3)%11<4?'#e6c88f':'#a97c48';c.fillRect(x,y,1,.5);}
+      c.restore();c.strokeStyle='#f3dcae';c.lineWidth=.7;shape(poly);c.stroke();foam(p,index*3,['#fff6ea','#d9f6f0']);
+    });
+    (MISSAO.barreiras||[]).forEach((poly,index)=>{
+      const p=shape(poly);c.fillStyle='#7a2b3acc';c.fill();c.strokeStyle='#ff7b6b';c.lineWidth=1;c.stroke();c.save();c.clip();
+      const xs=p.map(q=>q.sx),ys=p.map(q=>q.sy),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+      c.strokeStyle='#ff8f7a80';for(let x=x0-(y1-y0);x<x1;x+=4){c.beginPath();c.moveTo(x,y0);c.lineTo(x+(y1-y0),y1);c.stroke();}
+      c.fillStyle='#c4766877';for(let x=Math.floor(x0)+1;x<x1;x+=2)for(let y=Math.floor(y0)+1;y<y1;y+=2)c.fillRect(x+.5,y+.5,1,.5);c.restore();
+      foam(p,index*5+2,['#fff6ea','#ffd3c9']);
+    });
   }
   drawReef(t){const c=this.ctx,p=MISSAO.recife.map(p=>this.worldToScreen(...p));c.fillStyle='#7a2b3acc';c.strokeStyle='#ff7b6b';c.lineWidth=1;c.beginPath();p.forEach((q,i)=>i?c.lineTo(q.sx,q.sy):c.moveTo(q.sx,q.sy));c.closePath();c.fill();c.stroke();c.save();c.clip();c.strokeStyle='#ff8f7a80';for(let x=p[0].sx-30;x<p[1].sx+30;x+=4){c.beginPath();c.moveTo(x,p[0].sy+3);c.lineTo(x+20,p[2].sy-3);c.stroke();}c.fillStyle='#c4766877';for(let x=p[0].sx+1;x<p[1].sx;x+=2){for(let y=p[2].sy+1;y<p[0].sy;y+=2)c.fillRect(x+.5,y+.5,1,.5);}c.restore();
     // Foam breaking on the reef edge: a few white pixels that twinkle.
@@ -869,15 +939,25 @@ class TacticalMapRenderer {
     // Four discrete lilac bands (16-bit style) instead of a smooth gradient.
     const steps=[[.75,'rgba(243,236,255,.72)'],[.5,'rgba(215,200,255,.6)'],[.28,'rgba(182,156,255,.46)'],[0,'rgba(125,95,214,.3)']];
     for(let i=0;i<e.grid.length;i++){const p=e.grid[i];if(p<max*.004)continue;const r=Math.sqrt(p/max),s=this.worldToScreen(i%e.size,Math.floor(i/e.size));c.fillStyle=steps.find(([limit])=>r>limit)[1];c.fillRect(Math.round(s.sx-this.scale/2),Math.round(s.sy-this.scale/2),Math.ceil(this.scale),Math.ceil(this.scale));}}
-  drawTarget(s,t){const c=this.ctx,observed=s.turnsRecord?.at(-1)?.turn||0,now=this.frameNow||0;if(observed>=MISSAO.capsula.turno_revelacao){const p=this.worldToScreen(...MISSAO.capsula.pouso_real);
+  drawTarget(s,t){const c=this.ctx,observed=s.turnsRecord?.at(-1)?.turn||0,now=this.frameNow||0;if(observed>=MISSAO.capsula.turno_revelacao){
+      // Ghost Aurora: a spoofed beacon is shifted exactly as far as the GPS is lying.
+      // Both markers look identical; only the quantum estimate tells them apart.
+      const rec=s.turnsRecord?.at(-1),ghostOffset=!this.current?.isReplay&&rec?.gpsReported&&rec?.realAfter&&activeAttacks(rec.turn).length?[rec.gpsReported[0]-rec.realAfter[0],rec.gpsReported[1]-rec.realAfter[1]]:null;
+      const real=MISSAO.capsula.pouso_real,ghost=ghostOffset&&Math.hypot(...ghostOffset)>=1.5?real.map((v,i)=>Math.max(1,Math.min(99,v+ghostOffset[i]))):null;
+      const label=ghost?'AURORA-1 ?':'AURORA-1';
+      // Draw in a stable order that does not reveal which one is real.
+      const spots=ghost?[real,ghost].sort((a,b)=>a[0]-b[0]||a[1]-b[1]):[real];
+      for(const spot of spots)this.drawCapsule(this.worldToScreen(...spot),now,label);
+      this.ghostAurora=ghost;}
+    else if(observed>=MISSAO.capsula.turno_blackout_inicio){const m=MISSAO.capsula.elipse_prevista,p=this.worldToScreen(...m.centro);c.setLineDash([3,2]);c.lineDashOffset=this.reduced?0:-Math.floor(now/120)%5;c.strokeStyle='#ffd166';c.beginPath();c.ellipse(p.sx,p.sy,m.semi_eixo_x*this.scale,m.semi_eixo_y*this.scale,0,0,Math.PI*2);c.stroke();c.setLineDash([]);c.lineDashOffset=0;this.mapLabel(t.landingLabel,p.sx,p.sy-m.semi_eixo_y*this.scale-5,'#ffe2b0','center',this.chartSize<180);}}
+  drawCapsule(p,now,label){const c=this.ctx;
       // Capsule with an orange parachute and a pulsing rescue ring.
       c.fillStyle='#ff8a3d';c.fillRect(p.sx-4,p.sy-7,8,2);c.fillStyle='#fff1de';c.fillRect(p.sx-2,p.sy-7,2,2);c.fillRect(p.sx+2,p.sy-7,1,2);
       c.fillStyle='#e9d8c6';c.fillRect(p.sx-3,p.sy-5,1,3);c.fillRect(p.sx+2,p.sy-5,1,3);
       c.fillStyle='#fff1de';c.fillRect(p.sx-3,p.sy-2,6,4);c.fillStyle='#ff8a3d';c.fillRect(p.sx-3,p.sy,6,1);
       const pulse=this.reduced?0:(now%1600)/1600;c.strokeStyle='#ff8a3d';c.beginPath();c.arc(p.sx,p.sy,8,0,Math.PI*2);c.stroke();
       if(pulse){c.strokeStyle=`rgba(255,209,102,${(1-pulse)*.9})`;c.beginPath();c.arc(p.sx,p.sy,8+pulse*10,0,Math.PI*2);c.stroke();}
-      this.labelBoxes.push({left:p.sx-9,right:p.sx+9,top:p.sy-9,bottom:p.sy+9});this.mapLabel('AURORA-1',p.sx+12,p.sy+2,'#ffd166');}
-    else if(observed>=MISSAO.capsula.turno_blackout_inicio){const m=MISSAO.capsula.elipse_prevista,p=this.worldToScreen(...m.centro);c.setLineDash([3,2]);c.lineDashOffset=this.reduced?0:-Math.floor(now/120)%5;c.strokeStyle='#ffd166';c.beginPath();c.ellipse(p.sx,p.sy,m.semi_eixo_x*this.scale,m.semi_eixo_y*this.scale,0,0,Math.PI*2);c.stroke();c.setLineDash([]);c.lineDashOffset=0;this.mapLabel(t.landingLabel,p.sx,p.sy-m.semi_eixo_y*this.scale-5,'#ffe2b0','center',this.chartSize<180);}}
+      this.labelBoxes.push({left:p.sx-9,right:p.sx+9,top:p.sy-9,bottom:p.sy+9});this.mapLabel(label,p.sx+12,p.sy+2,'#ffd166');}
   drawInterference(x,y,r,now){const c=this.ctx;const phase=this.reduced?0:(now%3000)/3000;c.fillStyle='#ff6b6b30';c.strokeStyle='#ff8f86aa';for(let k=0;k<4;k++){c.beginPath();c.arc(x,y,r*(.25+k*.25)+phase*2,0,Math.PI*2);k===3&&c.fill();c.stroke();}c.fillStyle='#ff6b6b';c.fillRect(x-2,y-2,4,4);c.strokeStyle='#ffb0a8';c.beginPath();c.moveTo(x-r-4,y);c.lineTo(x-r-1,y);c.moveTo(x+r+1,y);c.lineTo(x+r+4,y);c.stroke();}
   drawGPS(x,y,mismatch,now){
     // Amber GPS marker. When it disagrees with the quantum estimate it glitches:

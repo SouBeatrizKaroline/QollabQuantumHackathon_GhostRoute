@@ -33,7 +33,7 @@ Aurora-1 is returning from orbit. You are at the helm of **SPOOFED**, with a cre
 3. Select the **Simple** sensor, advance, compare the instruments and reach Aurora-1.
 4. Review the result and move to the next level.
 
-New mechanics are introduced before use, even if you choose a later level directly. The difficulty curve gradually increases currents, grows familiar rock formations and tightens resources and rescue precision. Level 99 has the strongest currents, smallest rescue radius and lowest measurement budget.
+New mechanics are introduced before use, even if you choose a later level directly. The difficulty curve adds gates (reef walls and sandbanks with a single opening, alternating sides: one gate from level 01, two from 10, three from 40), so every route bends into a zigzag; it also increases currents, adds rocks beside the openings and tightens resources and rescue precision. While the GPS is under attack, a **ghost Aurora** appears beside the real capsule, shifted exactly as far as the GPS is lying; only the quantum estimate tells them apart. Level 99 has the strongest currents, smallest rescue radius and lowest measurement budget.
 
 ## Choose your way into the project
 

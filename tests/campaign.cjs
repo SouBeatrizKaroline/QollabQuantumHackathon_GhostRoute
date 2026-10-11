@@ -19,14 +19,19 @@ for(let level=0;level<100;level++){
     assert.ok(m.navio.ruido_corrente_km>=previous.navio.ruido_corrente_km,'Current uncertainty increases');
     assert.ok(m.turnos>=previous.turnos,'Mission length increases');
   }
-  // From level 1 the capsule lands on the far side of the chart, among rocks.
-  const obstacles=[m.recife,...m.pedras];
+  // From level 1 gates (reef walls and sandbanks with one opening) bend the route.
+  const obstacles=[m.recife,...m.pedras,...m.barreiras,...m.bancos];
   if(level>0){
     if(level>=10)assert.ok(Math.hypot(m.capsula.pouso_real[0]-m.porto[0],m.capsula.pouso_real[1]-m.porto[1])>=90,'Later rescues lie across the chart');
-    assert.ok(m.pedras.length>=2&&m.pedras.length>=(previous?.pedras.length||0),'Rocks never decrease');
-  } else assert.equal(m.pedras.length,0,'The tutorial has no rocks');
+    assert.ok(m.passagens.length>=1&&m.passagens.length>=(previous?.passagens.length||0),'Gates never decrease');
+    assert.ok(m.barreiras.length+m.bancos.length>=2,'Every gate has walls');
+    assert.ok(m.pedras.length+m.barreiras.length+m.bancos.length>=(previous?(previous.pedras.length+previous.barreiras.length+previous.bancos.length):0),'Obstacles never decrease');
+    // Consecutive openings alternate sides of the direct line, forcing a zigzag.
+    const d=[m.capsula.pouso_real[0]-m.porto[0],m.capsula.pouso_real[1]-m.porto[1]],side=p=>Math.sign((p[0]-m.porto[0])*d[1]-(p[1]-m.porto[1])*d[0]);
+    for(let i=1;i<m.passagens.length;i++)assert.notEqual(side(m.passagens[i]),side(m.passagens[i-1]),'Openings alternate');
+  } else assert.equal(m.pedras.length+m.passagens.length,0,'The tutorial has no rocks or gates');
   for(const poly of obstacles){
-    assert.ok(poly.length>=4&&poly.every(p=>p.every(v=>v>0&&v<100)));
+    assert.ok(poly.length>=3&&poly.every(p=>p.every(v=>v>0&&v<100)));
     for(const point of[m.porto,m.capsula.pouso_real])assert.ok(obstacles.every(o=>!a.checkReefCollision(point,point,o)),'Port and capsule are open water');
   }
   // Rocks never touch each other or the reef, so every gap between them is real water.
@@ -37,7 +42,7 @@ assert.equal(missions[1].ataques.length,0);assert.equal(missions[3].ataques.leng
 a.useCampaignMission(99);assert.equal(a.MISSAO.nivel,99);assert.equal(a.activeAttacks(3).length,1);
 a.useCampaignMission(0);assert.equal(a.MISSAO.nivel,0);assert.equal(a.activeAttacks(3).length,0);
 assert.equal(missions[99].sensor.shots_total,3000,'Switching missions must not mutate saved configs');
-console.log('PASS 100 unique missions across the chart, growing rock fields, gradual difficulty, tutorial safety, attack stages and configuration isolation');
+console.log('PASS 100 unique missions with alternating gates, growing obstacle fields, gradual difficulty, tutorial safety, attack stages and configuration isolation');
 
 // A bounded geometric search checks fixed-length moves, integer headings and
 // each level's actual deterministic current stream. It is a test oracle only;
@@ -47,17 +52,23 @@ for(let level=0;level<100;level++){
  const currents=Array.from({length:m.turnos},()=>[a.gaussianRandom(rng)*m.navio.ruido_corrente_km,a.gaussianRandom(rng)*m.navio.ruido_corrente_km]);
  const vectors=Array.from({length:360},(_,heading)=>[Math.sin(heading*Math.PI/180)*speed,Math.cos(heading*Math.PI/180)*speed]);
  const move=(position,heading,turn)=>position.map((coordinate,index)=>Math.max(0,Math.min(100,coordinate+vectors[heading][index]+currents[turn][index])));
- const boxes=[m.recife,...m.pedras].map(poly=>{const xs=poly.map(p=>p[0]),ys=poly.map(p=>p[1]);return{poly,bounds:[Math.min(...xs),Math.max(...xs),Math.min(...ys),Math.max(...ys)]};});
+ const boxes=[m.recife,...m.pedras,...m.barreiras,...m.bancos].map(poly=>{const xs=poly.map(p=>p[0]),ys=poly.map(p=>p[1]);return{poly,bounds:[Math.min(...xs),Math.max(...xs),Math.min(...ys),Math.max(...ys)]};});
  const collision=(from,to)=>boxes.some(({poly,bounds})=>{
   // Disjoint segment/polygon bounds prove separation; touching bounds still use
   // the game's exact collision check, preserving its boundary behavior.
   if(Math.max(from[0],to[0])<bounds[0]||Math.min(from[0],to[0])>bounds[1]||Math.max(from[1],to[1])<bounds[2]||Math.min(from[1],to[1])>bounds[3])return false;
   return a.checkReefCollision(from,to,poly);
  });
- const corners=boxes.flatMap(({bounds:[x0,x1,y0,y1]})=>[[x0-2.5,y0-2.5],[x1+2.5,y0-2.5],[x0-2.5,y1+2.5],[x1+2.5,y1+2.5]]).filter(p=>p.every(v=>v>0&&v<100));
- // Cheapest way from each corner to the capsule: straight, or via one more corner.
- const toTarget=corners.map(p=>collision(p,target)?Infinity:Math.hypot(p[0]-target[0],p[1]-target[1]));
- const cornerCost=corners.map((p,i)=>Math.min(toTarget[i],...corners.map((q,j)=>j===i||toTarget[j]===Infinity||collision(p,q)?Infinity:Math.hypot(q[0]-p[0],q[1]-p[1])+toTarget[j])));
+ // Waypoints: every opening, plus the corners around the reef and each rock.
+ const small=[m.recife,...m.pedras].map(poly=>{const xs=poly.map(p=>p[0]),ys=poly.map(p=>p[1]);return[Math.min(...xs),Math.max(...xs),Math.min(...ys),Math.max(...ys)];});
+ const corners=[...m.passagens,...small.flatMap(([x0,x1,y0,y1])=>[[x0-2.5,y0-2.5],[x1+2.5,y0-2.5],[x0-2.5,y1+2.5],[x1+2.5,y1+2.5]])].filter(p=>p.every(v=>v>0&&v<100)&&!collision(p,p));
+ // Shortest collision-free path from each waypoint to the capsule (Dijkstra on the visibility graph).
+ const cornerCost=corners.map(p=>collision(p,target)?Infinity:Math.hypot(p[0]-target[0],p[1]-target[1]));
+ for(const done=new Set();done.size<corners.length;){
+  let best=-1;corners.forEach((_,i)=>{if(!done.has(i)&&(best<0||cornerCost[i]<cornerCost[best]))best=i;});
+  if(cornerCost[best]===Infinity)break;done.add(best);
+  corners.forEach((q,j)=>{if(done.has(j)||collision(corners[best],q))return;const c=cornerCost[best]+Math.hypot(q[0]-corners[best][0],q[1]-corners[best][1]);if(c<cornerCost[j])cornerCost[j]=c;});
+ }
  const headingFor=(dx,dy)=>(Math.round(Math.atan2(dx,dy)*180/Math.PI)+360)%360;
  let beam=[{position:m.porto,headings:[]}],solution=null;
  for(let turn=0;turn<m.turnos&&!solution;turn++){

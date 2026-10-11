@@ -212,6 +212,10 @@ const TEXTOS = {
     "feature_freeze_body": "GPS can repeat the same position while the ship moves. Check distance, heading and sensor: a stationary reading after a move deserves attention.",
     "feature_budget_title": "Measurement economy",
     "feature_budget_body": "Advanced missions have fewer measurements and require more precise rescues. Use small readings in safe waters and reserve larger readings for uncertainty. You can still navigate when the budget runs out.",
+    "feature_sandbank_title": "Sandbanks and gates",
+    "feature_sandbank_body": "Sandbanks and reef walls now cross the chart. Each wall has a single opening, and the next one opens on the other side: plan a curved route through every gap.",
+    "feature_ghost_title": "Ghost Aurora",
+    "feature_ghost_body": "The Ghost also fakes Aurora-1’s beacon. While the GPS is under attack, two identical capsules appear: the fake one is shifted exactly as far as the GPS is lying. Use the quantum sensor to decide which one to trust — rescuing the ghost fails the mission.",
     "soundOn": "Sound: on",
     "soundOff": "Sound: off"
   },
@@ -427,6 +431,10 @@ const TEXTOS = {
     "feature_freeze_body": "O GPS pode repetir a mesma posição enquanto o navio se move. Confira distância, rumo e sensor: uma posição parada após avançar merece atenção.",
     "feature_budget_title": "Economia de medições",
     "feature_budget_body": "As missões avançadas têm menos medições e exigem resgates mais precisos. Use leituras pequenas em águas seguras e reserve as maiores para dúvidas. Com orçamento esgotado, ainda é possível navegar.",
+    "feature_sandbank_title": "Bancos de areia e portões",
+    "feature_sandbank_body": "Agora bancos de areia e muralhas de recife atravessam o mapa. Cada muralha tem uma única passagem, e a próxima abre do outro lado: planeje uma rota em curva por todas as aberturas.",
+    "feature_ghost_title": "Aurora-fantasma",
+    "feature_ghost_body": "O Fantasma também falsifica o sinal da Aurora-1. Enquanto o GPS estiver sob ataque, aparecem duas cápsulas iguais: a falsa fica deslocada exatamente o quanto o GPS está mentindo. Use o sensor quântico para decidir em qual confiar — resgatar a fantasma faz a missão falhar.",
     "soundOn": "Som: ligado",
     "soundOff": "Som: desligado"
   },
@@ -642,6 +650,10 @@ const TEXTOS = {
     "feature_freeze_body": "El GPS puede repetir la misma posición mientras el barco avanza. Comprueba distancia, rumbo y sensor: una lectura inmóvil después de avanzar merece atención.",
     "feature_budget_title": "Ahorro de mediciones",
     "feature_budget_body": "Las misiones avanzadas ofrecen menos mediciones y exigen rescates más precisos. Usa lecturas pequeñas en aguas seguras y reserva las mayores para las dudas. Puedes seguir navegando sin presupuesto.",
+    "feature_sandbank_title": "Bancos de arena y puertas",
+    "feature_sandbank_body": "Ahora bancos de arena y murallas de arrecife cruzan la carta. Cada muralla tiene una sola abertura y la siguiente se abre del otro lado: planea una ruta en curva por todos los pasos.",
+    "feature_ghost_title": "Aurora fantasma",
+    "feature_ghost_body": "El Fantasma también falsifica la señal de Aurora-1. Mientras el GPS esté bajo ataque, aparecen dos cápsulas idénticas: la falsa está desplazada exactamente lo que miente el GPS. Usa el sensor cuántico para decidir en cuál confiar: rescatar a la fantasma hace fallar la misión.",
     "soundOn": "Sonido: activado",
     "soundOff": "Sonido: desactivado"
   },
@@ -857,6 +869,10 @@ const TEXTOS = {
     "feature_freeze_body": "O GPS pode repetir a mesma posição enquanto o navio se move. Confere a distância, o rumo e o sensor: uma posição parada depois de avançares merece atenção.",
     "feature_budget_title": "Economia de medições",
     "feature_budget_body": "As missões avançadas têm menos medições e exigem resgates mais precisos. Usa leituras pequenas em águas seguras e reserva as maiores para as dúvidas. Ainda podes navegar quando o orçamento se esgotar.",
+    "feature_sandbank_title": "Bancos de areia e portões",
+    "feature_sandbank_body": "Agora há bancos de areia e muralhas de recife a atravessar a carta. Cada muralha tem uma única passagem e a seguinte abre do outro lado: planeia uma rota em curva por todas as aberturas.",
+    "feature_ghost_title": "Aurora-fantasma",
+    "feature_ghost_body": "O Fantasma também falsifica o sinal da Aurora-1. Enquanto o GPS estiver sob ataque, surgem duas cápsulas iguais: a falsa está deslocada exatamente o quanto o GPS está a mentir. Usa o sensor quântico para decidir em qual confiar — salvar a fantasma faz a missão falhar.",
     "soundOn": "Som: ligado",
     "soundOff": "Som: desligado"
   }
