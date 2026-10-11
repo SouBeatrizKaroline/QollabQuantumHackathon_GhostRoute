@@ -6,9 +6,9 @@
 
 **Equipe: QuantGirls**
 
-- Beatriz Karoline Cordeiro da Silva
-- Daiane Fonseca
-- Sonia Janara Silva Barros
+- Beatriz Karoline Cordeiro da Silva · [Portfólio](https://soubeatrizkaroline.vercel.app/)
+- Daiane Fonseca · [LinkedIn](https://www.linkedin.com/in/daiane-fonseca-552655285)
+- Sonia Janara Silva Barros · [Portfólio](https://jhay.goskip.app/)
 
 **Para jurados e leitores:** [Proposta do projeto](#o-problema-e-nossa-contribuição) · [Como executar](#jogue-localmente-sem-compilar) · [Créditos](#créditos-e-transparência-no-desenvolvimento) · [Referências](#referências-e-atribuição-externa)
 
