@@ -33,3 +33,110 @@ Evidencia nueva: 112 pruebas Python, nueve suites del frontend, búsqueda de rut
 ![Nivel 01 tranquilo: practicar el sensor sin obstáculos.](../assets/ghost-route-level01.png)
 
 ![Misión en mar abierto: rocas y corrientes pueden exigir curvas sin muros.](../assets/ghost-route-open-water.png)
+
+## Nombres de los niveles de campaña
+
+Cada título refleja la ruta y el aprendizaje de esa etapa. El nombre no añade una mecánica ni promete una posición exacta.
+
+| Nivel | Título |
+| --- | --- |
+| 00 | Primer viaje |
+| 01 | Aguas tranquilas |
+| 02 | Rumbo a Aurora |
+| 03 | Leer el mar |
+| 04 | Confianza en el rumbo |
+| 05 | Primera corriente |
+| 06 | Corregir el rumbo |
+| 07 | Medir y ajustar |
+| 08 | Seguir la corriente |
+| 09 | Equilibrio en el mar |
+| 10 | Primer desvío |
+| 11 | Rodear la roca |
+| 12 | Curva suave |
+| 13 | Espacio para maniobrar |
+| 14 | Ruta entre rocas |
+| 15 | Mirar adelante |
+| 16 | Maniobra cuidadosa |
+| 17 | Leer antes de girar |
+| 18 | Trazar una curva |
+| 19 | Rumbo bajo control |
+| 20 | Mar abierto, ruta libre |
+| 21 | Elegir el desvío |
+| 22 | Curvas y lecturas |
+| 23 | Preparar la maniobra |
+| 24 | Camino seguro |
+| 25 | Primer paso |
+| 26 | Entre bancos de arena |
+| 27 | Encontrar la abertura |
+| 28 | Curva en el paso |
+| 29 | Más allá del banco |
+| 30 | Vuelta al mar abierto |
+| 31 | Lecturas en movimiento |
+| 32 | Desvío planeado |
+| 33 | Ruta y estimación |
+| 34 | Preparar la travesía |
+| 35 | Primera señal falsa |
+| 36 | Paso bajo sospecha |
+| 37 | Revisar los instrumentos |
+| 38 | Curva con evidencias |
+| 39 | Más allá del GPS |
+| 40 | Señales en mar abierto |
+| 41 | Comparar para navegar |
+| 42 | Rumbo con incertidumbre |
+| 43 | Desvío de la señal falsa |
+| 44 | Lecturas independientes |
+| 45 | Conocer GHZ |
+| 46 | Sensibilidad en el paso |
+| 47 | Fases y caminos |
+| 48 | Resolver la ambigüedad |
+| 49 | Comparar modos |
+| 50 | GHZ en mar abierto |
+| 51 | Historial y lectura |
+| 52 | Elegir la evidencia |
+| 53 | Sensibilidad con cuidado |
+| 54 | Preparar dos curvas |
+| 55 | Segundo paso |
+| 56 | Arena y arrecife |
+| 57 | Aberturas alternadas |
+| 58 | Una curva a la vez |
+| 59 | Travesía del arrecife |
+| 60 | Horizonte abierto |
+| 61 | Rocas y evidencias |
+| 62 | Rumbo bien estimado |
+| 63 | Maniobra entre señales |
+| 64 | Lectura para el rescate |
+| 65 | Silencio en la reentrada |
+| 66 | Rumbo a la elipse |
+| 67 | Esperar la señal |
+| 68 | Travesía sin contacto |
+| 69 | Reencontrar Aurora |
+| 70 | Primera Aurora fantasma |
+| 71 | Dos señales en el horizonte |
+| 72 | Buscar la Aurora real |
+| 73 | Evidencias para el rescate |
+| 74 | Ecos y rocas |
+| 75 | Primera deriva falsa |
+| 76 | Error que se acumula |
+| 77 | Corregir entre pasos |
+| 78 | Rastrear el desvío |
+| 79 | Curvas bajo engaño |
+| 80 | Ecos en mar abierto |
+| 81 | Revisar la trayectoria |
+| 82 | Estimar bajo presión |
+| 83 | Separar las señales |
+| 84 | Preparar el eslalon |
+| 85 | Tercer paso |
+| 86 | Tres curvas en el mar |
+| 87 | Eslalon entre señales |
+| 88 | Alternar con precisión |
+| 89 | Travesía en tres etapas |
+| 90 | Primer GPS congelado |
+| 91 | Barco en movimiento |
+| 92 | Detectar la posición inmóvil |
+| 93 | Lecturas bajo engaño |
+| 94 | Último mar abierto |
+| 95 | Cada medición cuenta |
+| 96 | Precisión en los pasos |
+| 97 | Últimas curvas |
+| 98 | Rescate bajo presión |
+| 99 | Ruta fantasma final |

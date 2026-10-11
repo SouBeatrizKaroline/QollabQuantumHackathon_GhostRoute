@@ -6,6 +6,12 @@ vm.runInContext(read('i18n.js')+'\n'+engine+'\n'+read('audio.js')+'\n'+read('onb
 const a=scope.api;
 for(const lang of ['pt-BR','pt-PT','en','es']){
  assert.equal(new Set(Array.from({length:100},(_,n)=>a.campaignLevelName(n,lang))).size,100);
+ const guide=fs.readFileSync(path.resolve(__dirname,'../docs',lang==='en'?'':lang,'campaign-design.md'),'utf8');
+ for(let n=0;n<100;n++){
+  const title=a.campaignLevelName(n,lang);
+  assert.ok(title.trim()&&title.length<=30,'Campaign titles stay concise for compact displays');
+  assert.ok(guide.includes(`| ${String(n).padStart(2,'0')} | ${title} |`),'Documented titles match the menu and mission badge');
+ }
  for(let n=0;n<100;n++)for(const key of a.featureQueue(a.createCampaignMission(n),new Set())){
   assert.ok(a.TEXTOS[lang]['feature_'+key+'_title']);assert.ok(a.TEXTOS[lang]['feature_'+key+'_body']);
  }
